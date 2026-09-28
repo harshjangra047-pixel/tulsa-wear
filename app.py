@@ -235,15 +235,23 @@ BASE_DIR = os.path.abspath(
     os.path.dirname(__file__)
 )
 
-DATABASE_PATH = os.path.join(
-    BASE_DIR,
-    "database",
-    "fashion.db"
-)
+# Use hosted PostgreSQL on Vercel; keep SQLite as the local fallback.
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-app.config["SQLALCHEMY_DATABASE_URI"] = (
-    "sqlite:///" + DATABASE_PATH
-)
+if DATABASE_URL:
+    if DATABASE_URL.startswith("postgres://"):
+        DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+    elif DATABASE_URL.startswith("postgresql://"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+
+    app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL
+else:
+    DATABASE_PATH = os.path.join(
+        BASE_DIR,
+        "database",
+        "fashion.db"
+    )
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + DATABASE_PATH
 
 app.config[
     "SQLALCHEMY_TRACK_MODIFICATIONS"
