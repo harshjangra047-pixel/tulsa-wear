@@ -80,7 +80,10 @@
                         <div class="pdp-interactive-frame" id="pdpFrame">
                             <div class="pdp-main-image-wrap">
                                 {% if product.image %}
-                                <img id="mainPdpImage" src="{{ url_for('static', filename='images/' + product.image) }}?v={{ cache_id }}" alt="{{ product.name }}">
+                                <img id="mainPdpImage" 
+                                     src="{{ url_for('static', filename='images/' + product.image) }}?v={{ cache_id }}" 
+                                     alt="{{ product.name }}"
+                                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                                 {% else %}
                                 <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #eee8df; color: var(--text-muted); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">
                                     Atelier Archive Piece
