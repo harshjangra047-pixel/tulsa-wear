@@ -99,7 +99,7 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 # Media upload configuration
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "images")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-PAYMENT_PROOFS_FOLDER = os.path.join(UPLOAD_FOLDER, "payment_proofs")
+PAYMENT_PROOFS_FOLDER = os.path.join("/tmp", "payment_proofs")
 os.makedirs(PAYMENT_PROOFS_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 app.config["PAYMENT_PROOFS_FOLDER"] = PAYMENT_PROOFS_FOLDER
