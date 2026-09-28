@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Us — Client Services & Atelier | {{ brand_name }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .contact-page {
+            padding: 120px 24px 80px;
+            max-width: 1180px;
+            margin: 0 auto;
+        }
+
+        .contact-breadcrumb {
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 24px;
+        }
+
+        .contact-breadcrumb a {
+            color: var(--muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .contact-breadcrumb a:hover {
+            color: var(--text);
+        }
+
+        .contact-hero {
+            text-align: center;
+            max-width: 780px;
+            margin: 0 auto 50px;
+        }
+
+        .contact-hero h1 {
+            font-size: clamp(34px, 4.5vw, 54px);
+            font-weight: 400;
+            line-height: 1.15;
+            margin-top: 10px;
+            margin-bottom: 16px;
+        }
+
+        .contact-hero p {
+            font-size: 15px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        /* 4 Channel Grid */
+        .channel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+
+        .channel-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 32px 28px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+            position: relative;
+        }
+
+        .channel-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+            border-color: var(--text);
+        }
+
+        .channel-badge {
+            display: inline-block;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            background: #faf8f5;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            margin-bottom: 16px;
+            align-self: flex-start;
+        }
+
+        .channel-badge.active-concierge {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-color: #c8e6c9;
+            font-weight: 600;
+        }
+
+        .channel-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+            line-height: 1;
+        }
+
+        .channel-card h3 {
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .channel-card p {
+            font-size: 13px;
+            color: var(--muted);
+            line-height: 1.5;
+            margin-bottom: 20px;
+            flex: 1;
+        }
+
+        .channel-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 600;
+            text-decoration: none;
+            border: 1px solid var(--text);
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .channel-action-btn.btn-dark {
+            background: var(--text);
+            color: #fff;
+        }
+
+        .channel-action-btn.btn-dark:hover {
+            background: #333;
+        }
+
+        .channel-action-btn.btn-outline {
+            background: #fff;
+            color: var(--text);
+        }
+
+        .channel-action-btn.btn-outline:hover {
+            background: #faf8f5;
+        }
+
+        /* Two Column Main: Form & Atelier Info */
+        .contact-content-grid {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: 40px;
+            align-items: start;
+            margin-bottom: 70px;
+        }
+
+        .form-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 44px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+
+        .form-card h2 {
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+
+        .form-card p.form-subtitle {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 28px;
+            line-height: 1.5;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .field-group {
+            margin-bottom: 18px;
+        }
+
+        .field-group label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--text);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .field-group input,
+        .field-group select,
+        .field-group textarea {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1px solid var(--border);
+            background: #faf8f5;
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .field-group input:focus,
+        .field-group select:focus,
+        .field-group textarea:focus {
+            border-color: var(--text);
+            background: #fff;
+        }
+
+        .submit-inquiry-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--text);
+            color: #fff;
+            border: none;
+            font-family: inherit;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .submit-inquiry-btn:hover {
+            background: #333;
+        }
+
+        /* Atelier Info Sidebar */
+        .atelier-info-card {
+            background: #faf8f5;
+            border: 1px solid var(--border);
+            padding: 36px 32px;
+        }
+
+        .atelier-info-card h3 {
+            font-size: 22px;
+            font-weight: 400;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .info-item {
+            margin-bottom: 22px;
+        }
+
+        .info-item-label {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .info-item-value {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--text);
+        }
+
+        .info-item-value a {
+            color: var(--text);
+            text-decoration: none;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .info-item-value a:hover {
+            border-bottom-style: solid;
+        }
+
+        .inquiry-response-box {
+            display: none;
+            margin-top: 20px;
+            padding: 18px 20px;
+            border-radius: 2px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .inquiry-response-box.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .inquiry-response-box.error {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        @media (max-width: 860px) {
+            .contact-content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-card {
+                padding: 28px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- NAVBAR -->
+    <header class="navbar navbar-solid" id="top">
+        <a href="{{ url_for('home') }}" class="logo">
+            {{ brand_name|upper }}
+        </a>
+
+        <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('shop') }}">Collection</a>
+            <a href="/#categories">Categories</a>
+            <a href="/#about">About</a>
+            <a href="{{ url_for('track_order') }}">Track Order</a>
+            <a href="{{ url_for('return_policy') }}">Returns & Refunds</a>
+            <a href="{{ url_for('contact') }}" style="border-bottom: 1px solid var(--text); padding-bottom: 4px; font-weight: 500;">Contact Us</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="/#ai-studio" class="ai-link">✦ AI Studio</a>
+            <a href="{{ url_for('bag') }}" class="bag-link">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
+            <button id="menuButton" class="menu-button" type="button" aria-label="Open navigation" aria-expanded="false">
+                ☰
+            </button>
+        </div>
+    </header>
+
+    <main class="contact-page">
+
+        <!-- BREADCRUMB -->
+        <nav class="contact-breadcrumb">
+            <a href="{{ url_for('home') }}">Home</a> / <span>Contact Us</span>
+        </nav>
+
+        <!-- HERO -->
+        <section class="contact-hero">
+            <p class="eyebrow">CLIENT SERVICES & ATELIER</p>
+            <h1>Connect With Tulsa Wears</h1>
+            <p>
+                Whether you seek styling advice, custom sizing guidance, bespoke commission details, or wish to connect with our master artisans—our atelier concierge is at your service.
+            </p>
+        </section>
+
+        <!-- 4 CONTACT CHANNELS -->
+        <section class="channel-grid">
+
+            <!-- Channel 1: WhatsApp Concierge -->
+            <div class="channel-card">
+                <div>
+                    <span class="channel-badge active-concierge">● Quick WhatsApp Reply</span>
+                    <div class="channel-icon">💬</div>
+                    <h3>WhatsApp Concierge</h3>
+                    <p>
+                        Instant one-on-one assistance for measurements, product inquiries, fabric swatches, and live order status.
+                    </p>
+                </div>
+                <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa%20Wears!%20I%20would%20like%20to%20inquire%20about..."
+                   target="_blank" rel="noopener noreferrer" class="channel-action-btn btn-dark">
+                    <span>Chat on WhatsApp →</span>
+                </a>
+            </div>
+
+            <!-- Channel 2: Phone Hotline -->
+            <div class="channel-card">
+                <div>
+                    <span class="channel-badge">{{ studio_hours }}</span>
+                    <div class="channel-icon">📞</div>
+                    <h3>Studio Hotline</h3>
+                    <p>
+                        Speak directly with our studio artisans during atelier operating hours for bespoke consultation.
+                    </p>
+                </div>
+                <a href="tel:{{ studio_phone }}" class="channel-action-btn btn-outline">
+                    <span>Call {{ studio_phone }}</span>
+                </a>
+            </div>
+
+            <!-- Channel 3: Email Client Services -->
+            <div class="channel-card">
+                <div>
+                    <span class="channel-badge">Within 24 Hours</span>
+                    <div class="channel-icon">✉️</div>
+                    <h3>Client Services Email</h3>
+                    <p>
+                        Send us your detailed inquiries, custom bridal sketches, or press and collaborative partnerships.
+                    </p>
+                </div>
+                <a href="mailto:{{ studio_email }}?subject=Inquiry%20from%20Tulsa%20Wears%20Website" class="channel-action-btn btn-outline">
+                    <span>{{ studio_email }}</span>
+                </a>
+            </div>
+
+            <!-- Channel 4: Instagram Community -->
+            <div class="channel-card">
+                <div>
+                    <span class="channel-badge">Slow Fashion Stories</span>
+                    <div class="channel-icon">📸</div>
+                    <h3>Instagram Atelier</h3>
+                    <p>
+                        Follow our needlework progress, artisan stories, and message us on direct Instagram DM.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer" class="channel-action-btn btn-outline" style="flex: 1; padding: 10px 8px; font-size: 10px;">
+                        @{{ instagram_handle_1 }}
+                    </a>
+                    <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer" class="channel-action-btn btn-outline" style="flex: 1; padding: 10px 8px; font-size: 10px;">
+                        @{{ instagram_handle_2 }}
+                    </a>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- MAIN INQUIRY FORM + ATELIER SIDEBAR -->
+        <section class="contact-content-grid">
+
+            <!-- Form Card -->
+            <div class="form-card">
+                <p class="eyebrow" style="margin-bottom: 6px;">DIRECT MESSAGE</p>
+                <h2>Send an Atelier Inquiry</h2>
+                <p class="form-subtitle">
+                    Leave your details and request below. Our concierge team responds directly to your phone / WhatsApp.
+                </p>
+
+                <form id="contactForm">
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label for="contactName">Your Name *</label>
+                            <input type="text" id="contactName" name="name" required placeholder="e.g. Priyanshi Sharma">
+                        </div>
+                        <div class="field-group">
+                            <label for="contactPhone">Phone / WhatsApp *</label>
+                            <input type="tel" id="contactPhone" name="phone" required placeholder="e.g. +91 98765 43210">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="field-group">
+                            <label for="contactEmail">Email Address (Optional)</label>
+                            <input type="email" id="contactEmail" name="email" placeholder="e.g. priyanshi@example.com">
+                        </div>
+                        <div class="field-group">
+                            <label for="contactSubject">Inquiring About *</label>
+                            <select id="contactSubject" name="subject" required>
+                                <option value="General Inquiry">General Question</option>
+                                <option value="Order Status & Delivery">Order Status & Delivery Tracking</option>
+                                <option value="Custom Sizing & Fit Consultation">Custom Sizing & Fit Consultation</option>
+                                <option value="Bespoke Outfit / Bridal Commission">Bespoke Outfit / Bridal Commission</option>
+                                <option value="Fabric & Handloom Details">Fabric & Handloom Details</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="contactMessage">Your Message *</label>
+                        <textarea id="contactMessage" name="message" rows="5" required placeholder="Tell us how we may assist you today..."></textarea>
+                    </div>
+
+                    <button type="submit" id="contactSubmitBtn" class="submit-inquiry-btn">
+                        Submit Inquiry to Studio →
+                    </button>
+
+                    <div id="contactResponseBox" class="inquiry-response-box"></div>
+                </form>
+            </div>
+
+            <!-- Atelier Info Sidebar -->
+            <div class="atelier-info-card">
+                <p class="eyebrow" style="margin-bottom: 6px;">SLOW CRAFT WORKSHOP</p>
+                <h3>Tulsa Wears Atelier</h3>
+
+                <div class="info-item">
+                    <div class="info-item-label">Studio Location</div>
+                    <div class="info-item-value">
+                        {{ studio_address }}
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-item-label">Artisan Crafting Hours</div>
+                    <div class="info-item-value">
+                        {{ studio_hours }}<br>
+                        <small style="color: var(--muted);">Closed on Sundays & National Festivals</small>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-item-label">Direct WhatsApp Number</div>
+                    <div class="info-item-value">
+                        <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa%20Wears!" target="_blank">
+                            +{{ studio_whatsapp }}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-item-label">Direct Studio Email</div>
+                    <div class="info-item-value">
+                        <a href="mailto:{{ studio_email }}">
+                            {{ studio_email }}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="info-item" style="border-top: 1px solid var(--border); padding-top: 18px; margin-top: 24px;">
+                    <div class="info-item-label">Craft Pledge</div>
+                    <p style="font-size: 13px; color: var(--muted); line-height: 1.6; margin: 0;">
+                        Every Tulsa Wears piece is cut, assembled, and finished by hand with intentional pacing. We welcome custom adjustments to length, neckline, and sizing on any garment.
+                    </p>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <a href="{{ url_for('track_order') }}" class="channel-action-btn btn-outline" style="width: 100%; box-sizing: border-box;">
+                        Track an Existing Order ↗
+                    </a>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-brand">
+            <h3>{{ brand_name|upper }}</h3>
+            <p>
+                Handmade clothing created slowly, thoughtfully and by hand. {{ brand_tagline }}.
+            </p>
+        </div>
+
+        <div class="footer-column">
+            <h4>Shop</h4>
+            <a href="{{ url_for('shop') }}">Collection</a>
+            <a href="/#categories">Categories</a>
+            <a href="{{ url_for('track_order') }}">Track Order</a>
+            <a href="{{ url_for('return_policy') }}">Returns & Refunds</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Studio</h4>
+            <a href="/#about">About</a>
+            <a href="/#process">Process</a>
+            <a href="/#ai-studio">AI Studio</a>
+            <a href="{{ url_for('return_policy') }}">Return Policy</a>
+            <a href="{{ url_for('contact') }}">Contact Us</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Connect</h4>
+            <a href="https://wa.me/919350439667" target="_blank">WhatsApp: +91 93504 39667</a>
+            <a href="tel:+919350439667">Call: 93504 39667</a>
+            <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer">@{{ instagram_handle_1 }}</a>
+            <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer">@{{ instagram_handle_2 }}</a>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2025 {{ brand_name|upper }}</span>
+            <span>Handmade / India</span>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+
+    <script>
+        // Contact Form AJAX Handler
+        document.getElementById('contactForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('contactSubmitBtn');
+            const respBox = document.getElementById('contactResponseBox');
+            
+            btn.disabled = true;
+            btn.innerText = "Submitting Inquiry...";
+            respBox.style.display = "none";
+            respBox.className = "inquiry-response-box";
+
+            const payload = {
+                name: document.getElementById('contactName').value.trim(),
+                phone: document.getElementById('contactPhone').value.trim(),
+                email: document.getElementById('contactEmail').value.trim(),
+                subject: document.getElementById('contactSubject').value,
+                message: document.getElementById('contactMessage').value.trim()
+            };
+
+            try {
+                const response = await fetch('/api/contact', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    respBox.className = "inquiry-response-box success";
+                    respBox.innerHTML = `
+                        <strong>✓ ${result.message}</strong>
+                        <div style="margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap;">
+                            <a href="${result.whatsapp_link}" target="_blank" class="channel-action-btn btn-dark" style="padding: 9px 16px; font-size: 11px; text-decoration: none; display: inline-flex;">
+                                💬 Also Send via WhatsApp →
+                            </a>
+                        </div>
+                    `;
+                    respBox.style.display = "block";
+                    document.getElementById('contactForm').reset();
+                } else {
+                    respBox.className = "inquiry-response-box error";
+                    respBox.innerText = result.message || "Failed to submit inquiry. Please try again.";
+                    respBox.style.display = "block";
+                }
+            } catch (err) {
+                respBox.className = "inquiry-response-box error";
+                respBox.innerText = "An error occurred while transmitting your message. Please try WhatsApp directly.";
+                respBox.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Submit Inquiry to Studio →";
+            }
+        });
+    </script>
+
+</body>
+</html>

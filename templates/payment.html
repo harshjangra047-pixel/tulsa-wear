@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Payment — {{ brand_name }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .payment-wrapper {
+            max-width: 640px;
+            margin: 0 auto;
+            padding: 40px 20px 80px;
+        }
+
+        .payment-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 36px 32px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+        }
+
+        @media (max-width: 600px) {
+            .payment-card {
+                padding: 24px 18px;
+            }
+        }
+
+        .payment-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .payment-header h1 {
+            font-size: clamp(26px, 4vw, 36px);
+            font-weight: 500;
+            margin: 8px 0;
+        }
+
+        .payment-summary-box {
+            background: #faf8f5;
+            border: 1px solid #efe8df;
+            padding: 16px 20px;
+            border-radius: 4px;
+            margin-bottom: 26px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .method-option {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+            margin-bottom: 12px;
+        }
+
+        .method-option:hover {
+            border-color: #2e7d32;
+        }
+
+        .method-option.selected {
+            border-color: #2e7d32;
+            background: #fbfdfb;
+            box-shadow: 0 0 0 1px #2e7d32;
+        }
+
+        .method-option input[type="radio"] {
+            margin-top: 3px;
+            accent-color: #2e7d32;
+        }
+
+        .qr-display-box {
+            background: #faf8f5;
+            border: 1px solid var(--border);
+            padding: 24px 20px;
+            border-radius: 4px;
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 24px;
+        }
+
+        .qr-image-wrapper {
+            background: #fff;
+            padding: 12px;
+            display: inline-block;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
+            margin: 14px 0 10px;
+        }
+
+        .qr-image-wrapper img {
+            width: 180px;
+            height: 180px;
+            display: block;
+        }
+
+        .upi-app-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            text-decoration: none;
+            background: #2e7d32;
+            color: #fff;
+            padding: 14px 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 3px;
+            box-shadow: 0 4px 12px rgba(46,125,50,0.18);
+            transition: opacity 0.25s ease;
+        }
+
+        .upi-app-btn:hover {
+            opacity: 0.9;
+        }
+
+        /* SCREENSHOT UPLOAD SECTION */
+        .upload-section {
+            border: 2px dashed #c8e6c9;
+            background: #fcfdfc;
+            border-radius: 4px;
+            padding: 22px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            transition: border-color 0.2s ease, background 0.2s ease;
+            position: relative;
+        }
+
+        .upload-section.dragover {
+            border-color: #2e7d32;
+            background: #f1f8f3;
+        }
+
+        .upload-section.has-file {
+            border-color: #2e7d32;
+            background: #f6fbf7;
+        }
+
+        .upload-section-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #1b5e20;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .upload-section-desc {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 12px;
+        }
+
+        .upload-btn-label {
+            display: inline-block;
+            background: #fff;
+            border: 1px solid #2e7d32;
+            color: #2e7d32;
+            padding: 8px 18px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .upload-btn-label:hover {
+            background: #2e7d32;
+            color: #fff;
+        }
+
+        .preview-box {
+            display: none;
+            margin-top: 14px;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            background: #fff;
+            padding: 10px 14px;
+            border: 1px solid #c8e6c9;
+            border-radius: 3px;
+        }
+
+        .preview-box img {
+            width: 52px;
+            height: 52px;
+            object-fit: cover;
+            border-radius: 3px;
+            border: 1px solid var(--border);
+        }
+
+        /* UTR INPUT SECTION */
+        .utr-section {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 18px 20px;
+            border-radius: 4px;
+            margin-bottom: 24px;
+        }
+
+        .utr-section-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #111;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .utr-input-field {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            font-family: monospace;
+            font-size: 15px;
+            letter-spacing: 0.05em;
+            background: #faf8f5;
+            color: #111;
+            outline: none;
+            transition: border-color 0.2s ease, background 0.2s ease;
+        }
+
+        .utr-input-field:focus {
+            border-color: #2e7d32;
+            background: #fff;
+        }
+
+        .submit-order-btn {
+            display: block;
+            width: 100%;
+            background: #111;
+            color: #fff;
+            padding: 18px 24px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.25s ease, transform 0.15s ease;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+
+        .submit-order-btn:hover {
+            background: #2e7d32;
+        }
+
+        .validation-alert {
+            display: none;
+            background: #fdf0ed;
+            color: #c0392b;
+            border: 1px solid #f5c6cb;
+            padding: 12px 16px;
+            font-size: 12px;
+            border-radius: 2px;
+            margin-bottom: 18px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+
+<header class="navbar navbar-solid" id="top">
+    <a href="{{ url_for('home') }}" class="logo">
+        {{ brand_name|upper }}
+    </a>
+    <nav class="nav-links">
+        <a href="{{ url_for('home') }}">Home</a>
+        <a href="{{ url_for('shop') }}">Shop</a>
+        <a href="{{ url_for('track_order') }}">Track Order</a>
+        <a href="{{ url_for('return_policy') }}">Return Policy</a>
+        <a href="https://wa.me/919350439667?text=Namaste%20Tulsa%20Wears!%20I%20have%20an%20inquiry%20regarding%20my%20order." target="_blank">WhatsApp (+91 93504 39667)</a>
+    </nav>
+</header>
+
+<main>
+<section class="payment-wrapper">
+
+    <div class="payment-card">
+
+        <div class="payment-header">
+            <p class="eyebrow" style="color: #2e7d32; font-weight: 600;">STEP 2: SECURE PAYMENT</p>
+            <h1>Complete Payment</h1>
+            <p style="font-size: 13px; color: var(--muted);">
+                Select your payment method, scan QR to pay, then submit your screenshot and UTR number to place your order.
+            </p>
+        </div>
+
+        <!-- Flashed Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div style="margin-bottom: 20px;">
+                {% for category, message in messages %}
+                <div style="background: {% if category == 'success' %}#e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9{% elif category == 'danger' or category == 'warning' %}#fdf0ed; color: #c0392b; border: 1px solid #f5c6cb{% else %}#e3f2fd; color: #0d47a1; border: 1px solid #bbdefb{% endif %}; padding: 14px 18px; font-size: 13px; margin-bottom: 10px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between;">
+                    <span>{{ message }}</span>
+                    <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; font-size:16px; cursor:pointer;">&times;</button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- ORDER BRIEF SUMMARY -->
+        <div class="payment-summary-box">
+            <div>
+                <span style="font-size: 11px; text-transform: uppercase; color: var(--muted); display: block;">Order Reference</span>
+                <strong style="font-size: 15px;">#{{ order.id }}</strong>
+            </div>
+            <div>
+                <span style="font-size: 11px; text-transform: uppercase; color: var(--muted); display: block;">Garment</span>
+                <strong style="font-size: 14px; max-width: 220px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ order.product_name }}</strong>
+            </div>
+            <div>
+                <span style="font-size: 11px; text-transform: uppercase; color: var(--muted); display: block;">Total Amount</span>
+                <strong style="font-size: 18px; color: #2e7d32;">₹{{ "{:,.0f}".format(order.price) }}</strong>
+            </div>
+        </div>
+
+        <!-- PAYMENT FORM -->
+        <form
+            id="paymentProofForm"
+            action="{{ url_for('submit_payment_proof', order_id=order.id) }}"
+            method="POST"
+            enctype="multipart/form-data"
+            onsubmit="return validatePaymentSubmission(event)"
+        >
+
+            <!-- 1. CHOOSE PAYMENT METHOD -->
+            <div style="margin-bottom: 20px;">
+                <p style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--text); margin-bottom: 10px;">
+                    1. Choose Payment Method
+                </p>
+
+                <!-- Method: UPI -->
+                <label class="method-option selected" id="opt-upi">
+                    <input type="radio" name="payment_method" value="UPI (GPay / PhonePe / QR)" checked onchange="switchPaymentMethod(this.value)">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 14px;">UPI — Google Pay, PhonePe, Paytm, QR</div>
+                        <div style="font-size: 12px; color: #2e7d32; margin-top: 2px;">
+                            Pay <strong>₹{{ "{:,.0f}".format(order.price) }}</strong> • 0% Transaction Fees • Direct Bank Transfer
+                        </div>
+                    </div>
+                </label>
+
+                <!-- Method: COD with ₹99 Advance -->
+                <label class="method-option" id="opt-cod">
+                    <input type="radio" name="payment_method" value="Cash on Delivery" onchange="switchPaymentMethod(this.value)">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 14px;">Cash on Delivery (COD) — <span style="color: #2e7d32;">₹99 Advance Security</span></div>
+                        <div style="font-size: 12px; color: #555; margin-top: 3px; line-height: 1.4;">
+                            Pay <strong>₹99 advance online via UPI</strong> to confirm courier dispatch. Balance <strong>₹{{ "{:,.0f}".format(order.price - 99) }}</strong> payable in cash upon delivery.
+                        </div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- 2. DYNAMIC QR CODE BOX -->
+            <div class="qr-display-box" id="qrDisplayBox">
+                <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 600;">
+                    Scan QR Code to Pay
+                </div>
+
+                <div style="font-size: 24px; font-weight: 600; color: #111; margin: 6px 0;">
+                    Amount to Pay: <span id="displayAmount" style="color: #2e7d32;">₹{{ "{:,.0f}".format(order.price) }}</span>
+                </div>
+
+                {% if upi_id %}
+                <!-- 1-Tap Mobile UPI App Link -->
+                <div style="margin-top: 12px; margin-bottom: 12px;">
+                    <a id="upiMobileLink" href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tn=Order%20%23{{ order.id }}" class="upi-app-btn">
+                        <span>⚡ Pay with Google Pay / PhonePe / Paytm</span>
+                    </a>
+                    <small style="display: block; color: var(--muted); font-size: 11px; margin-top: 6px;">
+                        On mobile, tap the green button to open GPay, PhonePe, or Paytm automatically.
+                    </small>
+                </div>
+
+                <div style="margin: 12px 0; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); font-size: 11px; letter-spacing: 0.08em;">
+                    <span style="height: 1px; width: 40px; background: var(--border);"></span>
+                    <span>OR SCAN QR WITH ANY UPI APP</span>
+                    <span style="height: 1px; width: 40px; background: var(--border);"></span>
+                </div>
+
+                <!-- Dynamic QR Code Image -->
+                <div class="qr-image-wrapper">
+                    <img id="upiQrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi%3A%2F%2Fpay%3Fpa%3D{{ upi_id }}%26pn%3D{{ upi_payee_name|urlencode }}%26am%3D{{ order.price }}%26cu%3DINR%26tn%3DOrder_{{ order.id }}" alt="Scan UPI QR Code">
+                </div>
+
+                <div style="font-size: 12px; color: #333; margin-top: 4px;">
+                    Payee: <strong>{{ upi_payee_name }}</strong><br>
+                    UPI ID: <strong id="upiIdText" style="font-family: monospace; font-size: 13px; color: #111;">{{ upi_id }}</strong>
+                    <button type="button" onclick="copyUpiId()" style="background: none; border: 1px solid var(--border); padding: 2px 8px; font-size: 11px; cursor: pointer; border-radius: 2px; margin-left: 6px;">
+                        📋 Copy UPI
+                    </button>
+                </div>
+
+                {% else %}
+                <div style="background: #fff; border: 1px dashed var(--border); padding: 14px; margin-top: 10px; border-radius: 2px;">
+                    <p style="font-size: 12px; color: var(--muted); margin: 0;">
+                        ℹ️ <strong>Studio UPI ID setup:</strong> Payments will be verified manually upon UTR submission.
+                    </p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- 3. PAYMENT SCREENSHOT UPLOAD SECTION (USER REQUIRED) -->
+            <div class="upload-section" id="uploadDropzone">
+                <div class="upload-section-title">
+                    <span>📸</span> 2. Upload Payment Screenshot <span style="color: #c0392b;">*</span>
+                </div>
+                <div class="upload-section-desc">
+                    Take a screenshot of the successful transfer in Google Pay, PhonePe, or Paytm and attach it below.
+                </div>
+
+                <label for="paymentScreenshotInput" class="upload-btn-label">
+                    📁 Choose Screenshot File
+                </label>
+                <input
+                    type="file"
+                    name="payment_screenshot"
+                    id="paymentScreenshotInput"
+                    accept="image/*"
+                    required
+                    style="display: none;"
+                    onchange="handleProofPreview(this)"
+                >
+
+                <!-- Live Preview of Screenshot -->
+                <div id="previewContainer" class="preview-box">
+                    <img id="screenshotPreviewImg" src="" alt="Proof Preview">
+                    <div style="text-align: left; flex: 1;">
+                        <strong id="previewFileName" style="font-size: 12px; color: #111; display: block; word-break: break-all;"></strong>
+                        <span id="previewFileSize" style="font-size: 11px; color: var(--muted);"></span>
+                    </div>
+                    <button type="button" onclick="clearSelectedScreenshot()" style="background: none; border: none; color: #c0392b; font-size: 16px; cursor: pointer; padding: 4px;">
+                        &times;
+                    </button>
+                </div>
+            </div>
+
+            <!-- 4. PAYMENT UTR / REF NUMBER SECTION (USER REQUIRED) -->
+            <div class="utr-section">
+                <label for="upiUtrInput" class="utr-section-label">
+                    <span>🔢</span> 3. Enter Payment UTR / UPI Ref Number <span style="color: #c0392b;">*</span>
+                </label>
+                <input
+                    type="text"
+                    name="upi_utr"
+                    id="upiUtrInput"
+                    placeholder="Enter 12-digit UTR / UPI Ref ID (e.g. 423456789012)"
+                    class="utr-input-field"
+                    required
+                    minlength="6"
+                    maxlength="35"
+                >
+                <div style="font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.4;">
+                    📌 <strong>Where to find UTR?</strong> Check your Google Pay, PhonePe, or Paytm transaction details for the <strong>12-digit UPI Transaction ID / UTR</strong>.
+                </div>
+            </div>
+
+            <!-- CLIENT-SIDE VALIDATION NOTICE -->
+            <div id="validationAlert" class="validation-alert"></div>
+
+            <!-- 5. PLACE ORDER SUBMIT BUTTON -->
+            <button
+                type="submit"
+                id="placeOrderBtn"
+                class="submit-order-btn"
+            >
+                Submit Payment Proof & Place Order →
+            </button>
+
+            <!-- TRUST & SPEED BADGE -->
+            <div style="margin-top: 20px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.6;">
+                ⏳ <strong>Approval Window:</strong> Orders are verified and approved within <strong>1–2 hours</strong> of payment proof receipt.<br>
+                Need priority 10-minute approval? <a href="https://wa.me/919350439667?text=Namaste%20Tulsa%20Wears!%20I%20have%20placed%20Order%20%23{{ order.id }}%20and%20submitted%20my%20payment%20proof.%20Please%20verify%20and%20approve%20promptly." target="_blank" style="color: #2e7d32; font-weight: 600;">Message on WhatsApp (+91 93504 39667)</a>.
+            </div>
+
+        </form>
+
+    </div>
+
+</section>
+</main>
+
+<script>
+const basePrice = {{ order.price }};
+const orderId = {{ order.id }};
+const upiId = "{{ upi_id or '' }}";
+const upiName = "{{ upi_payee_name or 'Tulsa Wears' }}";
+
+function switchPaymentMethod(method) {
+    const isCod = method.includes('Cash on Delivery');
+    const payAmount = isCod ? 99 : basePrice;
+
+    // Update radio option styles
+    document.querySelectorAll('.method-option').forEach(el => el.classList.remove('selected'));
+    if (isCod) {
+        document.getElementById('opt-cod').classList.add('selected');
+    } else {
+        document.getElementById('opt-upi').classList.add('selected');
+    }
+
+    // Update Amount Text
+    document.getElementById('displayAmount').innerText = '₹' + Math.round(payAmount).toLocaleString();
+
+    // Update QR Code and Mobile Link
+    if (upiId) {
+        const note = encodeURIComponent('Order #' + orderId + (isCod ? ' COD Adv' : ''));
+        const upiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + payAmount + '&cu=INR&tn=' + note;
+
+        const mobileLink = document.getElementById('upiMobileLink');
+        if (mobileLink) mobileLink.href = upiUrl;
+
+        const qrImg = document.getElementById('upiQrImage');
+        if (qrImg) {
+            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiUrl);
+        }
+    }
+}
+
+function copyUpiId() {
+    if (upiId) {
+        navigator.clipboard.writeText(upiId).then(() => {
+            alert('✓ Copied UPI ID: ' + upiId);
+        }).catch(() => {
+            alert('UPI ID: ' + upiId);
+        });
+    }
+}
+
+// Screenshot preview handler
+function handleProofPreview(input) {
+    const file = input.files[0];
+    const previewContainer = document.getElementById('previewContainer');
+    const previewImg = document.getElementById('screenshotPreviewImg');
+    const nameEl = document.getElementById('previewFileName');
+    const sizeEl = document.getElementById('previewFileSize');
+    const dropzone = document.getElementById('uploadDropzone');
+
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            nameEl.innerText = file.name;
+            sizeEl.innerText = (file.size / 1024).toFixed(1) + ' KB';
+            previewContainer.style.display = 'flex';
+            dropzone.classList.add('has-file');
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function clearSelectedScreenshot() {
+    const input = document.getElementById('paymentScreenshotInput');
+    input.value = '';
+    document.getElementById('previewContainer').style.display = 'none';
+    document.getElementById('uploadDropzone').classList.remove('has-file');
+}
+
+// Form validation: customer can only place order after providing UTR and screenshot
+function validatePaymentSubmission(event) {
+    const fileInput = document.getElementById('paymentScreenshotInput');
+    const utrInput = document.getElementById('upiUtrInput');
+    const alertBox = document.getElementById('validationAlert');
+    const submitBtn = document.getElementById('placeOrderBtn');
+
+    const utrVal = utrInput.value.trim().toUpperCase();
+    const hasFile = fileInput.files && fileInput.files.length > 0;
+
+    let errors = [];
+
+    if (!hasFile) {
+        errors.push("Please upload your payment confirmation screenshot.");
+    } else {
+        const file = fileInput.files[0];
+        const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+        const ext = file.name.split('.').pop().toLowerCase();
+        if (!validExtensions.includes(ext) && !file.type.startsWith('image/')) {
+            errors.push("Invalid file format. Please upload an image file (JPG, PNG, WebP).");
+        }
+    }
+
+    if (!utrVal || utrVal.length < 8) {
+        errors.push("Please enter the genuine UPI UTR / Transaction Reference Number (min 8 characters).");
+    } else if (!/^[A-Z0-9]+$/.test(utrVal)) {
+        errors.push("UTR reference number must contain only letters and numbers (no special characters).");
+    }
+
+    const dummyList = ["TEST", "DUMMY", "FAKE", "12345678", "00000000", "SAMPLE", "NULL", "NONE"];
+    if (dummyList.some(d => utrVal === d || utrVal.startsWith("TEST"))) {
+        errors.push("Please enter your actual UPI transaction reference number from Google Pay, PhonePe, or Paytm.");
+    }
+
+    if (errors.length > 0) {
+        event.preventDefault();
+        alertBox.innerHTML = '⚠️ ' + errors.join('<br>⚠️ ');
+        alertBox.style.display = 'block';
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+
+    alertBox.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Submitting Order for Approval...";
+    return true;
+}
+</script>
+
+</body>
+</html>

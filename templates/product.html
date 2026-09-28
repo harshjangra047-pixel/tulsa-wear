@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{{ product.name }} — Handcrafted with bespoke measurements at {{ brand_name }}. {{ product.description[:140] if product.description else '' }}">
+    <meta property="og:title" content="{{ product.name }} — {{ brand_name }}">
+    <meta property="og:description" content="{{ product.description[:160] if product.description else '' }}">
+    <meta property="og:type" content="product">
+
+    <title>{{ product.name }} — {{ brand_name }}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/atelier-3d.css') }}?v={{ cache_id }}">
+</head>
+
+<body>
+
+    <!-- =========================================
+         NAVBAR
+    ========================================== -->
+    <header class="navbar navbar-solid" id="top">
+        <a href="{{ url_for('home') }}" class="logo">
+            {{ brand_name|upper }}
+        </a>
+
+        <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('home') }}#new-arrivals">New</a>
+            <a href="{{ url_for('shop') }}">Shop</a>
+            <a href="{{ url_for('home') }}#collections">Collections</a>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('home') }}#ai-studio" class="ai-link">
+                ✦ AI Studio
+            </a>
+            <a href="{{ url_for('bag') }}" class="bag-link">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
+            <button
+                id="menuButton"
+                class="menu-button"
+                type="button"
+                aria-label="Toggle navigation"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+        </div>
+    </header>
+
+    <main class="inner-page-main">
+        <div class="pdp-page-container">
+            <!-- Breadcrumbs -->
+            <div class="breadcrumb-trail">
+                <a href="{{ url_for('home') }}">Atelier</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="{{ url_for('shop') }}">Collection</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="{{ url_for('shop', category=product.category) }}">{{ product.category }}</a>
+                <span class="breadcrumb-separator">/</span>
+                <span>{{ product.name }}</span>
+            </div>
+
+            <!-- Main PDP 2-Column Split -->
+            <div class="pdp-split-layout">
+                <!-- Left: 3D Pedestal Media Gallery -->
+                <div class="pdp-media-gallery">
+                    <div class="pdp-3d-stage" id="pdp3dStage">
+                        <div class="pdp-interactive-frame" id="pdpFrame">
+                            <div class="pdp-main-image-wrap">
+                                {% if product.image %}
+                                <img id="mainPdpImage" src="{{ url_for('static', filename='images/' + product.image) }}?v={{ cache_id }}" alt="{{ product.name }}">
+                                {% else %}
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #eee8df; color: var(--text-muted); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">
+                                    Atelier Archive Piece
+                                </div>
+                                {% endif %}
+
+                                {% if product.best_seller %}
+                                <span class="badge-best-seller">✦ Atelier Best Seller</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="pdp-pedestal"></div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #fff; border: 1px solid var(--border-light); padding: 14px; border-radius: 2px; text-align: center;">
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                            <span style="font-size: 16px;">🪡</span>
+                            <span style="font-family: 'Inter', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;">Hand-Tailored</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                            <span style="font-size: 16px;">✨</span>
+                            <span style="font-family: 'Inter', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;">Custom Sizing</span>
+                        </div>
+                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
+                            <span style="font-size: 16px;">📦</span>
+                            <span style="font-family: 'Inter', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;">Insured Shipping</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Product Narrative & Customization -->
+                <div class="pdp-content-column">
+                    <p class="pdp-eyebrow">✦ {{ product.category|upper }} ARCHIVE</p>
+                    <h1 class="pdp-title">{{ product.name }}</h1>
+
+                    <div class="pdp-price-row">
+                        <span class="pdp-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                        <span class="pdp-tax-badge">Inclusive of all artisanal taxes • Free shipping pan-India</span>
+                    </div>
+
+                    <div class="pdp-description-text">
+                        {{ product.description }}
+                    </div>
+
+                    <!-- Meta Specification Grid -->
+                    <div class="pdp-specs-grid">
+                        <div class="pdp-spec-unit">
+                            <span class="pdp-spec-label">Artisanal Textile</span>
+                            <span class="pdp-spec-val">{{ product.fabric if product.fabric else 'Pure Handloom Cotton / Chanderi' }}</span>
+                        </div>
+                        <div class="pdp-spec-unit">
+                            <span class="pdp-spec-label">Atelier Palette</span>
+                            <span class="pdp-spec-val">{{ product.color if product.color else 'Artisanal Natural Dye' }}</span>
+                        </div>
+                        <div class="pdp-spec-unit">
+                            <span class="pdp-spec-label">Silhouette & Cut</span>
+                            <span class="pdp-spec-val">{{ product.category }}</span>
+                        </div>
+                        <div class="pdp-spec-unit">
+                            <span class="pdp-spec-label">Availability</span>
+                            <span class="pdp-spec-val" style="color: {% if product.stock > 0 %}#2e7d32{% else %}#c0392b{% endif %};">
+                                {% if product.stock > 0 %}In Stock • Made-to-Measure{% else %}Atelier Sold Out{% endif %}
+                            </span>
+                        </div>
+                    </div>
+
+                    {% if product.stock > 0 %}
+                    <!-- BESPOKE SIZING & MEASUREMENTS FORM -->
+                    <form id="productPurchaseForm" action="{{ url_for('add_to_bag', product_id=product.id) }}" method="POST">
+                        <div class="bespoke-customizer-box">
+                            <div class="bespoke-box-header">
+                                <span class="bespoke-box-title">
+                                    <span>✂</span> Bespoke Tailoring & Fit
+                                </span>
+                                <button type="button" onclick="openSizeChartModal()" class="size-chart-trigger-btn">
+                                    📏 View Size Chart
+                                </button>
+                            </div>
+
+                            <!-- Standard Size Pill Selection -->
+                            <div class="size-selector-row">
+                                <label class="pdp-input-label">
+                                    Select Standard Size <span style="color: var(--accent-burgundy);">*</span>
+                                </label>
+                                <div class="size-pill-group">
+                                    {% for s in ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'] %}
+                                    <label class="pdp-size-radio">
+                                        <input type="radio" name="size" value="{{ s }}" {% if s == 'M' %}checked{% endif %}>
+                                        <span class="pdp-size-tag">{{ s }}</span>
+                                    </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <!-- Custom Lengths -->
+                            <div class="lengths-grid-inputs">
+                                <div>
+                                    <label class="pdp-input-label" for="prodTopLength">
+                                        Kurti / Top Length (in) <span style="color: var(--accent-burgundy);">*</span>
+                                    </label>
+                                    <input type="number" id="prodTopLength" name="top_length" value="30" min="15" max="60" required class="luxury-number-input">
+                                </div>
+                                <div>
+                                    <label class="pdp-input-label" for="prodSleevesLength">
+                                        Sleeves Length (in) <span style="color: var(--accent-burgundy);">*</span>
+                                    </label>
+                                    <input type="number" id="prodSleevesLength" name="sleeves_length" value="18" min="5" max="40" required class="luxury-number-input">
+                                </div>
+                            </div>
+
+                            <!-- Optional Custom Body Measurements -->
+                            <details class="custom-measurements-drawer">
+                                <summary>
+                                    + Add Custom Body Measurements (Optional)
+                                </summary>
+                                <div class="measurements-subgrid">
+                                    <div>
+                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodBust">Bust (in)</label>
+                                        <input type="number" id="prodBust" name="bust" placeholder="e.g. 36" class="luxury-number-input" style="padding: 8px;">
+                                    </div>
+                                    <div>
+                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodWaist">Waist (in)</label>
+                                        <input type="number" id="prodWaist" name="waist" placeholder="e.g. 32" class="luxury-number-input" style="padding: 8px;">
+                                    </div>
+                                    <div>
+                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodHip">Hip (in)</label>
+                                        <input type="number" id="prodHip" name="hip" placeholder="e.g. 40" class="luxury-number-input" style="padding: 8px;">
+                                    </div>
+                                    <div>
+                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodShoulder">Shoulder (in)</label>
+                                        <input type="number" id="prodShoulder" name="shoulder" placeholder="e.g. 14.5" class="luxury-number-input" style="padding: 8px;">
+                                    </div>
+                                </div>
+                            </details>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="pdp-action-buttons">
+                            <button type="submit" class="btn-luxury-bag">
+                                Add to Bag
+                            </button>
+                            <button type="button" onclick="proceedToBuyNow()" class="btn-luxury-buynow">
+                                Buy Now — Direct Checkout
+                            </button>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div style="background: #faf7f2; border: 1px solid var(--border-light); padding: 24px; text-align: center; border-radius: 4px; margin-top: 24px;">
+                        <h3 style="font-size: 20px; font-weight: 500; margin-bottom: 8px;">This Silhouette is Currently Archived</h3>
+                        <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 16px;">Each piece is produced in small artisanal batches. Contact our studio to pre-order or request a custom recreation.</p>
+                        <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa%20Wears!%20I%20would%20like%20to%20inquire%20about%20ordering%20{{ product.name }}." target="_blank" class="category-pill active">
+                            Inquire on WhatsApp
+                        </a>
+                    </div>
+                    {% endif %}
+
+                    <!-- AI ATELIER ASSISTANT -->
+                    <div class="pdp-ai-section">
+                        <div class="pdp-ai-header">
+                            <span class="ai-sparkle-pill">✦ AI Stylist</span>
+                            <span style="font-family: 'Inter', sans-serif; font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 600;">Instant Guidance</span>
+                        </div>
+                        <h3>Ask About This Handcrafted Piece</h3>
+                        <p>Receive tailored guidance on fabric breathability, occasion pairings, bespoke sizing options, and artisanal care.</p>
+
+                        <div class="ai-qa-chip-cloud">
+                            <button type="button" class="luxury-ai-chip ai-qa-chip" data-q="What fabric is this and how does it feel?">
+                                Fabric & drape details
+                            </button>
+                            <button type="button" class="luxury-ai-chip ai-qa-chip" data-q="What occasions is this garment suited for?">
+                                Occasion styling
+                            </button>
+                            <button type="button" class="luxury-ai-chip ai-qa-chip" data-q="Can this piece be tailored to my unique measurements?">
+                                Custom tailoring guide
+                            </button>
+                            <button type="button" class="luxury-ai-chip ai-qa-chip" data-q="What are the delicate washing and care instructions?">
+                                Wash & preservation care
+                            </button>
+                        </div>
+
+                        <div id="aiQaBox" class="ai-qa-response-box">
+                            <p id="aiQaQuestion" class="ai-response-title"></p>
+                            <p id="aiQaAnswer" class="ai-response-text"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SIZE CHART MODAL (Properly structured outside scripts) -->
+    <div id="sizeChartModal" class="size-chart-modal" role="dialog" aria-modal="true" aria-labelledby="sizeChartTitle">
+        <div class="size-chart-content-box">
+            <div style="padding: 18px 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: #faf7f2;">
+                <h3 id="sizeChartTitle" style="font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 500; margin: 0;">{{ brand_name }} — Standard Size & Fit Guide</h3>
+                <button type="button" onclick="closeSizeChartModal()" style="background: none; border: none; font-size: 26px; cursor: pointer; line-height: 1; color: var(--text-primary);" aria-label="Close Modal">&times;</button>
+            </div>
+            <div style="padding: 24px; overflow-y: auto; text-align: center;">
+                <img src="{{ url_for('static', filename='images/size-chart.jpg') }}" alt="{{ brand_name }} Standard Measurement Chart" style="max-width: 100%; height: auto; border: 1px solid var(--border-light); border-radius: 2px;">
+                <div style="background: #faf7f2; border: 1px solid #ebd9c4; padding: 14px 18px; margin-top: 18px; text-align: left; font-size: 12px; color: var(--text-secondary); line-height: 1.6; border-radius: 2px;">
+                    <strong style="color: var(--accent-burgundy);">Bespoke Guarantee:</strong> Standard Kurti Length defaults to 30" and Sleeves to 18". If your preferred silhouette requires specific adjustments, tailor your dimensions in the bespoke box above and our master craftspeople will custom-tailor your piece!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+    <footer class="footer">
+        <div class="footer-column">
+            <h4>Shop</h4>
+            <a href="{{ url_for('home') }}#new-arrivals">New Arrivals</a>
+            <a href="{{ url_for('shop') }}">All Pieces</a>
+            <a href="{{ url_for('shop', sort='best_seller') }}">Best Sellers</a>
+            <a href="{{ url_for('home') }}#categories">Categories</a>
+            <a href="{{ url_for('track_order') }}">Track Order</a>
+            <a href="{{ url_for('return_policy') }}">Returns & Refunds</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Studio</h4>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+            <a href="{{ url_for('home') }}#contact">Custom Order</a>
+            <a href="{{ url_for('contact') }}">Contact Us</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Connect</h4>
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20have%20an%20inquiry." target="_blank">
+                💬 WhatsApp: {{ studio_phone }}
+            </a>
+            <a href="tel:{{ studio_phone }}">
+                📞 Call: {{ studio_phone }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_1 }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_2 }}
+            </a>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2025 {{ brand_name|upper }}</span>
+            <span>Handmade / India</span>
+        </div>
+    </footer>
+
+    <!-- Floating WhatsApp Concierge -->
+    <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20would%20like%20to%20inquire%20about%20{{ product.name }}." 
+       target="_blank" 
+       rel="noopener noreferrer" 
+       id="floatingWhatsAppBtn"
+       style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #25d366; color: #fff; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 18px rgba(37,211,102,0.45); text-decoration: none; transition: transform 0.2s;"
+       onmouseover="this.style.transform='scale(1.1)'" 
+       onmouseout="this.style.transform='scale(1)'"
+       title="Chat with Tulsa Wears on WhatsApp">
+        💬
+    </a>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
+    <script>
+        // AI Product Q&A Interaction
+        document.querySelectorAll(".ai-qa-chip").forEach(function(chip) {
+            chip.addEventListener("click", function() {
+                const question = this.dataset.q;
+                const box = document.getElementById("aiQaBox");
+                const qElem = document.getElementById("aiQaQuestion");
+                const aElem = document.getElementById("aiQaAnswer");
+
+                box.style.display = "block";
+                qElem.textContent = question;
+                aElem.textContent = "Consulting atelier knowledge...";
+
+                fetch("{{ url_for('api_ai_product_qa', product_id=product.id) }}", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ question: question })
+                })
+                .then(function(res) { return res.json(); })
+                .then(function(data) {
+                    aElem.textContent = data.answer || "Information currently unavailable from the atelier.";
+                })
+                .catch(function() {
+                    aElem.textContent = "Unable to consult the assistant. Please refer to product details above.";
+                });
+            });
+        });
+
+        // Size Chart Modal Handlers
+        function openSizeChartModal() {
+            const modal = document.getElementById("sizeChartModal");
+            if (modal) modal.classList.add("open");
+        }
+
+        function closeSizeChartModal() {
+            const modal = document.getElementById("sizeChartModal");
+            if (modal) modal.classList.remove("open");
+        }
+
+        window.addEventListener("click", function(e) {
+            const modal = document.getElementById("sizeChartModal");
+            if (e.target === modal) closeSizeChartModal();
+        });
+
+        // Buy Now handler
+        function proceedToBuyNow() {
+            const form = document.getElementById("productPurchaseForm");
+            if (!form) return;
+            const size = form.querySelector('input[name="size"]:checked')?.value || 'M';
+            const topLength = form.querySelector('#prodTopLength')?.value || '30';
+            const sleevesLength = form.querySelector('#prodSleevesLength')?.value || '18';
+            const bust = form.querySelector('#prodBust')?.value || '';
+            const waist = form.querySelector('#prodWaist')?.value || '';
+            const hip = form.querySelector('#prodHip')?.value || '';
+            const shoulder = form.querySelector('#prodShoulder')?.value || '';
+
+            const params = new URLSearchParams({
+                size: size,
+                top_length: topLength,
+                sleeves_length: sleevesLength,
+                bust: bust,
+                waist: waist,
+                hip: hip,
+                shoulder: shoulder
+            });
+
+            window.location.href = "{{ url_for('buy_now', product_id=product.id) }}?" + params.toString();
+        }
+
+        // Subtle 3D Frame Tilt on Mousemove
+        const pdpStage = document.getElementById('pdp3dStage');
+        const pdpFrame = document.getElementById('pdpFrame');
+        if (pdpStage && pdpFrame && window.innerWidth > 768) {
+            pdpStage.addEventListener('mousemove', (e) => {
+                const rect = pdpStage.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                const rotX = (y / (rect.height / 2)) * -6;
+                const rotY = (x / (rect.width / 2)) * 6;
+                pdpFrame.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg) translateZ(12px)`;
+            });
+
+            pdpStage.addEventListener('mouseleave', () => {
+                pdpFrame.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px)';
+            });
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Explore our handcrafted collection of luxury garments created slowly and thoughtfully by hand at {{ brand_name }}.">
+    <meta property="og:title" content="The Collection — {{ brand_name }}">
+    <meta property="og:description" content="Slow-crafted garments cut, tailored, and hand-finished with timeless artisanal precision.">
+    <meta property="og:type" content="website">
+
+    <title>The Collection — {{ brand_name }}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+</head>
+
+<body>
+
+    <!-- =========================================
+         NAVBAR
+    ========================================== -->
+    <header class="navbar navbar-solid" id="top">
+        <a href="{{ url_for('home') }}" class="logo">
+            {{ brand_name|upper }}
+        </a>
+
+        <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('home') }}#new-arrivals">New</a>
+            <a href="{{ url_for('shop') }}" style="border-bottom: 1px solid var(--text-primary); padding-bottom: 2px;">Shop</a>
+            <a href="{{ url_for('home') }}#collections">Collections</a>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('home') }}#ai-studio" class="ai-link">
+                ✦ AI Studio
+            </a>
+            <a href="{{ url_for('bag') }}" class="bag-link">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
+            <button
+                id="menuButton"
+                class="menu-button"
+                type="button"
+                aria-label="Toggle navigation"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+        </div>
+    </header>
+
+    <main class="inner-page-main">
+        <!-- =========================================
+             SHOP HERO BANNER
+        ========================================== -->
+        <section class="shop-hero-banner">
+            <div class="breadcrumb-trail">
+                <a href="{{ url_for('home') }}">Atelier</a>
+                <span class="breadcrumb-separator">/</span>
+                <span>The Collection</span>
+                {% if selected_category %}
+                <span class="breadcrumb-separator">/</span>
+                <span>{{ selected_category }}</span>
+                {% endif %}
+            </div>
+
+            <div class="shop-header-flex">
+                <div>
+                    <p class="eyebrow">{{ brand_name|upper }} ARCHIVE</p>
+                    <h1>Handcrafted Garments</h1>
+                    <p style="color: var(--text-muted); font-size: 14px; margin-top: 8px; max-width: 540px; line-height: 1.6;">
+                        Created slowly and thoughtfully by hand. Every silhouette cut from artisanal textiles with bespoke measurements made to your exact frame.
+                    </p>
+                </div>
+                <div class="shop-counter-tag">
+                    Showing {{ product_count }} {% if product_count == 1 %}piece{% else %}curated pieces{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <!-- =========================================
+             FILTER BAR (Categories & Sort)
+        ========================================== -->
+        <section class="shop-filter-bar">
+            <div class="filter-categories-pills">
+                <a href="{{ url_for('shop', sort=selected_sort) }}" class="category-pill {% if not selected_category %}active{% endif %}">
+                    All Pieces
+                </a>
+                {% for cat in categories %}
+                <a href="{{ url_for('shop', category=cat, sort=selected_sort, min_price=min_price, max_price=max_price) }}" class="category-pill {% if selected_category == cat %}active{% endif %}">
+                    {{ cat }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <div class="shop-sort-box">
+                <form method="GET" action="{{ url_for('shop') }}" id="sortForm">
+                    {% if selected_category %}
+                    <input type="hidden" name="category" value="{{ selected_category }}">
+                    {% endif %}
+                    {% if min_price %}
+                    <input type="hidden" name="min_price" value="{{ min_price }}">
+                    {% endif %}
+                    {% if max_price %}
+                    <input type="hidden" name="max_price" value="{{ max_price }}">
+                    {% endif %}
+
+                    <select name="sort" class="luxury-select" onchange="document.getElementById('sortForm').submit();" aria-label="Sort Collection">
+                        <option value="newest" {% if selected_sort == 'newest' %}selected{% endif %}>Sort: Newest First</option>
+                        <option value="price_asc" {% if selected_sort == 'price_asc' %}selected{% endif %}>Price: Low to High</option>
+                        <option value="price_desc" {% if selected_sort == 'price_desc' %}selected{% endif %}>Price: High to Low</option>
+                        <option value="best_seller" {% if selected_sort == 'best_seller' %}selected{% endif %}>Most Revered (Best Sellers)</option>
+                    </select>
+                </form>
+            </div>
+        </section>
+
+        <!-- =========================================
+             PRICE FILTER STRIP
+        ========================================== -->
+        <section class="shop-price-strip">
+            <span class="price-strip-label">Price Filter:</span>
+            <a href="{{ url_for('shop', category=selected_category, sort=selected_sort, max_price=1000) }}" class="price-filter-pill {% if max_price == 1000 and not min_price %}active{% endif %}">
+                Under ₹1,000
+            </a>
+            <a href="{{ url_for('shop', category=selected_category, sort=selected_sort, min_price=1000, max_price=2000) }}" class="price-filter-pill {% if min_price == 1000 and max_price == 2000 %}active{% endif %}">
+                ₹1,000 — ₹2,000
+            </a>
+            <a href="{{ url_for('shop', category=selected_category, sort=selected_sort, min_price=2000, max_price=3000) }}" class="price-filter-pill {% if min_price == 2000 and max_price == 3000 %}active{% endif %}">
+                ₹2,000 — ₹3,000
+            </a>
+            <a href="{{ url_for('shop', category=selected_category, sort=selected_sort, min_price=3000, max_price=4000) }}" class="price-filter-pill {% if min_price == 3000 and max_price == 4000 %}active{% endif %}">
+                ₹3,000 — ₹4,000
+            </a>
+            <a href="{{ url_for('shop', category=selected_category, sort=selected_sort, min_price=4000) }}" class="price-filter-pill {% if min_price == 4000 and not max_price %}active{% endif %}">
+                Above ₹4,000
+            </a>
+
+            {% if selected_category or min_price or max_price or (selected_sort and selected_sort != 'newest') %}
+            <a href="{{ url_for('shop') }}" class="clear-filters-btn">
+                ✕ Reset Filters
+            </a>
+            {% endif %}
+        </section>
+
+        <!-- =========================================
+             PRODUCT CATALOG GRID
+        ========================================== -->
+        <section class="shop-catalog-area">
+            {% if products and products|length > 0 %}
+            <div class="catalog-layout-grid">
+                {% for product in products %}
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="editorial-card reveal">
+                    <div class="editorial-card-media">
+                        {% if product.image %}
+                        <img src="{{ url_for('static', filename='images/' + product.image) }}?v={{ cache_id }}" alt="{{ product.name }}" loading="lazy">
+                        {% else %}
+                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #eee8df; color: var(--text-muted); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">
+                            Atelier Archive
+                        </div>
+                        {% endif %}
+
+                        {% if product.best_seller %}
+                        <span class="badge-best-seller">✦ Atelier Best Seller</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="editorial-card-content">
+                        <p class="editorial-card-cat">{{ product.category }}</p>
+                        <h2 class="editorial-card-title">{{ product.name }}</h2>
+                        <div class="editorial-card-bottom">
+                            <span class="editorial-card-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                            {% if product.fabric %}
+                            <span class="editorial-card-fabric">{{ product.fabric }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="catalog-empty-state">
+                <p class="eyebrow" style="color: var(--accent-burgundy);">✦ NO MATCHING PIECES</p>
+                <h3>No Garments Found</h3>
+                <p>We could not find any handmade pieces currently matching your selected filter criteria. Explore our full archive or contact our bespoke atelier for custom orders.</p>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <a href="{{ url_for('shop') }}" class="category-pill active">
+                        View Complete Collection
+                    </a>
+                    <a href="{{ url_for('home') }}#contact" class="category-pill">
+                        Request Bespoke Commission
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+    <footer class="footer">
+        <div class="footer-column">
+            <h4>Shop</h4>
+            <a href="{{ url_for('home') }}#new-arrivals">New Arrivals</a>
+            <a href="{{ url_for('shop') }}">All Pieces</a>
+            <a href="{{ url_for('shop', sort='best_seller') }}">Best Sellers</a>
+            <a href="{{ url_for('home') }}#categories">Categories</a>
+            <a href="{{ url_for('track_order') }}">Track Order</a>
+            <a href="{{ url_for('return_policy') }}">Returns & Refunds</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Studio</h4>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+            <a href="{{ url_for('home') }}#contact">Custom Order</a>
+            <a href="{{ url_for('contact') }}">Contact Us</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Connect</h4>
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20have%20an%20inquiry." target="_blank">
+                💬 WhatsApp: {{ studio_phone }}
+            </a>
+            <a href="tel:{{ studio_phone }}">
+                📞 Call: {{ studio_phone }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_1 }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_2 }}
+            </a>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2025 {{ brand_name|upper }}</span>
+            <span>Handmade / India</span>
+        </div>
+    </footer>
+
+    <!-- Floating WhatsApp Concierge -->
+    <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20would%20like%20to%20inquire%20about%20your%20collection." 
+       target="_blank" 
+       rel="noopener noreferrer" 
+       id="floatingWhatsAppBtn"
+       style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #25d366; color: #fff; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 18px rgba(37,211,102,0.45); text-decoration: none; transition: transform 0.2s;"
+       onmouseover="this.style.transform='scale(1.1)'" 
+       onmouseout="this.style.transform='scale(1)'"
+       title="Chat with Tulsa Wears on WhatsApp">
+        💬
+    </a>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
+</body>
+
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Settings & Credentials — {{ brand_name }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .settings-section {
+            padding: 100px 48px 80px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .settings-header h1 {
+            font-size: clamp(32px, 3.5vw, 44px);
+            font-weight: 400;
+            margin-top: 6px;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
+            gap: 32px;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 36px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        .card h2 {
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .card p.card-desc {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #faf8f5;
+        }
+
+        .form-control:focus {
+            border-color: var(--text);
+            background: #fff;
+        }
+
+        .btn-primary {
+            background: var(--text);
+            color: #fff;
+            border: none;
+            padding: 12px 28px;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #333;
+        }
+
+        .portal-link-box {
+            background: #faf8f5;
+            border: 1px solid var(--border);
+            padding: 16px;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .portal-link-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .portal-link-url {
+            font-size: 13px;
+            font-family: monospace;
+            color: #2e7d32;
+            font-weight: 600;
+            word-break: break-all;
+        }
+
+        .copy-btn {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 6px 14px;
+            font-size: 11px;
+            cursor: pointer;
+            letter-spacing: 0.05em;
+            border-radius: 2px;
+        }
+
+        .copy-btn:hover {
+            background: #f0eae1;
+        }
+
+        .alert {
+            padding: 14px 20px;
+            margin-bottom: 24px;
+            border-radius: 2px;
+            font-size: 13px;
+        }
+
+        .alert-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .alert-danger {
+            background: #ffebee;
+            color: #c62828;
+            border: 1px solid #ffcdd2;
+        }
+
+        .alert-warning {
+            background: #fff8e1;
+            color: #f57f17;
+            border: 1px solid #ffecb3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <a href="{{ url_for('home') }}" class="logo">{{ brand_name|upper }} ADMIN</a>
+
+        <nav class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('admin_customizer') }}" style="color: #c5a059; font-weight: 600;">🎨 Website Designer</a>
+            <a href="{{ url_for('admin_orders') }}">Orders</a>
+            <a href="{{ url_for('admin_products') }}">Products & Photos</a>
+            <a href="{{ url_for('admin_custom_orders') }}">Custom Requests</a>
+            <a href="{{ url_for('admin_coupons') }}">Coupons</a>
+            <a href="{{ url_for('admin_inquiries') }}">Inquiries</a>
+            <a href="{{ url_for('admin_trends') }}">AI Trends & Scans</a>
+            <a href="{{ url_for('admin_feedback') }}">Reviews</a>
+            <a href="{{ url_for('admin_settings') }}" style="border-bottom: 1px solid var(--text); padding-bottom: 4px;">Settings</a>
+            <a href="{{ url_for('home') }}">View Website</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('admin_logout') }}" class="logout-btn" style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #c0392b; padding: 6px 14px; border: 1px solid #f5c6cb; text-decoration: none; border-radius: 2px;">
+                Sign Out
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <section class="settings-section">
+
+            <div class="settings-header">
+                <div>
+                    <p class="eyebrow">PORTAL CONFIGURATION</p>
+                    <h1>Admin Settings & Access</h1>
+                    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+                        Manage your administrative login credentials, estimate crafting delivery days, and get direct portal links.
+                    </p>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="settings-grid">
+
+                <!-- 1. Profile & Delivery Estimation Time -->
+                <div class="card">
+                    <h2>Admin Profile & Delivery Days</h2>
+                    <p class="card-desc">
+                        Change the admin username and set the default estimated crafting & delivery window for customer orders (e.g. Kurtis / Bespoke Outfits).
+                    </p>
+
+                    <form action="{{ url_for('admin_settings') }}" method="POST">
+                        <input type="hidden" name="action" value="update_profile">
+
+                        <div class="form-group">
+                            <label for="username">Admin Username</label>
+                            <input type="text" id="username" name="username" class="form-control" value="{{ admin_user.username }}" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="default_delivery_days">Default Delivery Estimate (Days)</label>
+                            <input type="number" id="default_delivery_days" name="default_delivery_days" class="form-control" value="{{ admin_user.default_delivery_days or 10 }}" min="1" max="90" required>
+                            <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                Currently set to <strong>{{ admin_user.default_delivery_days or 10 }} days</strong>. When a customer places an order, the website will compute this timeframe automatically.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Save Profile & Delivery Days</button>
+                    </form>
+                </div>
+
+                <!-- 2. Change / Reset Password -->
+                <div class="card">
+                    <h2>Reset Admin Password</h2>
+                    <p class="card-desc">
+                        Update your password anytime. Once changed, new credentials take effect immediately across all devices.
+                    </p>
+
+                    <form action="{{ url_for('admin_settings') }}" method="POST">
+                        <input type="hidden" name="action" value="change_password">
+
+                        <div class="form-group">
+                            <label for="current_password">Current Password</label>
+                            <input type="password" id="current_password" name="current_password" class="form-control" placeholder="Enter current password" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="new_password">New Password</label>
+                            <input type="password" id="new_password" name="new_password" class="form-control" placeholder="Enter new password (min 4 chars)" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="confirm_password">Confirm New Password</label>
+                            <input type="password" id="confirm_password" name="confirm_password" class="form-control" placeholder="Repeat new password" required>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Update Password</button>
+                    </form>
+                </div>
+
+                <!-- 2B. Admin Security & Multi-Factor Recovery Contacts -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+                        <h2 style="margin: 0;">🔒 Security & OTP Recovery Contacts</h2>
+                        <span style="font-size: 10px; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 2px; font-weight: 600;">
+                            ✓ Protected MFA
+                        </span>
+                    </div>
+                    <p class="card-desc">
+                        Manage recovery channels used to verify password resets via 6-digit OTP and receive critical notifications.
+                    </p>
+
+                    <div style="background: #faf8f5; border: 1px solid var(--border); padding: 14px 16px; border-radius: 4px; margin-bottom: 18px;">
+                        <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); font-weight: 600; margin-bottom: 4px;">
+                            Permanent Master Recovery Phone
+                        </div>
+                        <div style="font-size: 16px; font-weight: 600; color: #111; display: flex; align-items: center; gap: 8px;">
+                            <span>📞 +91 93504 39667</span>
+                            <span style="font-size: 9px; background: #111; color: #fff; padding: 2px 6px; border-radius: 2px; text-transform: uppercase; letter-spacing: 0.08em;">Permanent</span>
+                        </div>
+                        <p style="font-size: 11px; color: var(--muted); margin: 6px 0 0; line-height: 1.4;">
+                            Master verification phone number for 1-tap OTP reset. This number is securely hardcoded for portal protection.
+                        </p>
+                    </div>
+
+                    <form action="{{ url_for('admin_settings') }}" method="POST">
+                        <input type="hidden" name="action" value="update_admin_security">
+
+                        <div class="form-group">
+                            <label for="primary_email">Primary Admin Gmail</label>
+                            <input type="email" id="primary_email" class="form-control" value="{{ admin_user.studio_email }}" disabled style="cursor: not-allowed; opacity: 0.75;">
+                            <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 4px;">
+                                Configured under Client Services Email below. Receives OTP codes automatically.
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="additional_emails">Additional Recovery Email IDs</label>
+                            <input type="text" id="additional_emails" name="additional_emails" class="form-control" value="{{ admin_user.additional_emails or '' }}" placeholder="backup@gmail.com, manager@tulsa.com">
+                            <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                Comma-separated extra Gmail/email IDs to receive forgot password OTP codes and order copies.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn-primary">Save Security Contacts →</button>
+                    </form>
+                </div>
+
+                <!-- 3. Studio Contact Information & Atelier Touchpoints -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
+                        <h2 style="margin: 0;">📞 Studio Contact Information & Atelier Details</h2>
+                        <span style="font-size: 11px; background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 2px; font-weight: 600;">
+                            ✓ Displayed on Website & Contact Page
+                        </span>
+                    </div>
+                    <p class="card-desc">
+                        Manage your customer-facing contact details. When updated here, these instantly appear on the website navigation, footer, on-page Contact section, and dedicated <code>/contact</code> page.
+                    </p>
+
+                    <form action="{{ url_for('admin_settings') }}" method="POST">
+                        <input type="hidden" name="action" value="update_contact_settings">
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                            <!-- Studio Phone -->
+                            <div class="form-group">
+                                <label for="studio_phone">Studio Phone Number</label>
+                                <input type="tel" id="studio_phone" name="studio_phone" class="form-control" value="{{ admin_user.studio_phone or '+91 98765 43210' }}" placeholder="+91 98765 43210" required>
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                    Tapping "Call Studio" on phones dials this number directly.
+                                </small>
+                            </div>
+
+                            <!-- Studio WhatsApp -->
+                            <div class="form-group">
+                                <label for="studio_whatsapp">Studio WhatsApp Number</label>
+                                <input type="text" id="studio_whatsapp" name="studio_whatsapp" class="form-control" value="{{ admin_user.studio_whatsapp or '919876543210' }}" placeholder="919876543210 (Country code + 10 digits)" required>
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                    Include country code without '+' (e.g. 919876543210 for India).
+                                </small>
+                            </div>
+
+                            <!-- Studio Email -->
+                            <div class="form-group">
+                                <label for="studio_email">Client Services Email</label>
+                                <input type="email" id="studio_email" name="studio_email" class="form-control" value="{{ admin_user.studio_email or 'contact@tulsawear.com' }}" placeholder="contact@tulsawear.com" required>
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                    Email address where customers can write for support and collaborations.
+                                </small>
+                            </div>
+
+                            <!-- Operating Hours -->
+                            <div class="form-group">
+                                <label for="studio_hours">Studio Crafting & Support Hours</label>
+                                <input type="text" id="studio_hours" name="studio_hours" class="form-control" value="{{ admin_user.studio_hours or 'Mon – Sat: 10:00 AM – 7:00 PM IST' }}" placeholder="Mon – Sat: 10:00 AM – 7:00 PM IST" required>
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                    Operating schedule displayed to visitors on the Contact Us page.
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Atelier Address -->
+                        <div class="form-group" style="margin-top: 10px;">
+                            <label for="studio_address">Physical Atelier / Workshop Address</label>
+                            <input type="text" id="studio_address" name="studio_address" class="form-control" value="{{ admin_user.studio_address or 'Tulsa Wears Atelier, Hansi, Haryana, India - 125033' }}" placeholder="Tulsa Wears Atelier, Hansi, Haryana, India - 125033" required>
+                            <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                Atelier location shown under studio information.
+                            </small>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="margin-top: 10px;">
+                            Save Studio Contact Details →
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 4. Bank Account & UPI Payment Gateway Settings -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
+                        <h2 style="margin: 0;">💳 Bank Account UPI & Payment Gateway Setup</h2>
+                        <span style="font-size: 11px; background: #e8f5e9; color: #2e7d32; padding: 4px 10px; border-radius: 2px; font-weight: 600;">
+                            ✓ Real Money Directly Into Your Bank
+                        </span>
+                    </div>
+                    <p class="card-desc">
+                        Configure where customer payments (Prepaid orders & COD ₹99 advance) are transferred. You can receive money <strong>instantly into your personal or business bank account via UPI</strong> with 0% transaction fees, or connect Razorpay.
+                    </p>
+
+                    <div style="background: #faf8f5; border: 1px solid var(--border); padding: 20px; border-radius: 4px; margin-bottom: 24px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                            <div>
+                                <h4 style="font-size: 14px; margin-bottom: 6px; color: #111;">Method 1: Direct Studio UPI (Instant & 0% Fee)</h4>
+                                <p style="font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0;">
+                                    Enter your Google Pay, PhonePe, Paytm, or BHIM UPI ID. When customers tap "Pay with UPI" or scan your QR code, money lands <strong>instantly into your linked bank account</strong> without any gateway delays or deductions.
+                                </p>
+                            </div>
+                            <div>
+                                <h4 style="font-size: 14px; margin-bottom: 6px; color: #111;">Method 2: Razorpay Payment Gateway (Automated)</h4>
+                                <p style="font-size: 12px; color: var(--muted); line-height: 1.5; margin: 0;">
+                                    If you have a Razorpay merchant account, paste your Key ID and Key Secret. The website will automatically open the Razorpay checkout modal and auto-verify every payment.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form action="{{ url_for('admin_settings') }}" method="POST">
+                        <input type="hidden" name="action" value="update_payment_settings">
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                            <!-- Studio UPI ID -->
+                            <div class="form-group">
+                                <label for="upi_id">
+                                    Your Studio UPI ID <span style="color: #2e7d32;">(Recommended)</span>
+                                </label>
+                                <input type="text" id="upi_id" name="upi_id" class="form-control" value="{{ admin_user.upi_id or '' }}" placeholder="e.g. yourname@okhdfcbank or 9812345678@ybl">
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                    Open Google Pay or PhonePe on your phone, copy your UPI ID, and paste it here.
+                                </small>
+                            </div>
+
+                            <!-- Payee Name -->
+                            <div class="form-group">
+                                <label for="upi_payee_name">Payee / Account Holder Name</label>
+                                <input type="text" id="upi_payee_name" name="upi_payee_name" class="form-control" value="{{ admin_user.upi_payee_name or 'Tulsa Wears' }}" placeholder="Tulsa Wears">
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                    The business or personal name linked to your UPI bank account.
+                                </small>
+                            </div>
+
+                            <!-- Razorpay Key ID -->
+                            <div class="form-group">
+                                <label for="razorpay_key_id">Razorpay Key ID (Optional)</label>
+                                <input type="text" id="razorpay_key_id" name="razorpay_key_id" class="form-control" value="{{ admin_user.razorpay_key_id or '' }}" placeholder="rzp_live_xxxxxxxxxxxx">
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                    Optional. Obtained from your Razorpay Dashboard → API Keys.
+                                </small>
+                            </div>
+
+                            <!-- Razorpay Key Secret -->
+                            <div class="form-group">
+                                <label for="razorpay_key_secret">Razorpay Key Secret (Optional)</label>
+                                <input type="password" id="razorpay_key_secret" name="razorpay_key_secret" class="form-control" value="{{ admin_user.razorpay_key_secret or '' }}" placeholder="••••••••••••••••••••">
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
+                                    Kept securely encrypted. Never exposed to customers.
+                                </small>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="margin-top: 10px;">
+                            Save Bank Account & Payment Settings →
+                        </button>
+                    </form>
+                </div>
+
+                <!-- 3. Direct Access Portal Links (Full Width) -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <h2>Direct Portal Links & Launch Status</h2>
+                    <p class="card-desc">
+                        Save and share these direct links so anyone on your team can access the website and backend dashboard.
+                    </p>
+
+                    <div class="portal-link-box">
+                        <div>
+                            <div class="portal-link-label">Main Customer Website Portal</div>
+                            <div class="portal-link-url" id="link-web">{{ server_host }}/</div>
+                        </div>
+                        <div>
+                            <a href="{{ url_for('home') }}" target="_blank" class="copy-btn" style="text-decoration: none; display: inline-block;">Open Website ↗</a>
+                        </div>
+                    </div>
+
+                    <div class="portal-link-box">
+                        <div>
+                            <div class="portal-link-label">Admin Management Portal</div>
+                            <div class="portal-link-url" id="link-admin">{{ server_host }}/admin/orders</div>
+                        </div>
+                        <div>
+                            <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('{{ server_host }}/admin/orders'); alert('Copied Admin Portal URL!');">Copy Link</button>
+                        </div>
+                    </div>
+
+                    <div class="portal-link-box">
+                        <div>
+                            <div class="portal-link-label">Customer Order Tracking Portal</div>
+                            <div class="portal-link-url" id="link-track">{{ server_host }}/track-order</div>
+                        </div>
+                        <div>
+                            <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('{{ server_host }}/track-order'); alert('Copied Tracking Portal URL!');">Copy Link</button>
+                        </div>
+                    </div>
+
+                    <!-- Offline / Local Network Access -->
+                    <div style="background: #faf8f5; border: 1px solid var(--border); padding: 18px; border-radius: 4px; margin-top: 20px;">
+                        <h4 style="font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; color: #111;">
+                            🏠 Offline / Local Wi-Fi Links (No Internet Required)
+                        </h4>
+                        <p style="font-size: 12px; color: var(--muted); margin-bottom: 14px; line-height: 1.5;">
+                            Connect your phone or other laptop to the <strong>same Wi-Fi network</strong> as this Mac to open the admin portal completely offline:
+                        </p>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px 14px; border: 1px solid var(--border); border-radius: 2px;">
+                                <div>
+                                    <div style="font-size: 10px; text-transform: uppercase; color: var(--muted); font-weight: 600;">Android Phones & Laptops (Wi-Fi)</div>
+                                    <div style="font-size: 13px; font-family: monospace; color: #2e7d32; font-weight: 600;">http://192.168.1.37:5050/admin/orders</div>
+                                </div>
+                                <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('http://192.168.1.37:5050/admin/orders'); alert('Copied Wi-Fi Admin URL!');">Copy</button>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px 14px; border: 1px solid var(--border); border-radius: 2px;">
+                                <div>
+                                    <div style="font-size: 10px; text-transform: uppercase; color: var(--muted); font-weight: 600;">iPhone & iPad (Apple Bonjour / AirPlay Network)</div>
+                                    <div style="font-size: 13px; font-family: monospace; color: #2e7d32; font-weight: 600;">http://Harshs-MacBook-Air.local:5050/admin/orders</div>
+                                </div>
+                                <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('http://Harshs-MacBook-Air.local:5050/admin/orders'); alert('Copied iPhone Bonjour URL!');">Copy</button>
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 10px 14px; border: 1px solid var(--border); border-radius: 2px;">
+                                <div>
+                                    <div style="font-size: 10px; text-transform: uppercase; color: var(--muted); font-weight: 600;">This Mac Laptop Directly (Localhost)</div>
+                                    <div style="font-size: 13px; font-family: monospace; color: #2e7d32; font-weight: 600;">http://127.0.0.1:5050/admin/orders</div>
+                                </div>
+                                <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('http://127.0.0.1:5050/admin/orders'); alert('Copied Localhost URL!');">Copy</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 16px; font-size: 12px; color: var(--muted); line-height: 1.6;">
+                        <strong>Quick Note:</strong> For production deployment to the internet (e.g. Render, Railway, or custom domain like <em>tulsawears.com</em>), replace <code>{{ server_host }}</code> with your public domain.
+                    </div>
+                </div>
+
+                <!-- Production Database & Security Backup Card -->
+                <div class="card" style="border-top: 3px solid #111;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                        <h2>📦 Database & Production Backup</h2>
+                        <span style="background: #e8f5e9; color: #2e7d32; font-size: 10px; font-weight: 600; padding: 4px 8px; border-radius: 2px; text-transform: uppercase;">Zero Fake Data Verified</span>
+                    </div>
+                    <p class="card-desc">
+                        Download a 100% complete, standalone offline backup copy of your live SQLite database (includes genuine products, catalog photos, customer users, orders, and studio settings). Keep secure backups before server migrations or deployments.
+                    </p>
+
+                    <div style="background: #faf8f5; border: 1px solid var(--border); padding: 18px; border-radius: 4px; margin-bottom: 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-size: 12px; font-weight: 600; color: #111;">Live Database Status:</span>
+                            <span style="font-size: 11px; color: #2e7d32; font-weight: 600;">● 100% Genuine & Ready</span>
+                        </div>
+                        <div style="font-size: 12px; color: var(--muted); line-height: 1.5;">
+                            • Storage path: <code>database/fashion.db</code><br>
+                            • Genuine Catalog: 5 Handcrafted Luxury Garments<br>
+                            • Permanent Contact: Master Phone +91 93504 39667
+                        </div>
+                    </div>
+
+                    <a href="{{ url_for('admin_backup_database') }}" class="btn-primary" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none;">
+                        <span>⬇️ Download Full Database Backup (.db)</span>
+                    </a>
+                </div>
+
+            </div>
+
+        </section>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Tulsa Admin">
+    <meta name="theme-color" content="#111111">
+    <title>Admin Login — {{ brand_name }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .login-section {
+            min-height: 80vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+
+        .login-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 440px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+            border-radius: 4px;
+        }
+
+        @media (max-width: 480px) {
+            .login-section {
+                padding: 20px 14px;
+            }
+            .login-card {
+                padding: 32px 20px;
+            }
+        }
+
+        .login-card h1 {
+            font-size: 32px;
+            font-weight: 400;
+            margin-top: 8px;
+            margin-bottom: 8px;
+        }
+
+        .login-card p.subtitle {
+            font-size: 13px;
+            color: var(--muted);
+            margin-bottom: 32px;
+        }
+
+        .login-field {
+            margin-bottom: 22px;
+        }
+
+        .login-field label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .login-field input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1px solid var(--border);
+            font-size: 16px; /* 16px prevents iOS Safari from auto-zooming */
+            background: #faf8f5;
+            border-radius: 2px;
+            color: var(--text);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .login-field input:focus {
+            border-color: var(--text);
+            background: #fff;
+        }
+
+        .login-btn {
+            width: 100%;
+            background: var(--text);
+            color: var(--background);
+            padding: 16px;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: opacity 0.25s ease;
+        }
+
+        .login-btn:hover {
+            opacity: 0.85;
+        }
+
+        .login-error {
+            background: #fdf0ed;
+            color: #c0392b;
+            border: 1px solid #f5c6cb;
+            padding: 12px 16px;
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 24px;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: var(--text);
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <a href="{{ url_for('home') }}" class="logo">{{ brand_name|upper }}</a>
+        <nav class="nav-links">
+            <a href="{{ url_for('home') }}">Website</a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="login-section">
+            <div class="login-card">
+                <p class="eyebrow">RESTRICTED ACCESS</p>
+                <h1>Admin Portal</h1>
+                <p class="subtitle">Enter your credentials to manage studio orders.</p>
+
+                <!-- Flashed Messages -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                        <div style="background: {% if category == 'success' %}#e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9{% else %}#e3f2fd; color: #0d47a1; border: 1px solid #bbdefb{% endif %}; padding: 12px 16px; font-size: 12px; margin-bottom: 20px; border-radius: 2px;">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% if error %}
+                <div class="login-error">
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('admin_login') }}">
+                    <div class="login-field">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" name="username" placeholder="admin" required autocomplete="username">
+                    </div>
+
+                    <div class="login-field">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label for="password" style="margin-bottom: 0;">Password</label>
+                            <a href="{{ url_for('admin_forgot_password') }}" style="font-size: 11px; color: var(--muted); text-decoration: underline;">
+                                Forgot Password?
+                            </a>
+                        </div>
+                        <input type="password" id="password" name="password" placeholder="••••••••••••" required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" class="login-btn">
+                        Sign In →
+                    </button>
+                </form>
+
+                <div style="text-align: center; margin-top: 20px;">
+                    <a href="{{ url_for('admin_forgot_password') }}" style="font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); text-decoration: none;">
+                        🔑 Master Password Recovery (OTP)
+                    </a>
+                </div>
+
+                <a href="{{ url_for('home') }}" class="back-link">
+                    ← Return to Website
+                </a>
+            </div>
+        </section>
+    </main>
+
+</body>
+
+</html>

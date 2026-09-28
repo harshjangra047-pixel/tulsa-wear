@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Review your handcrafted order before checkout at {{ brand_name }}. Complimentary insured pan-India delivery.">
+    <title>Shopping Bag — {{ brand_name }}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+</head>
+
+<body>
+
+    <!-- =========================================
+         NAVBAR
+    ========================================== -->
+    <header class="navbar navbar-solid" id="top">
+        <a href="{{ url_for('home') }}" class="logo">
+            {{ brand_name|upper }}
+        </a>
+
+        <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('home') }}#new-arrivals">New</a>
+            <a href="{{ url_for('shop') }}">Shop</a>
+            <a href="{{ url_for('home') }}#collections">Collections</a>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('home') }}#ai-studio" class="ai-link">
+                ✦ AI Studio
+            </a>
+            <a href="{{ url_for('bag') }}" class="bag-link" style="border-bottom: 1px solid var(--text-primary); padding-bottom: 2px;">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
+            <button
+                id="menuButton"
+                class="menu-button"
+                type="button"
+                aria-label="Toggle navigation"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+        </div>
+    </header>
+
+    <main class="inner-page-main">
+        <div class="bag-page-wrap">
+            <!-- Breadcrumbs -->
+            <div class="breadcrumb-trail">
+                <a href="{{ url_for('home') }}">Atelier</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="{{ url_for('shop') }}">Collection</a>
+                <span class="breadcrumb-separator">/</span>
+                <span>Shopping Bag</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; border-bottom: 1px solid var(--border-light); margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <p class="eyebrow">{{ brand_name|upper }} CURATION</p>
+                    <h1 style="font-family: 'Cormorant Garamond', serif; font-size: clamp(36px, 4.5vw, 56px); font-weight: 400; line-height: 1.05; margin-top: 6px;">
+                        Your Shopping Bag
+                    </h1>
+                </div>
+                <div class="shop-counter-tag">
+                    {{ cart_items|length }} {% if cart_items|length == 1 %}Garment{% else %}Garments{% endif %}
+                </div>
+            </div>
+
+            {% if cart_items and cart_items|length > 0 %}
+            <div class="bag-split-grid">
+                <!-- Left: Items List -->
+                <div class="bag-items-container">
+                    {% for item in cart_items %}
+                    <div class="bag-product-row">
+                        <div class="bag-thumb-box">
+                            {% if item.product.image %}
+                            <img src="{{ url_for('static', filename='images/' + item.product.image) }}?v={{ cache_id }}" alt="{{ item.product.name }}">
+                            {% else %}
+                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--text-muted); text-transform: uppercase;">
+                                Piece
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="bag-item-meta">
+                            <p style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 4px;">
+                                {{ item.product.category }}
+                            </p>
+                            <h3 style="font-size: 22px; font-weight: 500; margin-bottom: 6px;">
+                                <a href="{{ url_for('product_detail', product_id=item.product.id) }}" style="color: inherit; text-decoration: none;">
+                                    {{ item.product.name }}
+                                </a>
+                            </h3>
+
+                            <!-- Custom Tailoring Specs -->
+                            <div class="bag-custom-tags">
+                                <span class="bag-custom-badge">Size: {{ item.size or 'M' }}</span>
+                                <span class="bag-custom-badge">Top: {{ item.top_length or '30' }}"</span>
+                                <span class="bag-custom-badge">Sleeves: {{ item.sleeves_length or '18' }}"</span>
+                                {% if item.bust %}<span class="bag-custom-badge">Bust: {{ item.bust }}"</span>{% endif %}
+                                {% if item.waist %}<span class="bag-custom-badge">Waist: {{ item.waist }}"</span>{% endif %}
+                                {% if item.hip %}<span class="bag-custom-badge">Hip: {{ item.hip }}"</span>{% endif %}
+                                {% if item.shoulder %}<span class="bag-custom-badge">Shoulder: {{ item.shoulder }}"</span>{% endif %}
+                            </div>
+
+                            <!-- Quantity Stepper -->
+                            <div style="display: flex; align-items: center; gap: 14px; margin-top: 10px;">
+                                <div class="bag-stepper">
+                                    <a href="{{ url_for('update_bag_quantity', product_id=item.product.id, action='decrease') }}" class="stepper-btn" title="Decrease quantity">−</a>
+                                    <span class="stepper-qty">{{ item.quantity }}</span>
+                                    <a href="{{ url_for('update_bag_quantity', product_id=item.product.id, action='increase') }}" class="stepper-btn" title="Increase quantity">+</a>
+                                </div>
+
+                                <form action="{{ url_for('remove_from_bag', product_id=item.product.id) }}" method="POST" style="margin: 0;">
+                                    <button type="submit" class="bag-remove-action" style="background: none; border: none; cursor: pointer; padding: 4px;">
+                                        ✕ Remove
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <div class="bag-item-pricing">
+                            <span class="bag-price-display">₹{{ "{:,.0f}".format(item.subtotal) }}</span>
+                            <span style="font-size: 11px; color: var(--text-muted);">₹{{ "{:,.0f}".format(item.product.price) }} each</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Right: Summary & Checkout -->
+                <div class="bag-summary-card">
+                    <h2 class="bag-summary-title">Order Summary</h2>
+
+                    <!-- Coupon Area -->
+                    <div style="margin-bottom: 24px;">
+                        <label style="display: block; font-family: 'Inter', sans-serif; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-muted); font-weight: 600; margin-bottom: 8px;">
+                            Promotional / Gift Code
+                        </label>
+                        <div class="bag-coupon-row">
+                            <input type="text" id="couponCodeInput" class="bag-coupon-input" placeholder="e.g. TULSA10" value="{{ applied_coupon.code if applied_coupon else '' }}" {% if applied_coupon %}disabled{% endif %}>
+                            {% if applied_coupon %}
+                            <button type="button" onclick="removeCoupon()" class="bag-coupon-btn" style="background: #c0392b;">Remove</button>
+                            {% else %}
+                            <button type="button" onclick="applyCoupon()" class="bag-coupon-btn">Apply</button>
+                            {% endif %}
+                        </div>
+                        <div id="couponMessage" style="font-size: 11px; margin-top: 6px; font-weight: 500;"></div>
+                    </div>
+
+                    <!-- Breakdown -->
+                    <div class="bag-calc-line">
+                        <span>Garments Subtotal</span>
+                        <span id="bagSubtotalDisplay">₹{{ "{:,.0f}".format(subtotal) }}</span>
+                    </div>
+
+                    <div class="bag-calc-line">
+                        <span>Complimentary Packaging</span>
+                        <span style="color: #2e7d32; font-weight: 500;">Free</span>
+                    </div>
+
+                    <div class="bag-calc-line">
+                        <span>Insured Delivery (Pan-India)</span>
+                        <span style="color: #2e7d32; font-weight: 500;">Complimentary</span>
+                    </div>
+
+                    {% if applied_coupon and discount_amount > 0 %}
+                    <div class="bag-calc-line" id="discountRow" style="color: var(--accent-burgundy); font-weight: 600;">
+                        <span>Promotional Privilege ({{ applied_coupon.code }})</span>
+                        <span>− ₹{{ "{:,.0f}".format(discount_amount) }}</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="bag-grand-total">
+                        <span>Estimated Total</span>
+                        <span id="bagGrandTotalDisplay">₹{{ "{:,.0f}".format(total) }}</span>
+                    </div>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Includes all handcrafted garment taxes and artisan charges.</p>
+
+                    <a href="{{ url_for('checkout') }}" class="btn-bag-checkout">
+                        Proceed to Delivery & Checkout →
+                    </a>
+
+                    <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border-light); display: flex; flex-direction: column; gap: 8px; font-size: 11px; color: var(--text-muted);">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span>🔒</span>
+                            <span>Direct SSL Encrypted Checkout</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span>✂</span>
+                            <span>Each Garment Tailored to Exact Specified Measurements</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span>📦</span>
+                            <span>Dispatched via Insured Express Courier</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Empty Bag State -->
+            <div class="catalog-empty-state">
+                <span style="font-size: 40px; display: block; margin-bottom: 16px;">🛍️</span>
+                <p class="eyebrow" style="color: var(--accent-burgundy);">✦ YOUR ATELIER BAG IS EMPTY</p>
+                <h3>No Silhouettes Added Yet</h3>
+                <p>Every piece in our archive is crafted slowly by hand. Browse our latest arrivals or explore bespoke wedding and party ensembles.</p>
+                <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+                    <a href="{{ url_for('shop') }}" class="category-pill active">
+                        Explore Collection
+                    </a>
+                    <a href="{{ url_for('home') }}#new-arrivals" class="category-pill">
+                        View New Arrivals
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+    <footer class="footer">
+        <div class="footer-column">
+            <h4>Shop</h4>
+            <a href="{{ url_for('home') }}#new-arrivals">New Arrivals</a>
+            <a href="{{ url_for('shop') }}">All Pieces</a>
+            <a href="{{ url_for('shop', sort='best_seller') }}">Best Sellers</a>
+            <a href="{{ url_for('home') }}#categories">Categories</a>
+            <a href="{{ url_for('track_order') }}">Track Order</a>
+            <a href="{{ url_for('return_policy') }}">Returns & Refunds</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Studio</h4>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+            <a href="{{ url_for('home') }}#contact">Custom Order</a>
+            <a href="{{ url_for('contact') }}">Contact Us</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Connect</h4>
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20have%20an%20inquiry." target="_blank">
+                💬 WhatsApp: {{ studio_phone }}
+            </a>
+            <a href="tel:{{ studio_phone }}">
+                📞 Call: {{ studio_phone }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_1 }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_2 }}
+            </a>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2025 {{ brand_name|upper }}</span>
+            <span>Handmade / India</span>
+        </div>
+    </footer>
+
+    <!-- Floating WhatsApp Concierge -->
+    <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20have%20a%20question%20regarding%20my%20bag." 
+       target="_blank" 
+       rel="noopener noreferrer" 
+       id="floatingWhatsAppBtn"
+       style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #25d366; color: #fff; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 18px rgba(37,211,102,0.45); text-decoration: none; transition: transform 0.2s;"
+       onmouseover="this.style.transform='scale(1.1)'" 
+       onmouseout="this.style.transform='scale(1)'"
+       title="Chat with Tulsa Wears on WhatsApp">
+        💬
+    </a>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
+    <script>
+        function applyCoupon() {
+            const codeInput = document.getElementById("couponCodeInput");
+            const msg = document.getElementById("couponMessage");
+            const code = codeInput ? codeInput.value.trim() : "";
+
+            if (!code) {
+                if (msg) {
+                    msg.style.color = "#c0392b";
+                    msg.textContent = "Please enter a coupon code.";
+                }
+                return;
+            }
+
+            fetch("{{ url_for('api_apply_coupon') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: code, subtotal: {{ subtotal }} })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    if (msg) {
+                        msg.style.color = "#c0392b";
+                        msg.textContent = data.message || "Invalid coupon code.";
+                    }
+                }
+            })
+            .catch(() => {
+                if (msg) {
+                    msg.style.color = "#c0392b";
+                    msg.textContent = "Error applying coupon. Please try again.";
+                }
+            });
+        }
+
+        function removeCoupon() {
+            fetch("{{ url_for('api_remove_coupon') }}", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" }
+            })
+            .then(res => res.json())
+            .then(() => {
+                window.location.reload();
+            });
+        }
+    </script>
+</body>
+
+</html>

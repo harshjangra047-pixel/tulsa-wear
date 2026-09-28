@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Custom & Made-to-Order Requests — {{ brand_name }} Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .admin-section {
+            padding: 100px 40px 80px;
+            max-width: 1560px;
+            margin: 0 auto;
+        }
+
+        .admin-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .admin-heading h1 {
+            font-size: clamp(32px, 3.5vw, 48px);
+            font-weight: 400;
+            margin-top: 6px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 2px;
+            font-weight: 600;
+            background: #f4f0eb;
+            color: var(--text);
+        }
+
+        .status-select {
+            font-size: 11px;
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 2px;
+            cursor: pointer;
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .logout-btn {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #c0392b;
+            padding: 6px 14px;
+            border: 1px solid #f5c6cb;
+            text-decoration: none;
+            border-radius: 2px;
+        }
+
+        .logout-btn:hover {
+            background: #fdf0ed;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .admin-table th {
+            text-align: left;
+            padding: 14px 14px;
+            background: #efebe4;
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .admin-table td {
+            padding: 16px 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .admin-table tr:hover {
+            background: #faf8f5;
+        }
+
+        .admin-table-wrapper {
+            background: #fff;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+        }
+
+        .ref-thumb {
+            width: 70px;
+            height: 90px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 1px solid var(--border);
+            display: block;
+        }
+
+        .wa-chat-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #25d366;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 2px;
+            margin-top: 6px;
+        }
+
+        .wa-chat-btn:hover {
+            background: #20ba59;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <a href="{{ url_for('home') }}" class="logo">{{ brand_name|upper }} ADMIN</a>
+
+        <nav class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('admin_customizer') }}" style="color: #c5a059; font-weight: 600;">🎨 Website Designer</a>
+            <a href="{{ url_for('admin_orders') }}">Orders</a>
+            <a href="{{ url_for('admin_products') }}">Products & Photos</a>
+            <a href="{{ url_for('admin_custom_orders') }}" style="border-bottom: 1px solid var(--text); padding-bottom: 4px;">Custom Requests</a>
+            <a href="{{ url_for('admin_coupons') }}">Coupons</a>
+            <a href="{{ url_for('admin_inquiries') }}">Inquiries</a>
+            <a href="{{ url_for('admin_trends') }}">AI Trends & Scans</a>
+            <a href="{{ url_for('admin_feedback') }}">Reviews</a>
+            <a href="{{ url_for('admin_settings') }}">Settings</a>
+            <a href="{{ url_for('home') }}">View Website</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+                Sign Out
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <section class="admin-section">
+            <div class="admin-heading">
+                <div>
+                    <p class="eyebrow">BESPOKE WORKSHOP</p>
+                    <h1>Custom & Made-to-Order Requests ({{ custom_orders|length }})</h1>
+                    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+                        Manage customer custom styling inquiries, attached design reference photos, fabric preferences, and garment dimensions.
+                    </p>
+                </div>
+            </div>
+
+            {% if custom_orders and custom_orders|length > 0 %}
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Inquiry ID</th>
+                            <th>Reference Photo</th>
+                            <th>Customer & Contact</th>
+                            <th>Outfit Type & Occasion</th>
+                            <th>Fabric & Styling</th>
+                            <th>Measurements & Notes</th>
+                            <th>Status</th>
+                            <th>Update Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for co in custom_orders %}
+                        <tr>
+                            <!-- Inquiry ID -->
+                            <td>
+                                <strong style="font-size: 14px;">#{{ co.id }}</strong>
+                            </td>
+
+                            <!-- Reference Photo -->
+                            <td>
+                                {% if co.reference_image %}
+                                <a href="{{ url_for('static', filename='images/' ~ ('custom_orders/' ~ co.reference_image if not co.reference_image.startswith('ai_trend') else 'ai_uploads/' ~ co.reference_image)) }}" target="_blank" title="Click to view full reference image">
+                                    <img src="{{ url_for('static', filename='images/' ~ ('custom_orders/' ~ co.reference_image if not co.reference_image.startswith('ai_trend') else 'ai_uploads/' ~ co.reference_image)) }}" alt="Reference Image" class="ref-thumb" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/product-1.jpg') }}';">
+                                </a>
+                                <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">Click to enlarge</div>
+                                {% else %}
+                                <span style="font-size: 11px; color: var(--muted); font-style: italic;">No photo attached</span>
+                                {% endif %}
+                            </td>
+
+                            <!-- Customer & Contact -->
+                            <td>
+                                <strong>{{ co.customer_name }}</strong>
+                                <div style="font-size: 12px; margin-top: 2px;">📞 {{ co.phone }}</div>
+                                <div style="font-size: 11px; color: var(--muted);">{{ co.email }}</div>
+
+                                <!-- WhatsApp Button -->
+                                {% set clean_phone = co.phone|replace(' ', '')|replace('-', '')|replace('+', '') %}
+                                <a href="https://wa.me/{{ clean_phone if clean_phone.startswith('91') else ('91' ~ clean_phone) }}?text=Namaste%20{{ co.customer_name|urlencode }}!%20This%20is%20Tulsa%20Wears%20following%20up%20on%20your%20custom%20bespoke%20inquiry%20%23{{ co.id }}." target="_blank" class="wa-chat-btn">
+                                    💬 Chat on WhatsApp
+                                </a>
+                            </td>
+
+                            <!-- Outfit & Occasion -->
+                            <td>
+                                <strong>{{ co.outfit_type }}</strong>
+                                {% if co.occasion %}
+                                <div style="font-size: 11px; color: var(--muted); margin-top: 4px;">Occasion: {{ co.occasion }}</div>
+                                {% endif %}
+                            </td>
+
+                            <!-- Fabric & Styling -->
+                            <td>
+                                <div>Fabric: <strong>{{ co.fabric_preference or 'Open' }}</strong></div>
+                                <div>Color: <strong>{{ co.color_preference or 'Open' }}</strong></div>
+                                {% if co.embroidery_preference %}
+                                <div style="font-size: 11px; color: var(--muted); margin-top: 2px;">Embroidery: {{ co.embroidery_preference }}</div>
+                                {% endif %}
+                            </td>
+
+                            <!-- Measurements & Notes -->
+                            <td style="max-width: 320px;">
+                                {% if co.measurements %}
+                                <div style="font-size: 12px; margin-bottom: 6px; background: #faf8f5; padding: 6px 8px; border: 1px solid #f0eae1;">
+                                    <strong>Specs:</strong> {{ co.measurements }}
+                                </div>
+                                {% endif %}
+                                {% if co.notes %}
+                                <div style="font-size: 12px; color: #444; font-style: italic; margin-top: 4px;">
+                                    "{{ co.notes }}"
+                                </div>
+                                {% endif %}
+                            </td>
+
+                            <!-- Status -->
+                            <td>
+                                <span class="status-badge">{{ co.status }}</span>
+                            </td>
+
+                            <!-- Update Status -->
+                            <td>
+                                <form action="{{ url_for('admin_update_custom_order_status', order_id=co.id) }}" method="POST" style="display: flex; gap: 4px; align-items: center;">
+                                    <select name="status" class="status-select">
+                                        <option value="Inquiry Received" {% if co.status == 'Inquiry Received' %}selected{% endif %}>Inquiry Received</option>
+                                        <option value="Design Consultation" {% if co.status == 'Design Consultation' %}selected{% endif %}>Design Consultation</option>
+                                        <option value="In Production" {% if co.status == 'In Production' %}selected{% endif %}>In Production</option>
+                                        <option value="Ready for Fitting" {% if co.status == 'Ready for Fitting' %}selected{% endif %}>Ready for Fitting</option>
+                                        <option value="Completed" {% if co.status == 'Completed' %}selected{% endif %}>Completed</option>
+                                    </select>
+                                    <button type="submit" style="background: none; border: 1px solid var(--border); padding: 5px 8px; font-size: 10px; cursor: pointer; border-radius: 2px;">
+                                        Save
+                                    </button>
+                                </form>
+                            </td>
+
+                            <!-- Placed Date -->
+                            <td style="font-size: 11px; color: var(--muted); white-space: nowrap;">
+                                {{ co.created_at.strftime('%d %b %Y') if co.created_at else '' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="background: #fff; border: 1px solid var(--border); text-align: center; padding: 70px 20px;">
+                <h3 style="font-size: 26px; margin-bottom: 8px;">No Bespoke Inquiries Yet</h3>
+                <p style="color: var(--muted); font-size: 13px;">Customer custom inquiries and attached design photos submitted through your website will appear here.</p>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+
+</body>
+
+</html>

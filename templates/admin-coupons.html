@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coupon Codes & Discounts — {{ brand_name }} Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .admin-section {
+            padding: 100px 40px 80px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .admin-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .admin-heading h1 {
+            font-size: clamp(30px, 3.5vw, 44px);
+            font-weight: 400;
+            margin-top: 6px;
+        }
+
+        .coupon-layout {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 36px;
+            align-items: start;
+        }
+
+        .card {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 32px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+        }
+
+        .card h2 {
+            font-size: 22px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .card p.card-desc {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+            font-size: 13px;
+            outline: none;
+            background: #faf8f5;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--text);
+            background: #fff;
+        }
+
+        .btn-primary {
+            background: var(--text);
+            color: #fff;
+            border: none;
+            padding: 13px 24px;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #333;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            background: #fff;
+            border: 1px solid var(--border);
+        }
+
+        .admin-table th {
+            text-align: left;
+            padding: 14px 16px;
+            background: #efebe4;
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .admin-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .admin-table tr:hover {
+            background: #faf8f5;
+        }
+
+        .code-tag {
+            font-family: monospace;
+            font-size: 13px;
+            font-weight: 700;
+            padding: 4px 10px;
+            background: #faf8f5;
+            border: 1px dashed var(--border);
+            letter-spacing: 1px;
+            color: #111;
+            display: inline-block;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 2px;
+            font-weight: 600;
+        }
+
+        .status-badge.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-badge.inactive {
+            background: #f5f5f5;
+            color: #888;
+            border: 1px solid #e0e0e0;
+        }
+
+        .action-btn {
+            font-size: 11px;
+            padding: 5px 10px;
+            border: 1px solid var(--border);
+            background: #fff;
+            color: var(--text);
+            cursor: pointer;
+            border-radius: 2px;
+            text-decoration: none;
+            display: inline-block;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: #faf8f5;
+        }
+
+        .action-btn.delete {
+            color: #c0392b;
+            border-color: #f5c6cb;
+        }
+
+        .action-btn.delete:hover {
+            background: #fdf0ed;
+        }
+
+        .logout-btn {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #c0392b;
+            padding: 6px 14px;
+            border: 1px solid #f5c6cb;
+            text-decoration: none;
+            border-radius: 2px;
+        }
+
+        .logout-btn:hover {
+            background: #fdf0ed;
+        }
+
+        @media (max-width: 960px) {
+            .coupon-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <a href="{{ url_for('home') }}" class="logo">{{ brand_name|upper }} ADMIN</a>
+
+        <nav class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('admin_customizer') }}" style="color: #c5a059; font-weight: 600;">🎨 Website Designer</a>
+            <a href="{{ url_for('admin_orders') }}">Orders</a>
+            <a href="{{ url_for('admin_products') }}">Products & Photos</a>
+            <a href="{{ url_for('admin_custom_orders') }}">Custom Requests</a>
+            <a href="{{ url_for('admin_coupons') }}" style="border-bottom: 1px solid var(--text); padding-bottom: 4px;">Coupons</a>
+            <a href="{{ url_for('admin_inquiries') }}">Inquiries</a>
+            <a href="{{ url_for('admin_trends') }}">AI Trends & Scans</a>
+            <a href="{{ url_for('admin_feedback') }}">Reviews</a>
+            <a href="{{ url_for('admin_settings') }}">Settings</a>
+            <a href="{{ url_for('home') }}" target="_blank">View Website ↗</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+                Sign Out
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <section class="admin-section">
+
+            <div class="admin-heading">
+                <div>
+                    <p class="eyebrow">MARKETING & PROMOTIONS</p>
+                    <h1>Coupon Codes & Discounts</h1>
+                    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+                        Create promotional codes for festive sales, new client welcome gifts, or influencer campaigns.
+                    </p>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div style="padding: 12px 18px; margin-bottom: 24px; background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; font-size: 13px; border-radius: 2px;">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <div class="coupon-layout">
+
+                <!-- Left: Create Coupon Form -->
+                <div class="card">
+                    <h2>Create New Coupon</h2>
+                    <p class="card-desc">
+                        Define coupon code and discount terms. Codes are automatically uppercase.
+                    </p>
+
+                    <form action="{{ url_for('admin_create_coupon') }}" method="POST">
+                        <div class="form-group">
+                            <label for="code">Coupon Code *</label>
+                            <input type="text" id="code" name="code" class="form-control" placeholder="e.g. DIWALI20" required style="text-transform: uppercase; font-weight: 600; letter-spacing: 1px;">
+                            <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 4px;">
+                                Letters & numbers only (e.g. TULSA15, FESTIVE500).
+                            </small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="discount_type">Discount Type *</label>
+                            <select id="discount_type" name="discount_type" class="form-control" required onchange="updateDiscountLabel()">
+                                <option value="percentage">Percentage (%) Off</option>
+                                <option value="flat">Flat Amount (₹) Off</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label id="valLabel" for="discount_value">Discount Value (%) *</label>
+                            <input type="number" step="0.01" min="0.01" id="discount_value" name="discount_value" class="form-control" placeholder="e.g. 10 for 10%" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="min_order_amount">Minimum Order Subtotal (₹)</label>
+                            <input type="number" step="1" min="0" id="min_order_amount" name="min_order_amount" class="form-control" placeholder="0 (No minimum)" value="0">
+                            <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 4px;">
+                                Minimum cart value required to use this coupon.
+                            </small>
+                        </div>
+
+                        <div class="form-group" id="maxDiscountGroup">
+                            <label for="max_discount">Maximum Discount Cap (₹) (Optional)</label>
+                            <input type="number" step="1" min="0" id="max_discount" name="max_discount" class="form-control" placeholder="e.g. 1000 (Leave empty for no limit)">
+                            <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 4px;">
+                                Limits maximum discount amount for percentage coupons.
+                            </small>
+                        </div>
+
+                        <div class="form-group" style="display: flex; align-items: center; gap: 8px; margin-top: 10px;">
+                            <input type="checkbox" id="is_active" name="is_active" checked style="width: 16px; height: 16px; cursor: pointer;">
+                            <label for="is_active" style="margin: 0; cursor: pointer; text-transform: none; font-size: 13px; font-weight: normal;">
+                                Activate this coupon immediately
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="margin-top: 12px;">
+                            Create & Publish Coupon →
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right: Existing Coupons Table -->
+                <div>
+                    <div style="background: #fff; border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(0,0,0,0.02);">
+                        <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <h3 style="font-size: 18px; margin: 0; font-weight: 500;">Active & Configured Coupons</h3>
+                                <small style="color: var(--muted); font-size: 12px;">{{ coupons|length }} {% if coupons|length == 1 %}coupon{% else %}coupons{% endif %} in database</small>
+                            </div>
+                        </div>
+
+                        {% if coupons %}
+                        <div style="overflow-x: auto;">
+                            <table class="admin-table">
+                                <thead>
+                                    <tr>
+                                        <th>Code</th>
+                                        <th>Discount</th>
+                                        <th>Min Order</th>
+                                        <th>Max Cap</th>
+                                        <th>Usage</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for c in coupons %}
+                                    <tr>
+                                        <td>
+                                            <span class="code-tag">{{ c.code }}</span>
+                                        </td>
+                                        <td style="font-weight: 600;">
+                                            {% if c.discount_type == 'percentage' %}
+                                                {{ c.discount_value }}% OFF
+                                            {% else %}
+                                                ₹{{ "{:,.0f}".format(c.discount_value) }} OFF
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if c.min_order_amount and c.min_order_amount > 0 %}
+                                                ₹{{ "{:,.0f}".format(c.min_order_amount) }}
+                                            {% else %}
+                                                <span style="color: var(--muted);">None (₹0)</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if c.max_discount and c.max_discount > 0 %}
+                                                ₹{{ "{:,.0f}".format(c.max_discount) }}
+                                            {% else %}
+                                                <span style="color: var(--muted);">Unlimited</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong>{{ c.times_used or 0 }}</strong> orders
+                                        </td>
+                                        <td>
+                                            {% if c.is_active %}
+                                                <span class="status-badge active">● Active</span>
+                                            {% else %}
+                                                <span class="status-badge inactive">○ Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td style="white-space: nowrap;">
+                                            <form action="{{ url_for('admin_toggle_coupon', coupon_id=c.id) }}" method="POST" style="display: inline;">
+                                                <button type="submit" class="action-btn">
+                                                    {% if c.is_active %}Disable{% else %}Enable{% endif %}
+                                                </button>
+                                            </form>
+
+                                            <form action="{{ url_for('admin_delete_coupon', coupon_id=c.id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Delete coupon {{ c.code }}?');">
+                                                <button type="submit" class="action-btn delete">
+                                                    Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div style="padding: 60px 20px; text-align: center; color: var(--muted);">
+                            <div style="font-size: 32px; margin-bottom: 8px;">🏷️</div>
+                            <p style="margin: 0; font-size: 13px;">No coupons created yet. Use the form on the left to add your first discount code!</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        function updateDiscountLabel() {
+            const type = document.getElementById('discount_type').value;
+            const label = document.getElementById('valLabel');
+            const maxGroup = document.getElementById('maxDiscountGroup');
+            if (type === 'percentage') {
+                label.innerText = "Discount Value (%) *";
+                document.getElementById('discount_value').placeholder = "e.g. 10 for 10%";
+                maxGroup.style.display = "block";
+            } else {
+                label.innerText = "Discount Value (₹) *";
+                document.getElementById('discount_value').placeholder = "e.g. 500 for ₹500";
+                maxGroup.style.display = "none";
+            }
+        }
+    </script>
+
+</body>
+</html>

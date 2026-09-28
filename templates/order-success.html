@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status: Pending Verification — {{ brand_name }}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+</head>
+
+<body>
+
+    <!-- =========================================
+         NAVBAR
+    ========================================== -->
+    <header class="navbar navbar-solid" id="top">
+        <a href="{{ url_for('home') }}" class="logo">
+            {{ brand_name|upper }}
+        </a>
+
+        <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('home') }}#new-arrivals">New</a>
+            <a href="{{ url_for('shop') }}">Shop</a>
+            <a href="{{ url_for('home') }}#collections">Collections</a>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('home') }}#ai-studio" class="ai-link">
+                ✦ AI Studio
+            </a>
+            <a href="{{ url_for('bag') }}" class="bag-link">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
+            <button
+                id="menuButton"
+                class="menu-button"
+                type="button"
+                aria-label="Toggle navigation"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+        </div>
+    </header>
+
+    <main class="inner-page-main">
+        <div style="max-width: 860px; margin: 0 auto; padding: calc(var(--nav-height) + 24px) var(--page-padding) 80px;">
+            
+            <div style="background: #fff; border: 1px solid var(--border-light); padding: 48px 40px; border-radius: 4px; box-shadow: 0 8px 30px rgba(0,0,0,0.03); text-align: center;">
+                <div style="width: 64px; height: 64px; border-radius: 50%; background: #fff8e1; color: #b26a00; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 20px; border: 1px solid #ffe082;">
+                    ⏳
+                </div>
+
+                <p class="eyebrow" style="color: #b26a00; font-weight: 600;">
+                    STATUS: PENDING VERIFICATION & APPROVAL
+                </p>
+
+                <h1 style="font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 4vw, 44px); font-weight: 500; margin: 8px 0 12px; line-height: 1.15;">
+                    Order #{{ order.id }} Received with Gratitude
+                </h1>
+
+                <p style="color: var(--text-muted); font-size: 15px; max-width: 580px; margin: 0 auto 24px; line-height: 1.6;">
+                    Thank you, <strong>{{ order.customer_name }}</strong>. Your artisanal commission has been logged in our atelier records.
+                </p>
+
+                <!-- Approval Notice Card -->
+                <div style="background: #fffdf5; border: 1px solid #ffe082; border-left: 4px solid #b26a00; padding: 18px 22px; text-align: left; border-radius: 2px; margin: 0 auto 28px; max-width: 720px; line-height: 1.6; font-size: 13px;">
+                    <strong style="color: #b26a00; font-size: 14px; display: block; margin-bottom: 4px;">
+                        ⏱️ Payment Verification & Atelier Approval Notice:
+                    </strong>
+                    Your order status is currently in <strong>Pending Approval</strong>. Our verification concierge will review and verify your payment submission <strong>within 1–2 hours</strong>. Upon verification, your order will transition to <strong>Confirmed</strong> and bespoke tailoring will begin immediately!
+                </div>
+
+                <!-- Tracking ID Card -->
+                <div style="background: #faf7f2; border: 1px solid var(--border-light); padding: 18px 24px; border-radius: 4px; margin-bottom: 32px; text-align: left; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; max-width: 720px; margin-left: auto; margin-right: auto;">
+                    <div>
+                        <div style="font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">
+                            Official Atelier Tracking Identifier
+                        </div>
+                        <div style="font-family: monospace; font-size: 18px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.05em;" id="orderTrackingId">
+                            {{ order.tracking_id or ('TW-TRACK-' ~ order.id) }}
+                        </div>
+                    </div>
+                    <div>
+                        <button type="button" onclick="navigator.clipboard.writeText(document.getElementById('orderTrackingId').innerText.trim()); alert('Tracking ID copied to clipboard!');" class="category-pill" style="padding: 8px 16px; cursor: pointer;">
+                            Copy Tracking ID
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3 Details Grid Cards -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 18px; text-align: left; margin-bottom: 36px; max-width: 720px; margin-left: auto; margin-right: auto;">
+                    <!-- Delivery Address -->
+                    <div style="background: #faf7f2; border: 1px solid var(--border-light); padding: 20px; border-radius: 4px; font-size: 13px;">
+                        <h3 style="font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 6px; font-weight: 600;">
+                            Shipping Address
+                        </h3>
+                        <div style="line-height: 1.6; color: var(--text-primary);">
+                            <strong>{{ order.customer_name }}</strong><br>
+                            {{ order.address }}<br>
+                            {{ order.city }} - {{ order.pincode }}<br>
+                            <strong>Phone:</strong> {{ order.phone }}<br>
+                            {% if order.email %}<strong>Email:</strong> {{ order.email }}{% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Bespoke Measurements -->
+                    <div style="background: #faf7f2; border: 1px solid var(--border-light); padding: 20px; border-radius: 4px; font-size: 13px;">
+                        <h3 style="font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 6px; font-weight: 600;">
+                            Tailoring Specs
+                        </h3>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Size:</span>
+                            <strong style="color: var(--accent-burgundy);">{{ order.size or 'M' }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Top Length:</span>
+                            <strong>{{ order.top_length or '30' }}"</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Sleeves:</span>
+                            <strong>{{ order.sleeves_length or '18' }}"</strong>
+                        </div>
+                        {% if order.bust %}
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Bust:</span>
+                            <strong>{{ order.bust }}"</strong>
+                        </div>
+                        {% endif %}
+                        {% if order.waist %}
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Waist:</span>
+                            <strong>{{ order.waist }}"</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Payment Verification -->
+                    <div style="background: #faf7f2; border: 1px solid var(--border-light); padding: 20px; border-radius: 4px; font-size: 13px;">
+                        <h3 style="font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--text-muted); margin: 0 0 12px; border-bottom: 1px solid var(--border-light); padding-bottom: 6px; font-weight: 600;">
+                            Payment Info
+                        </h3>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Amount:</span>
+                            <strong>₹{{ "{:,.0f}".format(order.price) }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">Method:</span>
+                            <strong>{{ order.payment_method or 'UPI' }}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                            <span style="color: var(--text-muted);">UTR Ref:</span>
+                            <strong style="font-family: monospace; color: #2e7d32;">{{ order.upi_utr or 'Pending' }}</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CTA Actions -->
+                <div style="display: flex; flex-direction: column; gap: 14px; max-width: 440px; margin: 0 auto;">
+                    <a href="{{ whatsapp_url }}" target="_blank" class="btn-bag-checkout" style="background: #25d366; box-shadow: 0 4px 16px rgba(37,211,102,0.3); margin: 0; padding: 16px 24px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 18px;">💬</span> Expedite Approval on WhatsApp
+                    </a>
+
+                    <a href="{{ url_for('track_order', query=order.tracking_id or order.id) }}" class="btn-luxury-bag" style="text-decoration: none; padding: 14px 24px;">
+                        Check Live Order Status →
+                    </a>
+
+                    <a href="{{ url_for('return_policy') }}" style="font-size: 11px; color: var(--text-muted); text-decoration: underline; margin-top: 4px;">
+                        🛡️ Protected by Tulsa Wears 7-Day Craftsmanship & Return Policy
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+    <footer class="footer">
+        <div class="footer-column">
+            <h4>Shop</h4>
+            <a href="{{ url_for('home') }}#new-arrivals">New Arrivals</a>
+            <a href="{{ url_for('shop') }}">All Pieces</a>
+            <a href="{{ url_for('shop', sort='best_seller') }}">Best Sellers</a>
+            <a href="{{ url_for('home') }}#categories">Categories</a>
+            <a href="{{ url_for('track_order') }}">Track Order</a>
+            <a href="{{ url_for('return_policy') }}">Returns & Refunds</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Studio</h4>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+            <a href="{{ url_for('home') }}#contact">Custom Order</a>
+            <a href="{{ url_for('contact') }}">Contact Us</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Connect</h4>
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20have%20an%20inquiry%20regarding%20Order%20%23{{ order.id }}." target="_blank">
+                💬 WhatsApp: {{ studio_phone }}
+            </a>
+            <a href="tel:{{ studio_phone }}">
+                📞 Call: {{ studio_phone }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_1 }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_2 }}
+            </a>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2025 {{ brand_name|upper }}</span>
+            <span>Handmade / India</span>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
+</body>
+
+</html>

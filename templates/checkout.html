@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Secure bespoke checkout at {{ brand_name }}. Hand-tailored Indian ethnic fashion delivered to your doorstep.">
+    <title>Checkout — {{ brand_name }}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+</head>
+
+<body>
+
+    <!-- =========================================
+         NAVBAR
+    ========================================== -->
+    <header class="navbar navbar-solid" id="top">
+        <a href="{{ url_for('home') }}" class="logo">
+            {{ brand_name|upper }}
+        </a>
+
+        <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('home') }}#new-arrivals">New</a>
+            <a href="{{ url_for('shop') }}">Shop</a>
+            <a href="{{ url_for('home') }}#collections">Collections</a>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('home') }}#ai-studio" class="ai-link">
+                ✦ AI Studio
+            </a>
+            <a href="{{ url_for('bag') }}" class="bag-link">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
+            <button
+                id="menuButton"
+                class="menu-button"
+                type="button"
+                aria-label="Toggle navigation"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+        </div>
+    </header>
+
+    <main class="inner-page-main">
+        <div class="checkout-page-wrap">
+            <!-- Breadcrumbs -->
+            <div class="breadcrumb-trail">
+                <a href="{{ url_for('home') }}">Atelier</a>
+                <span class="breadcrumb-separator">/</span>
+                <a href="{{ url_for('bag') }}">Bag</a>
+                <span class="breadcrumb-separator">/</span>
+                <span>Checkout</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-bottom: 20px; border-bottom: 1px solid var(--border-light); margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <p class="eyebrow">{{ brand_name|upper }} ATELIER</p>
+                    <h1 style="font-family: 'Cormorant Garamond', serif; font-size: clamp(36px, 4.5vw, 56px); font-weight: 400; line-height: 1.05; margin-top: 6px;">
+                        Complete Your Order
+                    </h1>
+                </div>
+                <div class="shop-counter-tag">
+                    🔒 256-Bit SSL Encrypted
+                </div>
+            </div>
+
+            <!-- Flashed Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                <div style="margin-bottom: 24px;">
+                    {% for category, message in messages %}
+                    <div style="background: {% if category == 'success' %}#e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9{% elif category == 'danger' or category == 'warning' %}#fdf0ed; color: #c0392b; border: 1px solid #f5c6cb{% else %}#e3f2fd; color: #0d47a1; border: 1px solid #bbdefb{% endif %}; padding: 14px 18px; font-size: 13px; margin-bottom: 12px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between;">
+                        <span>{{ message }}</span>
+                        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; font-size:16px; cursor:pointer;">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            {% endwith %}
+
+            <div class="checkout-grid-layout">
+                <!-- Left: Form -->
+                <div>
+                    <form action="{% if is_cart_checkout %}{{ url_for('checkout') }}{% else %}{{ url_for('buy_now', product_id=product.id) }}{% endif %}" method="POST" id="mainCheckoutForm">
+                        
+                        <!-- Step 1: Customer Account & Contact -->
+                        <div class="checkout-card">
+                            <div class="checkout-card-header">
+                                <span class="checkout-step-num">1</span>
+                                <h2 class="checkout-card-title">Customer Information</h2>
+                            </div>
+
+                            {% if current_customer %}
+                            <div style="background: #e8f5e9; border: 1px solid #c8e6c9; padding: 14px 18px; border-radius: 2px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                                <div>
+                                    <strong style="color: #2e7d32; font-size: 13px;">✓ Signed in as:</strong>
+                                    <span style="font-size: 13px; margin-left: 4px; font-weight: 500;">{{ current_customer.name }} ({{ current_customer.phone }})</span>
+                                </div>
+                                <a href="{{ url_for('customer_logout') }}" style="color: #c0392b; font-size: 11px; text-decoration: underline; font-weight: 600;">
+                                    Sign Out / Switch
+                                </a>
+                            </div>
+                            {% else %}
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #faf7f2; border: 1px solid var(--border-light); padding: 12px 16px; border-radius: 2px; flex-wrap: wrap; gap: 8px;">
+                                <span style="font-size: 12px; color: var(--text-secondary);">Already have a Tulsa Wears profile?</span>
+                                <button type="button" onclick="openCustomerLoginModal()" style="background: none; border: none; color: var(--accent-burgundy); font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: underline; letter-spacing: 0.04em;">
+                                    Sign In to Auto-Fill →
+                                </button>
+                            </div>
+                            {% endif %}
+
+                            <div class="luxury-form-grid">
+                                <div class="luxury-input-group">
+                                    <label for="name">Full Name <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <input id="name" type="text" name="name" class="luxury-text-input" value="{{ current_customer.name if current_customer else '' }}" placeholder="Enter full name" required>
+                                </div>
+
+                                <div class="luxury-input-group">
+                                    <label for="phone">Mobile Phone (India +91) <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <input id="phone" type="tel" name="phone" class="luxury-text-input" value="{{ current_customer.phone if current_customer else '' }}" placeholder="10-digit mobile number" required pattern="[0-9+ \-]{10,14}" autocomplete="tel">
+                                </div>
+
+                                <div class="luxury-input-group form-full-col">
+                                    <label for="email">Email Address <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <input id="email" type="email" name="email" class="luxury-text-input" value="{{ current_customer.email if (current_customer and current_customer.email) else '' }}" placeholder="Order confirmation & tracking sent here" required>
+                                </div>
+
+                                {% if not current_customer %}
+                                <div class="luxury-input-group form-full-col" id="passwordGroup">
+                                    <label for="accountPassword">Create Account Password <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <input id="accountPassword" type="password" name="account_password" class="luxury-text-input" placeholder="Choose a secure password (min 4 characters)" required minlength="4">
+                                    <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">
+                                        🔒 A private customer profile will be created so you can monitor tailoring progress and track shipments.
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- Step 2: Delivery Address -->
+                        <div class="checkout-card">
+                            <div class="checkout-card-header">
+                                <span class="checkout-step-num">2</span>
+                                <h2 class="checkout-card-title">Delivery Destination</h2>
+                            </div>
+
+                            <div class="luxury-form-grid">
+                                <div class="luxury-input-group form-full-col">
+                                    <label for="address">Postal Street Address <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <textarea id="address" name="address" class="luxury-text-input" rows="3" placeholder="House / Flat / Studio No., Street, Colony, Landmark" required>{{ current_customer.address if (current_customer and current_customer.address) else '' }}</textarea>
+                                </div>
+
+                                <div class="luxury-input-group">
+                                    <label for="city">City / District <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <input id="city" type="text" name="city" class="luxury-text-input" value="{{ current_customer.city if (current_customer and current_customer.city) else '' }}" placeholder="City" required>
+                                </div>
+
+                                <div class="luxury-input-group">
+                                    <label for="pincode">6-Digit PIN Code <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <input id="pincode" type="text" name="pincode" class="luxury-text-input" value="{{ current_customer.pincode if (current_customer and current_customer.pincode) else '' }}" placeholder="e.g. 110001" required pattern="\d{6}" maxlength="6" minlength="6">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Bespoke Tailoring Verification -->
+                        <div class="checkout-card">
+                            <div class="checkout-card-header" style="justify-content: space-between;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <span class="checkout-step-num">3</span>
+                                    <h2 class="checkout-card-title">Bespoke Tailoring Specifications</h2>
+                                </div>
+                                <button type="button" onclick="openSizeChartModal()" class="size-chart-trigger-btn">
+                                    📏 Size Guide
+                                </button>
+                            </div>
+
+                            <div class="luxury-form-grid">
+                                <div class="luxury-input-group">
+                                    <label for="checkoutSize">Primary Size <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <select id="checkoutSize" name="size" class="luxury-select" style="width: 100%; border-radius: 2px;" required>
+                                        {% for s in ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'] %}
+                                        <option value="{{ s }}" {% if (sizing and sizing.size == s) or (not sizing and s == 'M') %}selected{% endif %}>Standard Size {{ s }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="luxury-input-group">
+                                    <label for="checkoutTopLength">Kurti / Top Length (in) <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <input id="checkoutTopLength" type="number" name="top_length" class="luxury-text-input" value="{{ sizing.top_length if sizing else '30' }}" min="15" max="60" required>
+                                </div>
+
+                                <div class="luxury-input-group form-full-col">
+                                    <label for="checkoutSleevesLength">Sleeves Length (in) <span style="color: var(--accent-burgundy);">*</span></label>
+                                    <input id="checkoutSleevesLength" type="number" name="sleeves_length" class="luxury-text-input" value="{{ sizing.sleeves_length if sizing else '18' }}" min="5" max="40" required>
+                                </div>
+
+                                <div class="form-full-col">
+                                    <details class="custom-measurements-drawer">
+                                        <summary>
+                                            + Fine-Tune Custom Body Dimensions (Optional)
+                                        </summary>
+                                        <div class="measurements-subgrid">
+                                            <div>
+                                                <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="checkoutBust">Bust (in)</label>
+                                                <input id="checkoutBust" type="number" name="bust" value="{{ sizing.bust if sizing else '' }}" placeholder="e.g. 36" class="luxury-number-input" style="padding: 8px;">
+                                            </div>
+                                            <div>
+                                                <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="checkoutWaist">Waist (in)</label>
+                                                <input id="checkoutWaist" type="number" name="waist" value="{{ sizing.waist if sizing else '' }}" placeholder="e.g. 32" class="luxury-number-input" style="padding: 8px;">
+                                            </div>
+                                            <div>
+                                                <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="checkoutHip">Hip (in)</label>
+                                                <input id="checkoutHip" type="number" name="hip" value="{{ sizing.hip if sizing else '' }}" placeholder="e.g. 40" class="luxury-number-input" style="padding: 8px;">
+                                            </div>
+                                            <div>
+                                                <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="checkoutShoulder">Shoulder (in)</label>
+                                                <input id="checkoutShoulder" type="number" name="shoulder" value="{{ sizing.shoulder if sizing else '' }}" placeholder="e.g. 14.5" class="luxury-number-input" style="padding: 8px;">
+                                            </div>
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit CTA Button -->
+                        <button type="submit" class="btn-bag-checkout" style="font-size: 12px; padding: 20px;">
+                            Proceed to Secure Payment Section →
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right: Summary Sidebar -->
+                <div>
+                    <div class="bag-summary-card">
+                        <h2 class="bag-summary-title">
+                            {% if is_cart_checkout %}
+                            Bag Items ({{ cart_items|length }})
+                            {% else %}
+                            Order Silhouette
+                            {% endif %}
+                        </h2>
+
+                        <!-- Product Recap -->
+                        <div style="margin-bottom: 24px; max-height: 280px; overflow-y: auto;">
+                            {% if is_cart_checkout %}
+                                {% for item in cart_items %}
+                                <div style="display: flex; gap: 14px; margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border-light); align-items: center;">
+                                    <div style="width: 52px; height: 68px; overflow: hidden; background: var(--cream); border-radius: 2px; flex-shrink: 0;">
+                                        {% if item.product.image %}
+                                        <img src="{{ url_for('static', filename='images/' + item.product.image) }}" alt="{{ item.product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% endif %}
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <h4 style="font-family: 'Cormorant Garamond', serif; font-size: 16px; margin: 0 0 2px; font-weight: 500;">{{ item.product.name }}</h4>
+                                        <span style="font-size: 11px; color: var(--text-muted);">Qty: {{ item.quantity }} • Size: {{ item.size or 'M' }}</span>
+                                    </div>
+                                    <span style="font-size: 13px; font-weight: 600;">₹{{ "{:,.0f}".format(item.subtotal) }}</span>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div style="display: flex; gap: 14px; margin-bottom: 16px; align-items: center;">
+                                    <div style="width: 60px; height: 78px; overflow: hidden; background: var(--cream); border-radius: 2px; flex-shrink: 0;">
+                                        {% if product.image %}
+                                        <img src="{{ url_for('static', filename='images/' + product.image) }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <p style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin: 0 0 2px;">{{ product.category }}</p>
+                                        <h4 style="font-family: 'Cormorant Garamond', serif; font-size: 18px; margin: 0 0 4px; font-weight: 500;">{{ product.name }}</h4>
+                                        <span style="font-size: 13px; font-weight: 600;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Coupon Promo Input -->
+                        <div style="margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--border-light);">
+                            <div id="coCouponInputWrapper" style="display: {% if applied_coupon %}none{% else %}flex{% endif %}; gap: 8px;">
+                                <input type="text" id="coCouponInput" placeholder="e.g. TULSA10" class="bag-coupon-input" value="{{ applied_coupon.code if applied_coupon else '' }}">
+                                <button type="button" id="coApplyBtn" onclick="applyCheckoutCoupon()" class="bag-coupon-btn">Apply</button>
+                            </div>
+
+                            <div id="coAppliedWrapper" style="display: {% if applied_coupon %}flex{% else %}none{% endif %}; justify-content: space-between; align-items: center; background: #e8f5e9; border: 1px solid #c8e6c9; padding: 10px 14px; border-radius: 2px;">
+                                <div>
+                                    <strong style="font-size: 11px; color: #2e7d32; letter-spacing: 0.08em;" id="coAppliedCode">{{ applied_coupon.code if applied_coupon else '' }}</strong>
+                                    <span style="font-size: 11px; color: #2e7d32; margin-left: 4px;" id="coAppliedDiscount">(-₹{{ "{:,.0f}".format(discount_amount) if discount_amount else '0' }})</span>
+                                </div>
+                                <button type="button" onclick="removeCheckoutCoupon()" style="background: none; border: none; font-size: 11px; color: #c0392b; cursor: pointer; text-decoration: underline; font-weight: 600;">✕ Remove</button>
+                            </div>
+                            <div id="coCouponMsg" style="font-size: 11px; margin-top: 6px; display: none;"></div>
+                        </div>
+
+                        <!-- Price Breakdown -->
+                        <div class="bag-calc-line">
+                            <span>Garments Subtotal</span>
+                            <span id="coSubtotal">₹{{ "{:,.0f}".format(subtotal if subtotal else (total if is_cart_checkout else product.price)) }}</span>
+                        </div>
+
+                        <div class="bag-calc-line">
+                            <span>Insured Pan-India Courier</span>
+                            <span style="color: #2e7d32; font-weight: 500;">Complimentary</span>
+                        </div>
+
+                        <div class="bag-calc-line" id="coDiscountRow" style="display: {% if discount_amount and discount_amount > 0 %}flex{% else %}none{% endif %}; color: var(--accent-burgundy); font-weight: 600;">
+                            <span>Promotional Savings</span>
+                            <strong id="coDiscountDisplay">-₹{{ "{:,.0f}".format(discount_amount) if discount_amount else '0' }}</strong>
+                        </div>
+
+                        <div class="bag-grand-total">
+                            <span>Final Total</span>
+                            <span id="coTotalDisplay">₹{{ "{:,.0f}".format(total) }}</span>
+                        </div>
+
+                        <!-- Trust Badges Strip -->
+                        <div class="trust-badges-strip">
+                            <div class="trust-badge-unit">
+                                <span class="trust-badge-icon">🪡</span>
+                                <span class="trust-badge-text">100% Handcrafted Atelier</span>
+                            </div>
+                            <div class="trust-badge-unit">
+                                <span class="trust-badge-icon">🛡️</span>
+                                <span class="trust-badge-text">7-Day Quality Guarantee</span>
+                            </div>
+                            <div class="trust-badge-unit">
+                                <span class="trust-badge-icon">💬</span>
+                                <span class="trust-badge-text">Direct WhatsApp Concierge</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- SIZE CHART MODAL -->
+    <div id="sizeChartModal" class="size-chart-modal" role="dialog" aria-modal="true">
+        <div class="size-chart-content-box">
+            <div style="padding: 18px 24px; border-bottom: 1px solid var(--border-light); display: flex; justify-content: space-between; align-items: center; background: #faf7f2;">
+                <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 500; margin: 0;">{{ brand_name }} — Standard Size & Fit Guide</h3>
+                <button type="button" onclick="closeSizeChartModal()" style="background: none; border: none; font-size: 26px; cursor: pointer; line-height: 1; color: var(--text-primary);">&times;</button>
+            </div>
+            <div style="padding: 24px; overflow-y: auto; text-align: center;">
+                <img src="{{ url_for('static', filename='images/size-chart.jpg') }}" alt="{{ brand_name }} Standard Measurement Chart" style="max-width: 100%; height: auto; border: 1px solid var(--border-light); border-radius: 2px;">
+                <div style="background: #faf7f2; border: 1px solid #ebd9c4; padding: 14px 18px; margin-top: 18px; text-align: left; font-size: 12px; color: var(--text-secondary); line-height: 1.6; border-radius: 2px;">
+                    <strong style="color: var(--accent-burgundy);">Bespoke Guarantee:</strong> Standard Kurti Length defaults to 30" and Sleeves to 18". Enter your preferred dimensions and our master tailors will handcraft your garment to exact specifications!
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CUSTOMER LOGIN MODAL -->
+    <div id="customerLoginModal" class="size-chart-modal" role="dialog" aria-modal="true">
+        <div style="background: #fff; max-width: 440px; width: 100%; border-radius: 4px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 36px 32px; position: relative;">
+            <button type="button" onclick="closeCustomerLoginModal()" style="position: absolute; top: 16px; right: 18px; background: none; border: none; font-size: 26px; cursor: pointer; line-height: 1;">&times;</button>
+            <p class="eyebrow" style="margin-bottom: 6px; color: var(--accent-burgundy);">RETURNING CLIENT</p>
+            <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 500; margin: 0 0 10px;">Sign In to Profile</h3>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 22px; line-height: 1.5;">Enter your registered mobile phone and password to immediately auto-fill delivery details.</p>
+
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 6px;">Mobile Number</label>
+                <input type="tel" id="loginModalPhone" placeholder="10-digit number" class="luxury-text-input">
+            </div>
+
+            <div style="margin-bottom: 22px;">
+                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 6px;">Password</label>
+                <input type="password" id="loginModalPassword" placeholder="Your password" class="luxury-text-input">
+            </div>
+
+            <div id="loginModalMsg" style="display: none; font-size: 12px; color: #c0392b; margin-bottom: 16px; background: #fdf0ed; padding: 10px 14px; border: 1px solid #f5c6cb; border-radius: 2px;"></div>
+
+            <button type="button" id="loginModalBtn" onclick="submitCustomerLogin()" class="btn-bag-checkout" style="margin: 0; padding: 16px;">
+                Sign In to Profile →
+            </button>
+        </div>
+    </div>
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+    <footer class="footer">
+        <div class="footer-column">
+            <h4>Shop</h4>
+            <a href="{{ url_for('home') }}#new-arrivals">New Arrivals</a>
+            <a href="{{ url_for('shop') }}">All Pieces</a>
+            <a href="{{ url_for('shop', sort='best_seller') }}">Best Sellers</a>
+            <a href="{{ url_for('home') }}#categories">Categories</a>
+            <a href="{{ url_for('track_order') }}">Track Order</a>
+            <a href="{{ url_for('return_policy') }}">Returns & Refunds</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Studio</h4>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+            <a href="{{ url_for('home') }}#contact">Custom Order</a>
+            <a href="{{ url_for('contact') }}">Contact Us</a>
+        </div>
+
+        <div class="footer-column">
+            <h4>Connect</h4>
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20have%20an%20inquiry." target="_blank">
+                💬 WhatsApp: {{ studio_phone }}
+            </a>
+            <a href="tel:{{ studio_phone }}">
+                📞 Call: {{ studio_phone }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_1 }}
+            </a>
+            <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_2 }}
+            </a>
+        </div>
+
+        <div class="footer-bottom">
+            <span>© 2025 {{ brand_name|upper }}</span>
+            <span>Handmade / India</span>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
+    <script>
+        function openSizeChartModal() {
+            const m = document.getElementById("sizeChartModal");
+            if (m) m.classList.add("open");
+        }
+        function closeSizeChartModal() {
+            const m = document.getElementById("sizeChartModal");
+            if (m) m.classList.remove("open");
+        }
+
+        function openCustomerLoginModal() {
+            const m = document.getElementById("customerLoginModal");
+            if (m) m.classList.add("open");
+        }
+        function closeCustomerLoginModal() {
+            const m = document.getElementById("customerLoginModal");
+            if (m) m.classList.remove("open");
+        }
+
+        window.addEventListener("click", function(e) {
+            const sm = document.getElementById("sizeChartModal");
+            const lm = document.getElementById("customerLoginModal");
+            if (e.target === sm) closeSizeChartModal();
+            if (e.target === lm) closeCustomerLoginModal();
+        });
+
+        // Checkout Coupon Code AJAX
+        async function applyCheckoutCoupon() {
+            const input = document.getElementById('coCouponInput');
+            const code = input ? input.value.trim().toUpperCase() : '';
+            const btn = document.getElementById('coApplyBtn');
+            const msg = document.getElementById('coCouponMsg');
+            const subtotalText = document.getElementById('coSubtotal').innerText.replace(/[^0-9.]/g, '');
+            const subtotal = parseFloat(subtotalText) || 0;
+
+            if (!code) {
+                msg.style.display = 'block';
+                msg.style.color = '#c0392b';
+                msg.innerText = 'Please enter a valid coupon code.';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = '...';
+            msg.style.display = 'none';
+
+            try {
+                const res = await fetch('/api/coupon/apply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code, subtotal: subtotal })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    document.getElementById('coCouponInputWrapper').style.display = 'none';
+                    document.getElementById('coAppliedWrapper').style.display = 'flex';
+                    document.getElementById('coAppliedCode').innerText = data.coupon_code;
+                    document.getElementById('coAppliedDiscount').innerText = '(-₹' + Math.round(data.discount_amount).toLocaleString() + ')';
+                    
+                    document.getElementById('coDiscountRow').style.display = 'flex';
+                    document.getElementById('coDiscountDisplay').innerText = '-₹' + Math.round(data.discount_amount).toLocaleString();
+                    document.getElementById('coTotalDisplay').innerText = '₹' + Math.round(data.final_total).toLocaleString();
+
+                    msg.style.display = 'block';
+                    msg.style.color = '#2e7d32';
+                    msg.innerText = '✓ ' + data.message;
+                } else {
+                    msg.style.display = 'block';
+                    msg.style.color = '#c0392b';
+                    msg.innerText = '✕ ' + data.message;
+                }
+            } catch (err) {
+                msg.style.display = 'block';
+                msg.style.color = '#c0392b';
+                msg.innerText = 'Error applying coupon.';
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Apply';
+            }
+        }
+
+        async function removeCheckoutCoupon() {
+            try {
+                await fetch('/api/coupon/remove', { method: 'POST' });
+                window.location.reload();
+            } catch (err) {
+                window.location.reload();
+            }
+        }
+
+        // Customer Login AJAX
+        async function submitCustomerLogin() {
+            const phoneInput = document.getElementById("loginModalPhone");
+            const passInput = document.getElementById("loginModalPassword");
+            const msg = document.getElementById("loginModalMsg");
+            const btn = document.getElementById("loginModalBtn");
+
+            const phone = phoneInput.value.trim();
+            const password = passInput.value.trim();
+
+            if (!phone) {
+                msg.innerText = "Please enter your mobile phone number.";
+                msg.style.display = "block";
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = "Signing In...";
+            msg.style.display = "none";
+
+            try {
+                const res = await fetch('/customer/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone, password: password })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    if (data.name) document.getElementById("name").value = data.name;
+                    if (data.phone) document.getElementById("phone").value = data.phone;
+                    if (data.email) document.getElementById("email").value = data.email;
+                    if (data.address) document.getElementById("address").value = data.address;
+                    if (data.city) document.getElementById("city").value = data.city;
+                    if (data.pincode) document.getElementById("pincode").value = data.pincode;
+
+                    const pwdGrp = document.getElementById("passwordGroup");
+                    if (pwdGrp) pwdGrp.style.display = "none";
+                    const pwdInput = document.getElementById("accountPassword");
+                    if (pwdInput) pwdInput.required = false;
+
+                    closeCustomerLoginModal();
+                } else {
+                    msg.innerText = "✕ " + (data.message || "Invalid credentials.");
+                    msg.style.display = "block";
+                }
+            } catch (err) {
+                msg.innerText = "Error connecting to server. Please try again.";
+                msg.style.display = "block";
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "Sign In to Profile →";
+            }
+        }
+    </script>
+</body>
+
+</html>

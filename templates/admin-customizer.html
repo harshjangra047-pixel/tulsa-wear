@@ -1,0 +1,1755 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Website Designer & CMS — {{ brand_name }} Admin Portal</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+
+    <style>
+        :root {
+            --admin-bg: #f5f3ee;
+            --admin-card-bg: #ffffff;
+            --admin-border: #e4ddd2;
+            --admin-dark: #141311;
+            --admin-gold: #c5a059;
+            --admin-gold-hover: #b38f48;
+            --admin-burgundy: #5a1e28;
+            --admin-green: #2e7d32;
+            --admin-muted: #736d65;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--admin-bg);
+            color: var(--admin-dark);
+            font-family: 'Inter', -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Admin Navbar */
+        .admin-nav {
+            background: #11100e;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .admin-logo-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .admin-brand {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0.18em;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, var(--admin-gold), #8a6d3b);
+            color: #111;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 2px;
+        }
+
+        .admin-menu-links {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .admin-menu-link {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .admin-menu-link:hover,
+        .admin-menu-link.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .admin-menu-link.active {
+            border-bottom: 2px solid var(--admin-gold);
+            color: #fff;
+        }
+
+        .admin-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-live-store {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+            color: #fff;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 7px 14px;
+            border-radius: 3px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-live-store:hover {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        .btn-admin-logout {
+            background: rgba(192, 57, 43, 0.2);
+            border: 1px solid rgba(192, 57, 43, 0.4);
+            color: #ff7675;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 3px;
+            text-decoration: none;
+        }
+
+        /* Mobile Hamburger & Drawer */
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 20px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .mobile-admin-drawer {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(17, 16, 14, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 9998;
+            padding: 24px;
+            overflow-y: auto;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-admin-drawer.open {
+            display: flex;
+        }
+
+        .mobile-drawer-link {
+            color: #fff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 4px;
+            border-left: 3px solid transparent;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mobile-drawer-link.active {
+            border-left-color: var(--admin-gold);
+            background: rgba(197, 160, 89, 0.15);
+            color: var(--admin-gold);
+            font-weight: 600;
+        }
+
+        /* Main Customizer Workspace Layout */
+        .customizer-container {
+            max-width: 1680px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Hero Sub-header */
+        .customizer-header {
+            background: #fff;
+            border: 1px solid var(--admin-border);
+            border-radius: 6px;
+            padding: 22px 28px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .header-title-group h1 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 6px 0;
+            color: var(--admin-dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-title-group p {
+            margin: 0;
+            font-size: 13px;
+            color: var(--admin-muted);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn-gold-save {
+            background: var(--admin-gold);
+            color: #111;
+            border: none;
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 11px 22px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(197, 160, 89, 0.35);
+        }
+
+        .btn-gold-save:hover {
+            background: var(--admin-gold-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn-reset-defaults {
+            background: transparent;
+            color: #777;
+            border: 1px solid #d0c8bd;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-reset-defaults:hover {
+            color: #c0392b;
+            border-color: #c0392b;
+            background: #fff;
+        }
+
+        /* 2-Column Split: Controls + Live Interactive Preview */
+        .workspace-split {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+            gap: 24px;
+            align-items: start;
+        }
+
+        /* Section Navigation Tabs (Horizontal Scrollable on Mobile) */
+        .section-tabs-bar {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 4px 2px 14px 2px;
+            scrollbar-width: thin;
+            border-bottom: 2px solid var(--admin-border);
+            margin-bottom: 20px;
+        }
+
+        .section-tab-btn {
+            background: #fff;
+            border: 1px solid var(--admin-border);
+            color: var(--admin-dark);
+            font-size: 12px;
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 4px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-tab-btn:hover {
+            border-color: var(--admin-dark);
+        }
+
+        .section-tab-btn.active {
+            background: #11100e;
+            color: #fff;
+            border-color: #11100e;
+        }
+
+        /* Tab Content Cards */
+        .customizer-card {
+            background: #fff;
+            border: 1px solid var(--admin-border);
+            border-radius: 6px;
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .customizer-card.active-tab {
+            display: block;
+            animation: fadeInTab 0.25s ease;
+        }
+
+        @keyframes fadeInTab {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header-bar {
+            border-bottom: 1px solid var(--admin-border);
+            padding-bottom: 16px;
+            margin-bottom: 22px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-header-bar h2 {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-badge-tag {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: #f0eae1;
+            color: #555;
+            font-weight: 600;
+        }
+
+        /* Form Fields & Grid */
+        .form-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .form-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #444;
+            margin-bottom: 6px;
+        }
+
+        .form-label-hint {
+            font-weight: 400;
+            text-transform: none;
+            color: #888;
+            font-size: 11px;
+            margin-left: 6px;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--admin-border);
+            border-radius: 4px;
+            background: #faf8f5;
+            color: var(--admin-dark);
+            font-family: inherit;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--admin-gold);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.15);
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+            line-height: 1.5;
+        }
+
+        /* Visual Image Upload Picker Box */
+        .image-picker-box {
+            background: #faf8f5;
+            border: 2px dashed #ded6c9;
+            border-radius: 6px;
+            padding: 16px;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .image-picker-box:hover {
+            border-color: var(--admin-gold);
+            background: #fff;
+        }
+
+        .image-picker-flex {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+
+        .current-thumb-wrap {
+            width: 110px;
+            height: 110px;
+            border-radius: 4px;
+            overflow: hidden;
+            border: 1px solid var(--admin-border);
+            background: #111;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .current-thumb-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.2s;
+        }
+
+        .thumb-tag {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            background: rgba(0, 0, 0, 0.75);
+            color: #fff;
+            font-size: 8px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            padding: 2px 5px;
+            border-radius: 2px;
+        }
+
+        .upload-controls {
+            flex: 1;
+            min-width: 220px;
+        }
+
+        .custom-file-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff;
+            border: 1px solid var(--admin-border);
+            padding: 8px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 6px;
+        }
+
+        .custom-file-btn:hover {
+            border-color: var(--admin-dark);
+            background: #fdfdfd;
+        }
+
+        .file-chosen-status {
+            font-size: 11px;
+            color: var(--admin-muted);
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        /* Right Column: Sticky Live Preview Panel */
+        .preview-sticky-wrap {
+            position: sticky;
+            top: 84px;
+            background: #fff;
+            border: 1px solid var(--admin-border);
+            border-radius: 6px;
+            padding: 16px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+        }
+
+        .preview-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--admin-border);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .preview-title {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--admin-dark);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .device-switcher {
+            display: flex;
+            background: #f0eae1;
+            padding: 3px;
+            border-radius: 4px;
+            gap: 3px;
+        }
+
+        .device-btn {
+            background: transparent;
+            border: none;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.15s;
+            color: #555;
+        }
+
+        .device-btn.active {
+            background: #fff;
+            color: #111;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+        }
+
+        .preview-viewport-box {
+            display: flex;
+            justify-content: center;
+            background: #252422;
+            border-radius: 6px;
+            padding: 14px 8px;
+            overflow: hidden;
+            min-height: 580px;
+            max-height: 78vh;
+        }
+
+        .preview-frame {
+            border: none;
+            background: #fff;
+            border-radius: 4px;
+            width: 100%;
+            height: 72vh;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        .preview-frame.mode-mobile {
+            width: 375px;
+            border-radius: 20px;
+            border: 6px solid #1a1918;
+        }
+
+        .preview-frame.mode-tablet {
+            width: 768px;
+            border-radius: 12px;
+            border: 6px solid #1a1918;
+        }
+
+        .preview-frame.mode-desktop {
+            width: 100%;
+        }
+
+        /* Sticky Bottom Mobile Bar */
+        .mobile-bottom-bar {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #11100e;
+            padding: 12px 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            z-index: 9990;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.25);
+        }
+
+        .mobile-bottom-bar .btn-gold-save {
+            flex: 1;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .btn-mobile-preview-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 11px 14px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Flash Messages */
+        .flash-box {
+            padding: 14px 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .flash-success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .flash-info {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1200px) {
+            .workspace-split {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-sticky-wrap {
+                position: static;
+                margin-top: 24px;
+            }
+        }
+
+        @media (max-width: 900px) {
+            .admin-menu-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .customizer-container {
+                padding: 14px 12px 90px 12px;
+            }
+
+            .form-grid-2,
+            .form-grid-3 {
+                grid-template-columns: 1fr;
+            }
+
+            .mobile-bottom-bar {
+                display: flex;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================================
+         TOP ADMIN NAVIGATION
+    ========================================== -->
+    <header class="admin-nav">
+        <a href="{{ url_for('admin_dashboard') }}" class="admin-logo-box">
+            <span class="admin-brand">{{ brand_name }}</span>
+            <span class="admin-badge">ADMIN PORTAL</span>
+        </a>
+
+        <!-- Desktop Navigation Links -->
+        <nav class="admin-menu-links">
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-menu-link">📊 Mission Control</a>
+            <a href="{{ url_for('admin_customizer') }}" class="admin-menu-link active">🎨 Website Designer</a>
+            <a href="{{ url_for('admin_orders') }}" class="admin-menu-link">📦 Orders</a>
+            <a href="{{ url_for('admin_products') }}" class="admin-menu-link">👗 Products</a>
+            <a href="{{ url_for('admin_coupons') }}" class="admin-menu-link">🎟️ Coupons</a>
+            <a href="{{ url_for('admin_custom_orders') }}" class="admin-menu-link">✂️ Bespoke</a>
+            <a href="{{ url_for('admin_inquiries') }}" class="admin-menu-link">💬 Inquiries</a>
+            <a href="{{ url_for('admin_feedback') }}" class="admin-menu-link">⭐ Reviews</a>
+            <a href="{{ url_for('admin_trends') }}" class="admin-menu-link">✦ AI Scans</a>
+            <a href="{{ url_for('admin_settings') }}" class="admin-menu-link">⚙️ Settings</a>
+        </nav>
+
+        <div class="admin-nav-actions">
+            <a href="{{ url_for('home') }}" target="_blank" class="btn-live-store" title="Open storefront in new tab">
+                👁️ Live Store ↗
+            </a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation">
+                ☰
+            </button>
+            <a href="{{ url_for('admin_logout') }}" class="btn-admin-logout" style="display: none; @media(min-width: 900px){ display: block; }">
+                Logout
+            </a>
+        </div>
+    </header>
+
+    <!-- Mobile Slide-out Drawer Menu -->
+    <div class="mobile-admin-drawer" id="mobileAdminDrawer">
+        <a href="{{ url_for('admin_dashboard') }}" class="mobile-drawer-link">📊 Dashboard / Mission Control</a>
+        <a href="{{ url_for('admin_customizer') }}" class="mobile-drawer-link active">🎨 Website Designer & CMS (Text & Images)</a>
+        <a href="{{ url_for('admin_orders') }}" class="mobile-drawer-link">📦 Orders & Dispatches</a>
+        <a href="{{ url_for('admin_products') }}" class="mobile-drawer-link">👗 Product Catalog & Photos</a>
+        <a href="{{ url_for('admin_coupons') }}" class="mobile-drawer-link">🎟️ Promo Coupons</a>
+        <a href="{{ url_for('admin_custom_orders') }}" class="mobile-drawer-link">✂️ Bespoke Custom Orders</a>
+        <a href="{{ url_for('admin_inquiries') }}" class="mobile-drawer-link">💬 Client Inquiries</a>
+        <a href="{{ url_for('admin_feedback') }}" class="mobile-drawer-link">⭐ Customer Reviews</a>
+        <a href="{{ url_for('admin_trends') }}" class="mobile-drawer-link">✦ AI Concierge Trends</a>
+        <a href="{{ url_for('admin_settings') }}" class="mobile-drawer-link">⚙️ Studio & UPI Payments</a>
+        <a href="{{ url_for('home') }}" target="_blank" class="mobile-drawer-link" style="color: var(--admin-gold);">👁️ Open Live Storefront ↗</a>
+        <a href="{{ url_for('admin_logout') }}" class="mobile-drawer-link" style="color: #ff7675; margin-top: 14px;">🚪 Sign Out of Admin</a>
+    </div>
+
+    <!-- =========================================
+         CUSTOMIZER MAIN WORKSPACE
+    ========================================== -->
+    <div class="customizer-container">
+
+        <!-- Flash feedback messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-box flash-{{ category }}">
+                    <span><strong>{{ message }}</strong></span>
+                    <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; font-weight:bold;">✕</button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Top Header & Action Controls -->
+        <div class="customizer-header">
+            <div class="header-title-group">
+                <h1>🎨 Website Designer & Visual Studio</h1>
+                <p>Edit and redesign all website text, headlines, descriptions, button labels, and photos in real time.</p>
+            </div>
+
+            <div class="header-actions">
+                <form action="{{ url_for('admin_customizer_reset') }}" method="POST" onsubmit="return confirm('Are you sure you want to reset all site texts and photos to the original factory default?');" style="margin: 0;">
+                    <button type="submit" class="btn-reset-defaults">
+                        🔄 Reset Factory Defaults
+                    </button>
+                </form>
+
+                <button type="button" class="btn-gold-save" id="topSaveBtn">
+                    💾 Save & Publish Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Section Navigation Tabs -->
+        <div class="section-tabs-bar" id="sectionTabs">
+            <button type="button" class="section-tab-btn active" data-tab="tab-header">📢 Header & Announcement</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-hero">🌟 Hero Opening Stage</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-moods">🏛️ Mood Portals (Categories)</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-collection">📜 Featured Collection</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-bridal">👰 Bridal & Celebration Edit</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-seasonal">🍂 Seasonal Archive (3 Photos)</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-trends">⚡ Latest Trends Forecast</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-craft">✂️ Handmade Craft Process</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-designer">✍️ Designer Story / About</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-custom">🧵 Bespoke Made-to-Order</button>
+            <button type="button" class="section-tab-btn" data-tab="tab-contact">📞 Studio Contact & Social</button>
+        </div>
+
+        <!-- MAIN FORM -->
+        <form id="cmsForm" action="{{ url_for('admin_customizer') }}" method="POST" enctype="multipart/form-data">
+
+            <div class="workspace-split">
+
+                <!-- LEFT COLUMN: CONTROLS & SECTIONS -->
+                <div class="controls-column">
+
+                    <!-- =========================================
+                         TAB 1: HEADER & ANNOUNCEMENT BAR
+                    ========================================== -->
+                    <div class="customizer-card active-tab" id="tab-header">
+                        <div class="card-header-bar">
+                            <h2>📢 Announcement Bar & Brand Identity</h2>
+                            <span class="card-badge-tag">Header Zone</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Announcement Banner Status</label>
+                                <select class="form-select" name="announcement_enabled">
+                                    <option value="true" {% if cms.get('announcement_enabled') == 'true' %}selected{% endif %}>✓ Enabled (Show banner at top of site)</option>
+                                    <option value="false" {% if cms.get('announcement_enabled') == 'false' %}selected{% endif %}>✕ Disabled (Hide banner)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Banner Link URL / Anchor</label>
+                                <input type="text" class="form-input" name="announcement_link" value="{{ cms.get('announcement_link', '#collections') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Announcement Text Banner</label>
+                            <input type="text" class="form-input" name="announcement_text" value="{{ cms.get('announcement_text', '') }}" placeholder="e.g. ✦ FESTIVE COUTURE — ENJOY COMPLIMENTARY BESPOKE TAILORING ✦">
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Atelier Brand Name</label>
+                                <input type="text" class="form-input" name="brand_name" value="{{ cms.get('brand_name', 'Tulsa Wears') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Brand Tagline / Year</label>
+                                <input type="text" class="form-input" name="brand_tagline" value="{{ cms.get('brand_tagline', 'Handcrafted Slow Fashion • Est. 2025') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Footer Brand Bio</label>
+                            <textarea class="form-textarea" name="footer_bio">{{ cms.get('footer_bio', '') }}</textarea>
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 2: HERO OPENING STAGE
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-hero">
+                        <div class="card-header-bar">
+                            <h2>🌟 Hero Opening Stage</h2>
+                            <span class="card-badge-tag">First Impression</span>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Hero Badge / Eyebrow Text</label>
+                            <input type="text" class="form-input" name="hero_badge" value="{{ cms.get('hero_badge', '✦ TULSA WEARS — ATELIER COUTURE ✦') }}">
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Headline Line 1</label>
+                                <input type="text" class="form-input" name="hero_title_line1" value="{{ cms.get('hero_title_line1', 'The Art of') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Headline Line 2 (Italic Accent)</label>
+                                <input type="text" class="form-input" name="hero_title_line2" value="{{ cms.get('hero_title_line2', 'Handmade') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Hero Subtitle Story</label>
+                            <textarea class="form-textarea" name="hero_subtitle">{{ cms.get('hero_subtitle', '') }}</textarea>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Primary Button Text</label>
+                                <input type="text" class="form-input" name="hero_cta1_text" value="{{ cms.get('hero_cta1_text', 'Explore Collection →') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Primary Button Link</label>
+                                <input type="text" class="form-input" name="hero_cta1_link" value="{{ cms.get('hero_cta1_link', '#curved-carousel') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Secondary Button Text</label>
+                                <input type="text" class="form-input" name="hero_cta2_text" value="{{ cms.get('hero_cta2_text', '✦ AI Style Studio') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Secondary Button Link</label>
+                                <input type="text" class="form-input" name="hero_cta2_link" value="{{ cms.get('hero_cta2_link', '#ai-studio') }}">
+                            </div>
+                        </div>
+
+                        <!-- Hero Image Upload -->
+                        <div class="form-group">
+                            <label class="form-label">Hero Background Image</label>
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('hero_image', 'editorial-hero.jpg')) }}?v={{ cache_id }}" id="preview_hero_image" alt="Hero Image">
+                                        <span class="thumb-tag">Current</span>
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Choose New Photo / Camera
+                                            <input type="file" name="hero_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_hero_image', 'hero_file_status')">
+                                        </label>
+                                        <input type="hidden" name="hero_image" value="{{ cms.get('hero_image', 'editorial-hero.jpg') }}">
+                                        <div class="file-chosen-status" id="hero_file_status">Current file: {{ cms.get('hero_image', 'editorial-hero.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 3: ARCHED MOOD PORTALS
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-moods">
+                        <div class="card-header-bar">
+                            <h2>🏛️ Arched Mood Portals (Categories)</h2>
+                            <span class="card-badge-tag">Category Showcase</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Section Eyebrow</label>
+                                <input type="text" class="form-input" name="mood_eyebrow" value="{{ cms.get('mood_eyebrow', 'CURATED EDITORIAL PORTALS') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Section Title</label>
+                                <input type="text" class="form-input" name="mood_title" value="{{ cms.get('mood_title', 'Six Moods. <em>Infinite Craft.</em>') }}">
+                            </div>
+                        </div>
+
+                        <!-- Mood 1: Plazo & Kurta -->
+                        <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 10px; border-bottom: 1px dashed var(--admin-border); padding-bottom: 6px;">01 / Portal 1 (Plazo & Kurta)</h3>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Title</label>
+                                <input type="text" class="form-input" name="mood_cat1_title" value="{{ cms.get('mood_cat1_title', 'Plazo & Kurta') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Link Subtitle</label>
+                                <input type="text" class="form-input" name="mood_cat1_sub" value="{{ cms.get('mood_cat1_sub', 'Explore Pieces →') }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat1_image', 'editorial-category-1.jpg')) }}?v={{ cache_id }}" id="preview_mood1" alt="Mood 1">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Upload Portal 1 Photo
+                                            <input type="file" name="mood_cat1_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_mood1', 'status_mood1')">
+                                        </label>
+                                        <input type="hidden" name="mood_cat1_image" value="{{ cms.get('mood_cat1_image', 'editorial-category-1.jpg') }}">
+                                        <div class="file-chosen-status" id="status_mood1">{{ cms.get('mood_cat1_image', 'editorial-category-1.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mood 2: Salwar Kameez -->
+                        <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 10px; border-bottom: 1px dashed var(--admin-border); padding-bottom: 6px;">02 / Portal 2 (Salwar Kameez)</h3>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Title</label>
+                                <input type="text" class="form-input" name="mood_cat2_title" value="{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Link Subtitle</label>
+                                <input type="text" class="form-input" name="mood_cat2_sub" value="{{ cms.get('mood_cat2_sub', 'Explore Pieces →') }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat2_image', 'editorial-category-2.jpg')) }}?v={{ cache_id }}" id="preview_mood2" alt="Mood 2">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Upload Portal 2 Photo
+                                            <input type="file" name="mood_cat2_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_mood2', 'status_mood2')">
+                                        </label>
+                                        <input type="hidden" name="mood_cat2_image" value="{{ cms.get('mood_cat2_image', 'editorial-category-2.jpg') }}">
+                                        <div class="file-chosen-status" id="status_mood2">{{ cms.get('mood_cat2_image', 'editorial-category-2.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mood 3: Party Wear -->
+                        <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 10px; border-bottom: 1px dashed var(--admin-border); padding-bottom: 6px;">03 / Portal 3 (Party Wear)</h3>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Title</label>
+                                <input type="text" class="form-input" name="mood_cat3_title" value="{{ cms.get('mood_cat3_title', 'Party Wear') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Link Subtitle</label>
+                                <input type="text" class="form-input" name="mood_cat3_sub" value="{{ cms.get('mood_cat3_sub', 'Explore Pieces →') }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat3_image', 'editorial-category-3.jpg')) }}?v={{ cache_id }}" id="preview_mood3" alt="Mood 3">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Upload Portal 3 Photo
+                                            <input type="file" name="mood_cat3_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_mood3', 'status_mood3')">
+                                        </label>
+                                        <input type="hidden" name="mood_cat3_image" value="{{ cms.get('mood_cat3_image', 'editorial-category-3.jpg') }}">
+                                        <div class="file-chosen-status" id="status_mood3">{{ cms.get('mood_cat3_image', 'editorial-category-3.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mood 4: Wedding Regalia -->
+                        <h3 style="font-size: 14px; text-transform: uppercase; letter-spacing: 0.1em; margin: 20px 0 10px; border-bottom: 1px dashed var(--admin-border); padding-bottom: 6px;">04 / Portal 4 (Wedding Regalia)</h3>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Title</label>
+                                <input type="text" class="form-input" name="mood_cat4_title" value="{{ cms.get('mood_cat4_title', 'Wedding Regalia') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Link Subtitle</label>
+                                <input type="text" class="form-input" name="mood_cat4_sub" value="{{ cms.get('mood_cat4_sub', 'Explore Pieces →') }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat4_image', 'editorial-category-4.jpg')) }}?v={{ cache_id }}" id="preview_mood4" alt="Mood 4">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Upload Portal 4 Photo
+                                            <input type="file" name="mood_cat4_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_mood4', 'status_mood4')">
+                                        </label>
+                                        <input type="hidden" name="mood_cat4_image" value="{{ cms.get('mood_cat4_image', 'editorial-category-4.jpg') }}">
+                                        <div class="file-chosen-status" id="status_mood4">{{ cms.get('mood_cat4_image', 'editorial-category-4.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 4: FEATURED COLLECTION
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-collection">
+                        <div class="card-header-bar">
+                            <h2>📜 Featured Collection (Split Editorial)</h2>
+                            <span class="card-badge-tag">Collection Story</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Eyebrow</label>
+                                <input type="text" class="form-input" name="collection_eyebrow" value="{{ cms.get('collection_eyebrow', 'COLLECTION 01') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Headline Title</label>
+                                <input type="text" class="form-input" name="collection_title" value="{{ cms.get('collection_title', 'Threads<br>of Memory') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Story Narrative</label>
+                            <textarea class="form-textarea" name="collection_desc">{{ cms.get('collection_desc', '') }}</textarea>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Button Label</label>
+                                <input type="text" class="form-input" name="collection_cta_text" value="{{ cms.get('collection_cta_text', 'Explore Collection →') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Button Link</label>
+                                <input type="text" class="form-input" name="collection_cta_link" value="{{ cms.get('collection_cta_link', '/shop') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Collection Portrait Image</label>
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('collection_image', 'editorial-collection.jpg')) }}?v={{ cache_id }}" id="preview_coll" alt="Collection Image">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Replace Collection Photo
+                                            <input type="file" name="collection_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_coll', 'status_coll')">
+                                        </label>
+                                        <input type="hidden" name="collection_image" value="{{ cms.get('collection_image', 'editorial-collection.jpg') }}">
+                                        <div class="file-chosen-status" id="status_coll">{{ cms.get('collection_image', 'editorial-collection.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 5: BRIDAL & CELEBRATION EDIT
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-bridal">
+                        <div class="card-header-bar">
+                            <h2>👰 Bridal & Celebration Edit</h2>
+                            <span class="card-badge-tag">Couture Showcase</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Eyebrow</label>
+                                <input type="text" class="form-input" name="bridal_eyebrow" value="{{ cms.get('bridal_eyebrow', 'THE BRIDAL EDIT') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Headline Title</label>
+                                <input type="text" class="form-input" name="bridal_title" value="{{ cms.get('bridal_title', 'Made for moments that stay with you.') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bridal Description</label>
+                            <textarea class="form-textarea" name="bridal_desc">{{ cms.get('bridal_desc', '') }}</textarea>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Button Label</label>
+                                <input type="text" class="form-input" name="bridal_cta_text" value="{{ cms.get('bridal_cta_text', 'View The Bridal Edit →') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Button Link</label>
+                                <input type="text" class="form-input" name="bridal_cta_link" value="{{ cms.get('bridal_cta_link', '/shop?category=Wedding+Wear') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bridal Hero Image</label>
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('bridal_image', 'editorial-bridal.jpg')) }}?v={{ cache_id }}" id="preview_bridal" alt="Bridal Image">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Replace Bridal Photo
+                                            <input type="file" name="bridal_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_bridal', 'status_bridal')">
+                                        </label>
+                                        <input type="hidden" name="bridal_image" value="{{ cms.get('bridal_image', 'editorial-bridal.jpg') }}">
+                                        <div class="file-chosen-status" id="status_bridal">{{ cms.get('bridal_image', 'editorial-bridal.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 6: SEASONAL ARCHIVE (3 PHOTOS)
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-seasonal">
+                        <div class="card-header-bar">
+                            <h2>🍂 Seasonal Forecast & Lookbook (3 Photos)</h2>
+                            <span class="card-badge-tag">Editorial Grid</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Season Badge</label>
+                                <input type="text" class="form-input" name="seasonal_eyebrow" value="{{ cms.get('seasonal_eyebrow', 'AUTUMN — WINTER 2026') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Season Title</label>
+                                <input type="text" class="form-input" name="seasonal_title" value="{{ cms.get('seasonal_title', 'The season,<br>in fabric.') }}">
+                            </div>
+                        </div>
+
+                        <!-- Seasonal Photo 1 -->
+                        <h4 style="font-size: 13px; text-transform: uppercase; margin: 16px 0 8px;">Photo 01</h4>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Tag</label>
+                                <input type="text" class="form-input" name="seasonal_cap1_tag" value="{{ cms.get('seasonal_cap1_tag', 'Editorial') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Caption Text</label>
+                                <input type="text" class="form-input" name="seasonal_cap1_text" value="{{ cms.get('seasonal_cap1_text', 'Warmth in every stitch') }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('seasonal_img1', 'editorial-seasonal-1.jpg')) }}?v={{ cache_id }}" id="preview_seas1" alt="Seasonal 1">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Upload Photo 1
+                                            <input type="file" name="seasonal_img1_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_seas1', 'status_seas1')">
+                                        </label>
+                                        <input type="hidden" name="seasonal_img1" value="{{ cms.get('seasonal_img1', 'editorial-seasonal-1.jpg') }}">
+                                        <div class="file-chosen-status" id="status_seas1">{{ cms.get('seasonal_img1', 'editorial-seasonal-1.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seasonal Photo 2 -->
+                        <h4 style="font-size: 13px; text-transform: uppercase; margin: 16px 0 8px;">Photo 02</h4>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Tag</label>
+                                <input type="text" class="form-input" name="seasonal_cap2_tag" value="{{ cms.get('seasonal_cap2_tag', 'Craft') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Caption Text</label>
+                                <input type="text" class="form-input" name="seasonal_cap2_text" value="{{ cms.get('seasonal_cap2_text', 'Hand-finished details') }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('seasonal_img2', 'editorial-seasonal-2.jpg')) }}?v={{ cache_id }}" id="preview_seas2" alt="Seasonal 2">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Upload Photo 2
+                                            <input type="file" name="seasonal_img2_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_seas2', 'status_seas2')">
+                                        </label>
+                                        <input type="hidden" name="seasonal_img2" value="{{ cms.get('seasonal_img2', 'editorial-seasonal-2.jpg') }}">
+                                        <div class="file-chosen-status" id="status_seas2">{{ cms.get('seasonal_img2', 'editorial-seasonal-2.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Seasonal Photo 3 -->
+                        <h4 style="font-size: 13px; text-transform: uppercase; margin: 16px 0 8px;">Photo 03</h4>
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Tag</label>
+                                <input type="text" class="form-input" name="seasonal_cap3_tag" value="{{ cms.get('seasonal_cap3_tag', 'Texture') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Caption Text</label>
+                                <input type="text" class="form-input" name="seasonal_cap3_text" value="{{ cms.get('seasonal_cap3_text', 'Natural fibres, living colour') }}">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('seasonal_img3', 'editorial-seasonal-3.jpg')) }}?v={{ cache_id }}" id="preview_seas3" alt="Seasonal 3">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Upload Photo 3
+                                            <input type="file" name="seasonal_img3_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_seas3', 'status_seas3')">
+                                        </label>
+                                        <input type="hidden" name="seasonal_img3" value="{{ cms.get('seasonal_img3', 'editorial-seasonal-3.jpg') }}">
+                                        <div class="file-chosen-status" id="status_seas3">{{ cms.get('seasonal_img3', 'editorial-seasonal-3.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 7: LATEST TRENDS FORECAST
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-trends">
+                        <div class="card-header-bar">
+                            <h2>⚡ Latest Trends Forecast</h2>
+                            <span class="card-badge-tag">Fashion Intelligence</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Eyebrow</label>
+                                <input type="text" class="form-input" name="trends_eyebrow" value="{{ cms.get('trends_eyebrow', 'THE SEASONAL FORECAST') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Trends Title</label>
+                                <input type="text" class="form-input" name="trends_title" value="{{ cms.get('trends_title', 'LATEST<br><span>TRENDS</span>') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Description Story</label>
+                            <textarea class="form-textarea" name="trends_desc">{{ cms.get('trends_desc', '') }}</textarea>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Button Label</label>
+                                <input type="text" class="form-input" name="trends_cta_text" value="{{ cms.get('trends_cta_text', 'Discover The Edit →') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Button Link</label>
+                                <input type="text" class="form-input" name="trends_cta_link" value="{{ cms.get('trends_cta_link', '/shop') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Trends Featured Poster Image</label>
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('trends_image', 'editorial-trends.jpg')) }}?v={{ cache_id }}" id="preview_trends" alt="Trends Image">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Upload Trends Photo
+                                            <input type="file" name="trends_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_trends', 'status_trends')">
+                                        </label>
+                                        <input type="hidden" name="trends_image" value="{{ cms.get('trends_image', 'editorial-trends.jpg') }}">
+                                        <div class="file-chosen-status" id="status_trends">{{ cms.get('trends_image', 'editorial-trends.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 8: HANDMADE CRAFT PROCESS
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-craft">
+                        <div class="card-header-bar">
+                            <h2>✂️ Handmade Craft Process (4 Stages)</h2>
+                            <span class="card-badge-tag">Atelier Philosophy</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Eyebrow</label>
+                                <input type="text" class="form-input" name="process_eyebrow" value="{{ cms.get('process_eyebrow', 'THE CRAFT') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Section Title</label>
+                                <input type="text" class="form-input" name="process_title" value="{{ cms.get('process_title', 'Made by Hand.') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Section Intro Text</label>
+                            <input type="text" class="form-input" name="process_intro" value="{{ cms.get('process_intro', '') }}">
+                        </div>
+
+                        <!-- 4 Process Steps -->
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Step 01 Title</label>
+                                <input type="text" class="form-input" name="process_step1_title" value="{{ cms.get('process_step1_title', 'The Idea') }}">
+                                <textarea class="form-textarea" style="margin-top:6px;" name="process_step1_desc">{{ cms.get('process_step1_desc', '') }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Step 02 Title</label>
+                                <input type="text" class="form-input" name="process_step2_title" value="{{ cms.get('process_step2_title', 'The Fabric') }}">
+                                <textarea class="form-textarea" style="margin-top:6px;" name="process_step2_desc">{{ cms.get('process_step2_desc', '') }}</textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Step 03 Title</label>
+                                <input type="text" class="form-input" name="process_step3_title" value="{{ cms.get('process_step3_title', 'The Handwork') }}">
+                                <textarea class="form-textarea" style="margin-top:6px;" name="process_step3_desc">{{ cms.get('process_step3_desc', '') }}</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Step 04 Title</label>
+                                <input type="text" class="form-input" name="process_step4_title" value="{{ cms.get('process_step4_title', 'The Final Piece') }}">
+                                <textarea class="form-textarea" style="margin-top:6px;" name="process_step4_desc">{{ cms.get('process_step4_desc', '') }}</textarea>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 9: DESIGNER STORY / ABOUT
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-designer">
+                        <div class="card-header-bar">
+                            <h2>✍️ Designer Story & Studio Heritage</h2>
+                            <span class="card-badge-tag">About Atelier</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Eyebrow</label>
+                                <input type="text" class="form-input" name="designer_eyebrow" value="{{ cms.get('designer_eyebrow', 'THE DESIGNER') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Heading</label>
+                                <input type="text" class="form-input" name="designer_title" value="{{ cms.get('designer_title', 'The person<br>behind the pieces.') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Designer Story Narrative</label>
+                            <textarea class="form-textarea" name="designer_desc">{{ cms.get('designer_desc', '') }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Signature Quote</label>
+                            <input type="text" class="form-input" name="designer_quote" value="{{ cms.get('designer_quote', 'Craft is not decoration. It is memory made visible.') }}">
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Link Label</label>
+                                <input type="text" class="form-input" name="designer_cta_text" value="{{ cms.get('designer_cta_text', 'Meet the designer →') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Link Anchor</label>
+                                <input type="text" class="form-input" name="designer_cta_link" value="{{ cms.get('designer_cta_link', '#contact') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Designer Portrait / Studio Photo</label>
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap">
+                                        <img src="{{ url_for('static', filename='images/' + cms.get('designer_image', 'editorial-designer.jpg')) }}?v={{ cache_id }}" id="preview_des" alt="Designer Portrait">
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Upload Designer Photo
+                                            <input type="file" name="designer_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_des', 'status_des')">
+                                        </label>
+                                        <input type="hidden" name="designer_image" value="{{ cms.get('designer_image', 'editorial-designer.jpg') }}">
+                                        <div class="file-chosen-status" id="status_des">{{ cms.get('designer_image', 'editorial-designer.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 10: BESPOKE MADE TO ORDER
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-custom">
+                        <div class="card-header-bar">
+                            <h2>🧵 Bespoke Made-to-Order Section</h2>
+                            <span class="card-badge-tag">Custom Commission</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Eyebrow</label>
+                                <input type="text" class="form-input" name="custom_eyebrow" value="{{ cms.get('custom_eyebrow', 'MADE TO ORDER') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Headline Title</label>
+                                <input type="text" class="form-input" name="custom_title" value="{{ cms.get('custom_title', 'Your piece.<br>Your story.') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Bespoke Description</label>
+                            <textarea class="form-textarea" name="custom_desc">{{ cms.get('custom_desc', '') }}</textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Action Button Label</label>
+                            <input type="text" class="form-input" name="custom_cta_text" value="{{ cms.get('custom_cta_text', 'Start a custom order →') }}">
+                        </div>
+                    </div>
+
+
+                    <!-- =========================================
+                         TAB 11: STUDIO CONTACT & SOCIAL
+                    ========================================== -->
+                    <div class="customizer-card" id="tab-contact">
+                        <div class="card-header-bar">
+                            <h2>📞 Studio Contact & Social Coordinates</h2>
+                            <span class="card-badge-tag">Client Services</span>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Studio Phone / Hotline</label>
+                                <input type="text" class="form-input" name="studio_phone" value="{{ cms.get('studio_phone', '+91 93504 39667') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Studio WhatsApp Number (With Country Code)</label>
+                                <input type="text" class="form-input" name="studio_whatsapp" value="{{ cms.get('studio_whatsapp', '919350439667') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Studio Email Address</label>
+                                <input type="email" class="form-input" name="studio_email" value="{{ cms.get('studio_email', 'contact@tulsawear.com') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Working Hours & Days</label>
+                                <input type="text" class="form-input" name="studio_hours" value="{{ cms.get('studio_hours', 'Mon – Sat: 10:00 AM – 7:00 PM IST') }}">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">Studio Physical Address</label>
+                            <input type="text" class="form-input" name="studio_address" value="{{ cms.get('studio_address', 'Tulsa Wears Atelier, Hansi, Haryana, India - 125033') }}">
+                        </div>
+
+                        <div class="form-grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Primary Instagram Handle</label>
+                                <input type="text" class="form-input" name="instagram_handle_1" value="{{ cms.get('instagram_handle_1', '__aannuuu.06') }}">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Secondary Instagram Handle</label>
+                                <input type="text" class="form-input" name="instagram_handle_2" value="{{ cms.get('instagram_handle_2', 'tulsawear') }}">
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- RIGHT COLUMN: INTERACTIVE LIVE PREVIEW -->
+                <div class="preview-column">
+                    <div class="preview-sticky-wrap">
+                        <div class="preview-toolbar">
+                            <div class="preview-title">
+                                <span>📱 Live Preview</span>
+                                <small style="color:var(--admin-muted); font-size:10px; font-weight:400;">(Real-time responsive frame)</small>
+                            </div>
+
+                            <div class="device-switcher">
+                                <button type="button" class="device-btn" id="btnDeviceDesktop">🖥️ Desktop</button>
+                                <button type="button" class="device-btn" id="btnDeviceTablet">📱 Tablet</button>
+                                <button type="button" class="device-btn active" id="btnDeviceMobile">📱 Mobile</button>
+                            </div>
+
+                            <button type="button" class="btn-live-store" style="background:#111; color:#fff; font-size:10px; padding:4px 8px;" onclick="refreshPreviewFrame()">
+                                🔄 Reload
+                            </button>
+                        </div>
+
+                        <div class="preview-viewport-box">
+                            <iframe id="livePreviewIframe" class="preview-frame mode-mobile" src="{{ url_for('home') }}?preview=1" title="Live Storefront Preview"></iframe>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+    <!-- Mobile Bottom Floating Action Bar -->
+    <div class="mobile-bottom-bar">
+        <button type="button" class="btn-gold-save" id="bottomSaveBtn">
+            💾 Save & Publish
+        </button>
+        <button type="button" class="btn-mobile-preview-toggle" id="mobilePreviewScrollBtn">
+            👁️ Preview
+        </button>
+    </div>
+
+    <!-- JavaScript Interactive Functionality -->
+    <script>
+        // Section Tab Switcher
+        const tabButtons = document.querySelectorAll('.section-tab-btn');
+        const tabCards = document.querySelectorAll('.customizer-card');
+
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-tab');
+
+                tabButtons.forEach(b => b.classList.remove('active'));
+                tabCards.forEach(c => c.classList.remove('active-tab'));
+
+                btn.classList.add('active');
+                const targetCard = document.getElementById(targetId);
+                if (targetCard) {
+                    targetCard.classList.add('active-tab');
+                }
+            });
+        });
+
+        // Mobile Drawer Menu Toggle
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileAdminDrawer = document.getElementById('mobileAdminDrawer');
+
+        if (mobileMenuBtn && mobileAdminDrawer) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileAdminDrawer.classList.toggle('open');
+                mobileMenuBtn.innerText = mobileAdminDrawer.classList.contains('open') ? '✕' : '☰';
+            });
+        }
+
+        // Live Upload Image Client Preview
+        function previewUploadImage(inputElement, imgElementId, statusElementId) {
+            if (inputElement.files && inputElement.files[0]) {
+                const file = inputElement.files[0];
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const img = document.getElementById(imgElementId);
+                    if (img) {
+                        img.src = e.target.result;
+                    }
+                    const status = document.getElementById(statusElementId);
+                    if (status) {
+                        status.innerHTML = `<strong style="color: #2e7d32;">✓ Selected:</strong> ${file.name} (${(file.size / 1024).toFixed(0)} KB)`;
+                    }
+                };
+
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Device Switcher
+        const previewIframe = document.getElementById('livePreviewIframe');
+        const btnDesktop = document.getElementById('btnDeviceDesktop');
+        const btnTablet = document.getElementById('btnDeviceTablet');
+        const btnMobile = document.getElementById('btnDeviceMobile');
+
+        function setDevice(mode) {
+            previewIframe.classList.remove('mode-desktop', 'mode-tablet', 'mode-mobile');
+            btnDesktop.classList.remove('active');
+            btnTablet.classList.remove('active');
+            btnMobile.classList.remove('active');
+
+            if (mode === 'desktop') {
+                previewIframe.classList.add('mode-desktop');
+                btnDesktop.classList.add('active');
+            } else if (mode === 'tablet') {
+                previewIframe.classList.add('mode-tablet');
+                btnTablet.classList.add('active');
+            } else {
+                previewIframe.classList.add('mode-mobile');
+                btnMobile.classList.add('active');
+            }
+        }
+
+        btnDesktop?.addEventListener('click', () => setDevice('desktop'));
+        btnTablet?.addEventListener('click', () => setDevice('tablet'));
+        btnMobile?.addEventListener('click', () => setDevice('mobile'));
+
+        function refreshPreviewFrame() {
+            if (previewIframe) {
+                previewIframe.src = previewIframe.src;
+            }
+        }
+
+        // Save Form Submissions (Top & Bottom buttons)
+        const cmsForm = document.getElementById('cmsForm');
+        const topSaveBtn = document.getElementById('topSaveBtn');
+        const bottomSaveBtn = document.getElementById('bottomSaveBtn');
+
+        function submitCmsForm() {
+            if (topSaveBtn) {
+                topSaveBtn.disabled = true;
+                topSaveBtn.innerHTML = '⏳ Saving...';
+            }
+            if (bottomSaveBtn) {
+                bottomSaveBtn.disabled = true;
+                bottomSaveBtn.innerHTML = '⏳ Saving...';
+            }
+            cmsForm.submit();
+        }
+
+        topSaveBtn?.addEventListener('click', submitCmsForm);
+        bottomSaveBtn?.addEventListener('click', submitCmsForm);
+
+        // Mobile Preview Scroll Helper
+        const mobilePreviewScrollBtn = document.getElementById('mobilePreviewScrollBtn');
+        mobilePreviewScrollBtn?.addEventListener('click', () => {
+            const previewWrap = document.querySelector('.preview-sticky-wrap');
+            if (previewWrap) {
+                previewWrap.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
+
+</body>
+
+</html>

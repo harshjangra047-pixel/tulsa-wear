@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Visual AI Scans — {{ brand_name }} Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .admin-trends-section {
+            padding: 100px 48px 80px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .admin-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .admin-heading h1 {
+            font-size: clamp(32px, 3.5vw, 48px);
+            font-weight: 400;
+            margin-top: 6px;
+        }
+
+        .trends-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .trend-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trend-img-wrapper {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            background: #f4f0eb;
+            overflow: hidden;
+        }
+
+        .trend-img-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .trend-img-wrapper:hover img {
+            transform: scale(1.03);
+        }
+
+        .trend-content {
+            padding: 18px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .trend-meta {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .trend-time {
+            font-size: 12px;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .btn-view-full {
+            display: inline-block;
+            margin-top: 14px;
+            text-align: center;
+            background: #faf8f5;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 8px 14px;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 2px;
+        }
+
+        .btn-view-full:hover {
+            background: #efebe4;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <a href="{{ url_for('home') }}" class="logo">{{ brand_name|upper }} ADMIN</a>
+
+        <nav class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('admin_customizer') }}" style="color: #c5a059; font-weight: 600;">🎨 Website Designer</a>
+            <a href="{{ url_for('admin_orders') }}">Orders</a>
+            <a href="{{ url_for('admin_products') }}">Products & Photos</a>
+            <a href="{{ url_for('admin_custom_orders') }}">Custom Requests</a>
+            <a href="{{ url_for('admin_coupons') }}">Coupons</a>
+            <a href="{{ url_for('admin_inquiries') }}">Inquiries</a>
+            <a href="{{ url_for('admin_trends') }}" style="border-bottom: 1px solid var(--text); padding-bottom: 4px;">AI Trends & Scans</a>
+            <a href="{{ url_for('admin_feedback') }}">Reviews</a>
+            <a href="{{ url_for('admin_settings') }}">Settings</a>
+            <a href="{{ url_for('home') }}">View Website</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('admin_logout') }}" class="logout-btn" style="font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: #c0392b; padding: 6px 14px; border: 1px solid #f5c6cb; text-decoration: none; border-radius: 2px;">
+                Sign Out
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <section class="admin-trends-section">
+
+            <div class="admin-heading">
+                <div>
+                    <p class="eyebrow">CUSTOMER INSPIRATION INTELLIGENCE</p>
+                    <h1>AI Fashion Concierge Scans</h1>
+                    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+                        Showing outfits and dress designs scanned by customers on the AI Fashion Concierge. Use these designs to craft new catalog items or tailor bespoke commissions.
+                    </p>
+                </div>
+            </div>
+
+            {% if trends and trends|length > 0 %}
+            <div class="trends-grid">
+                {% for item in trends %}
+                <div class="trend-card">
+                    <div class="trend-img-wrapper">
+                        <img src="{{ url_for('static', filename='images/ai_uploads/' ~ item.image) }}" alt="Customer Uploaded Dress Look" loading="lazy" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/product-1.jpg') }}';">
+                    </div>
+                    <div class="trend-content">
+                        <div>
+                            <div class="trend-meta">Source: {{ item.source or 'AI Fashion Concierge' }}</div>
+                            <div class="trend-time">
+                                Scanned: {{ item.created_at.strftime('%d %b %Y, %I:%M %p') if item.created_at else 'Recent' }}
+                            </div>
+                        </div>
+                        <a href="{{ url_for('static', filename='images/ai_uploads/' ~ item.image) }}" target="_blank" class="btn-view-full">
+                            Inspect High-Res Photo ↗
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div style="background: #fff; border: 1px solid var(--border); text-align: center; padding: 80px 20px;">
+                <h3 style="font-size: 28px; margin-bottom: 8px;">No Uploaded Scans Yet</h3>
+                <p style="color: var(--muted); font-size: 13px; max-width: 500px; margin: 0 auto;">
+                    When shoppers upload outfit photos into the <strong>✦ AI Fashion Concierge</strong> on your homepage, their scanned photos will be automatically archived here.
+                </p>
+            </div>
+            {% endif %}
+
+        </section>
+    </main>
+
+</body>
+</html>
