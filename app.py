@@ -99,6 +99,9 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 # Media upload configuration
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "images")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+# Vercel's deployed filesystem is read-only. Use /tmp for runtime payment-proof
+# uploads. Note: /tmp is temporary on serverless deployments; permanent storage
+# should be moved to object/blob storage for production.
 PAYMENT_PROOFS_FOLDER = os.path.join("/tmp", "payment_proofs")
 os.makedirs(PAYMENT_PROOFS_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
