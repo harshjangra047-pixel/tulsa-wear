@@ -36,3 +36,8 @@ database/*.sqlite3
 session_secret
 .session_secret
 .session_secret*
+.vercel
+.env*
+.env
+session_secret
+venv/
