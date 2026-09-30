@@ -281,7 +281,7 @@
                 {% for p in products[:8] %}
                     {% if p.image %}
                     <div class="filmstrip-thumb">
-                        <img src="{{ url_for('static', filename='images/' + p.image) }}?v={{ cache_id }}" 
+                        <img src="{{ product_image_url(p.image) }}?v={{ cache_id }}"
                              alt="{{ p.name }}" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
@@ -297,7 +297,7 @@
                     <div class="curved-item" data-id="{{ product.id }}">
                         <div class="curved-card-media">
                             <span class="curved-badge">Handmade</span>
-                            <img src="{{ url_for('static', filename='images/' + (product.image or 'editorial-hero.jpg')) }}?v={{ cache_id }}" 
+                            <img src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
                                  alt="{{ product.name }}" 
                                  decoding="async"
                                  loading="eager"
@@ -349,8 +349,8 @@
                          data-price="{{ p.price }}"
                          data-desc="{{ p.description or 'Handcrafted from fine natural fibers with artisanal precision.' }}"
                          data-tag="{{ p.category }}"
-                         data-img="{{ url_for('static', filename='images/' + (p.image or 'garment-01.jpg')) }}?v={{ cache_id }}">
-                        <img src="{{ url_for('static', filename='images/' + (p.image or 'garment-01.jpg')) }}?v={{ cache_id }}" alt="{{ p.name }}">
+                         data-img="{{ product_image_url(p.image, 'garment-01.jpg') }}?v={{ cache_id }}">
+                        <img src="{{ product_image_url(p.image, 'garment-01.jpg') }}?v={{ cache_id }}" alt="{{ p.name }}">
                     </div>
                     {% endfor %}
                 </div>
@@ -360,7 +360,7 @@
                     {% set initial_p = products[0] if products else None %}
                     <img id="lookStageImg"
                          class="look-mannequin-img"
-                         src="{{ url_for('static', filename='images/' + (initial_p.image if initial_p and initial_p.image else 'editorial-hero.jpg')) }}?v={{ cache_id }}"
+                         src="{{ product_image_url(initial_p.image if initial_p else None) }}?v={{ cache_id }}"
                          alt="Selected Couture Look">
                 </div>
 
@@ -441,7 +441,7 @@
 
                         {% if product.image %}
                         <img
-                            src="{{ url_for('static', filename='images/' + product.image) }}?v={{ cache_id }}"
+                            src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
                             alt="{{ product.name }}"
                             loading="lazy"
                         >
@@ -562,7 +562,7 @@
                     {% for p in products if p.category == 'Wedding Wear' or 'Wedding' in p.name %}
                     <div class="bridal-pedestal-card">
                         <div class="bridal-card-media">
-                            <img src="{{ url_for('static', filename='images/' + (p.image or 'editorial-bridal.jpg')) }}?v={{ cache_id }}" 
+                            <img src="{{ product_image_url(p.image, 'editorial-bridal.jpg') }}?v={{ cache_id }}"
                                  alt="{{ p.name }}" 
                                  decoding="async"
                                  onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">

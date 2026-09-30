@@ -81,7 +81,7 @@
                             <div class="pdp-main-image-wrap">
                                 {% if product.image %}
                                 <img id="mainPdpImage" 
-                                     src="{{ url_for('static', filename='images/' + product.image) }}?v={{ cache_id }}" 
+                                     src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
                                      alt="{{ product.name }}"
                                      onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                                 {% else %}

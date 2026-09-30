@@ -162,7 +162,7 @@
                 <a href="{{ url_for('product_detail', product_id=product.id) }}" class="editorial-card reveal">
                     <div class="editorial-card-media">
                         {% if product.image %}
-                        <img src="{{ url_for('static', filename='images/' + product.image) }}?v={{ cache_id }}" 
+                        <img src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
                              alt="{{ product.name }}" 
                              loading="lazy" 
                              decoding="async" 

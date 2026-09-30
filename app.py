@@ -66,6 +66,22 @@ load_dotenv()
 
 app = Flask(__name__)
 
+
+@app.template_global()
+def product_image_url(image, fallback="editorial-hero.jpg"):
+    """
+    Supports:
+    - existing local image filenames
+    - absolute Vercel Blob URLs uploaded by the Admin Portal
+    """
+    if image:
+        image = str(image).strip()
+        if image.startswith(("http://", "https://")):
+            return image
+        return url_for("static", filename=f"images/{image}")
+
+    return url_for("static", filename=f"images/{fallback}")
+
 # Persistent High-Entropy Cryptographic Session Key
 SECRET_KEY_FILE = os.path.join(app.root_path, ".session_secret")
 if os.getenv("FLASK_SECRET_KEY"):

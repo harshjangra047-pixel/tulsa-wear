@@ -458,7 +458,7 @@
                                 <td>
                                     <div class="photo-upload-box">
                                         <a href="{{ url_for('product_detail', product_id=p.id) }}" target="_blank">
-                                            <img src="{{ url_for('static', filename='images/' + (p.image or 'product-1.jpg')) }}?v={{ cache_id }}" alt="{{ p.name }}" class="prod-thumb">
+                                            <img src="{{ product_image_url(p.image, 'product-1.jpg') }}?v={{ cache_id }}" alt="{{ p.name }}" class="prod-thumb">
                                         </a>
                                     </div>
                                 </td>
