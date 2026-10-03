@@ -33,6 +33,7 @@ from sqlalchemy import inspect, text
 
 from models.database import db
 from models.product import Product
+from models.product_image import ProductImage
 from models.order import Order
 from models.feedback import Feedback
 from models.custom_order import CustomOrder

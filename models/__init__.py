@@ -9,3 +9,5 @@ from .customer_user import CustomerUser
 from .traffic_log import TrafficLog
 
 __all__ = ["db", "Product", "Order", "Feedback", "CustomOrder", "AdminUser", "TrendUpload", "CustomerUser", "TrafficLog"]
+
+from .product_image import ProductImage

@@ -80,10 +80,44 @@
                         <div class="pdp-interactive-frame" id="pdpFrame">
                             <div class="pdp-main-image-wrap">
                                 {% if product.image %}
-                                <img id="mainPdpImage" 
-                                     src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
-                                     alt="{{ product.name }}"
-                                     onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                                {% set gallery_items = product.gallery_images|list %}
+{% if gallery_items %}
+    {% set gallery_primary = gallery_items[0].image_url %}
+{% else %}
+    {% set gallery_primary = product.image %}
+{% endif %}
+
+{% if gallery_primary %}
+<div class="pdp-gallery-stage">
+    <img
+        id="mainPdpImage"
+        src="{% if gallery_primary.startswith(('http://', 'https://')) %}{{ gallery_primary }}{% else %}{{ product_image_url(gallery_primary) }}{% endif %}?v={{ cache_id }}"
+        alt="{{ product.name }}"
+        loading="eager"
+        onerror="this.onerror=null;this.src='{{ product_image_url("editorial-hero.jpg") }}';"
+    >
+</div>
+
+{% if gallery_items %}
+<div class="pdp-gallery-thumbs" aria-label="Product photos">
+    {% for gallery_image in gallery_items %}
+    <button
+        type="button"
+        class="pdp-gallery-thumb{% if loop.first %} active{% endif %}"
+        data-full-src="{{ gallery_image.image_url }}"
+        data-alt="{{ product.name }} photo {{ loop.index }}"
+        aria-label="View {{ product.name }} photo {{ loop.index }}"
+    >
+        <img
+            src="{{ gallery_image.image_url }}"
+            alt="{{ product.name }} thumbnail {{ loop.index }}"
+            loading="lazy"
+        >
+    </button>
+    {% endfor %}
+</div>
+{% endif %}
+{% endif %}
                                 {% else %}
                                 <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #eee8df; color: var(--text-muted); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">
                                     Atelier Archive Piece

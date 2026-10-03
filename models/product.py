@@ -62,3 +62,10 @@ class Product(db.Model):
         return (
             f"<Product {self.name}>"
         )
+    gallery_images = db.relationship(
+        "ProductImage",
+        backref="product",
+        cascade="all, delete-orphan",
+        order_by="ProductImage.sort_order",
+        lazy="selectin",
+    )

@@ -14,12 +14,7 @@ class ProductImage(db.Model):
     )
 
     image_url = db.Column(db.String(1000), nullable=False)
-
-    sort_order = db.Column(
-        db.Integer,
-        nullable=False,
-        default=0,
-    )
+    sort_order = db.Column(db.Integer, nullable=False, default=0)
 
     created_at = db.Column(
         db.DateTime,
