@@ -255,8 +255,9 @@ def inject_global_vars():
     return dict(
         cache_id=int(time.time()),
         cms=cms,
-        brand_name=cms.get("brand_name", "Tulsa Wears"),
-        brand_tagline=cms.get("brand_tagline", "Since 2025"),
+        brand_name=cms.get("brand_name", "Tulsa by Anjali"),
+        brand_tagline=cms.get("brand_tagline", "Handcrafted Slow Fashion • By Anjali"),
+        brand_logo=cms.get("brand_logo", "tulsa-brand-logo.png"),
         instagram_handle_1=cms.get("instagram_handle_1", "__aannuuu.06"),
         instagram_handle_2=cms.get("instagram_handle_2", "tulsawear"),
         default_delivery_days=delivery_days,
@@ -1362,24 +1363,17 @@ def submit_payment_proof(order_id):
         flash("⚠️ Please enter a genuine UPI UTR / Transaction Reference ID (min 8 alphanumeric characters from your payment app).", "danger")
         return redirect(url_for("view_payment_step", order_id=order.id))
 
-    # Store submitted payment evidence privately; it is never payment confirmation.
+    # Store submitted payment evidence privately; optional screenshot, mandatory UTR
     if "payment_screenshot" in request.files:
         file = request.files["payment_screenshot"]
-        if not file or not file.filename:
-            flash("Please select a JPG, PNG, or WebP payment screenshot.", "danger")
-            return redirect(url_for("view_payment_step", order_id=order.id))
-        try:
-            order.payment_screenshot = upload_payment_proof(file, order.id)
-        except ValueError as exc:
-            flash(str(exc), "danger")
-            return redirect(url_for("view_payment_step", order_id=order.id))
-        except Exception as exc:
-            app.logger.warning("Private payment-proof storage unavailable (%s)", type(exc).__name__)
-            flash("Private proof storage is not configured or is temporarily unavailable. No payment proof was saved.", "danger")
-            return redirect(url_for("view_payment_step", order_id=order.id))
-    else:
-        flash("⚠️ Payment screenshot is required to verify your transaction.", "danger")
-        return redirect(url_for("view_payment_step", order_id=order.id))
+        if file and file.filename:
+            try:
+                order.payment_screenshot = upload_payment_proof(file, order.id)
+            except ValueError as exc:
+                flash(str(exc), "danger")
+                return redirect(url_for("view_payment_step", order_id=order.id))
+            except Exception as exc:
+                app.logger.warning("Private payment-proof storage unavailable (%s)", type(exc).__name__)
 
     order.payment_method = payment_method
     order.status = "Payment Verification Required"
@@ -1722,10 +1716,10 @@ def customer_register():
     city = (data.get("city") or "").strip()
     pincode = (data.get("pincode") or "").strip()
 
-    if not name or not phone or len(password) < 12:
+    if not name or not phone or len(password) < 6:
         if request.is_json:
-            return jsonify({"success": False, "message": "Name, mobile number, and a password of at least 12 characters are required."}), 400
-        flash("Name, mobile number, and a password of at least 12 characters are required.", "danger")
+            return jsonify({"success": False, "message": "Name, mobile number, and a password of at least 6 characters are required."}), 400
+        flash("Name, mobile number, and a password of at least 6 characters are required.", "danger")
         return redirect(request.referrer or url_for("checkout"))
 
     is_valid_phone, clean_phone = validate_indian_phone(phone)
@@ -1789,7 +1783,11 @@ def customer_login():
     if is_valid_phone:
         phone = clean_phone
 
-    customer = CustomerUser.query.filter_by(phone=phone).first()
+    customer = CustomerUser.query.filter((CustomerUser.phone == phone) | (CustomerUser.email == phone)).first()
+    if not customer:
+        is_valid_phone, clean_phone = validate_indian_phone(phone)
+        if is_valid_phone:
+            customer = CustomerUser.query.filter_by(phone=clean_phone).first()
     if not customer:
         if request.is_json:
             return jsonify({"success": False, "message": "No account found with this phone number. Please register."}), 404
