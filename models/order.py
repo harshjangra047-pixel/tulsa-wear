@@ -155,6 +155,9 @@ class Order(db.Model):
         nullable=True
     )
 
+    manual_payment_verified_by = db.Column(db.String(80), nullable=True)
+    manual_payment_verified_at = db.Column(db.DateTime, nullable=True)
+
     customer_id = db.Column(
         db.Integer,
         nullable=True

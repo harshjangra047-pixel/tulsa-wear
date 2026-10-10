@@ -1,21 +1,35 @@
 import os
 import json
 import logging
-from werkzeug.utils import secure_filename
+import re
+import io
+from models.database import db
+from models.site_content import SiteContent, SiteContentRevision
 
 logger = logging.getLogger(__name__)
 
 CONTENT_FILE_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "database", "site_content.json")
-ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "gif", "svg"}
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "avif"}
 
 DEFAULT_SITE_CONTENT = {
+    "editor_sections": [
+        {"id": section_id, "visible": True} for section_id in (
+            "hero-section", "mood-portals", "curved-carousel", "look-builder",
+            "best-sellers", "collections", "bridal", "seasonal", "campaign-gallery",
+            "trends", "categories", "shop-price", "process", "about", "contact",
+            "ai-studio", "feedback", "faq-section", "contact-us", "instagram-section",
+            "newsletter-section"
+        )
+    ],
+    "custom_sections": [],
+    "editor_theme": {"accent": "#C9A96E", "background": "#F7F4EF", "heading_font": "Cormorant Garamond", "section_spacing": 96},
     # Announcement Bar
     "announcement_enabled": "true",
     "announcement_text": "✦ FESTIVE ATELIER — COMPLIMENTARY BESPOKE TAILORING ON ALL PRE-ORDERS ✦",
     "announcement_link": "#collections",
 
     # Brand Identity
-    "brand_name": "Tulsa Wears",
+    "brand_name": "TULSA — BY ANJALI",
     "brand_tagline": "Handcrafted Slow Fashion • Est. 2025",
     "footer_bio": "Tulsa Wears is an artisanal fashion studio dedicated to the slow, thoughtful creation of handmade Indian garments.",
 
@@ -134,13 +148,82 @@ DEFAULT_SITE_CONTENT = {
     "instagram_handle_2": "tulsawear"
 }
 
+BUILT_IN_EDITOR_SECTIONS = tuple(item["id"] for item in DEFAULT_SITE_CONTENT["editor_sections"])
+
+
+def validate_editor_layout(sections_json: str, custom_json: str):
+    """Accept only known section ids and plain text custom-section data."""
+    try:
+        sections = json.loads(sections_json or "[]")
+        custom_sections = json.loads(custom_json or "[]")
+        if not isinstance(sections, list) or not isinstance(custom_sections, list) or len(custom_sections) > 8:
+            return None
+        clean_custom = []
+        allowed_backgrounds = {"ivory", "cream", "dark"}
+        for section in custom_sections:
+            if not isinstance(section, dict):
+                return None
+            section_id = str(section.get("id", ""))
+            if not re.fullmatch(r"custom-[a-f0-9]{8}", section_id):
+                return None
+            clean_custom.append({
+                "id": section_id,
+                "title": str(section.get("title", ""))[:120],
+                "body": str(section.get("body", ""))[:1200],
+                "background": section.get("background") if section.get("background") in allowed_backgrounds else "ivory",
+            })
+        custom_ids = {section["id"] for section in clean_custom}
+        valid_ids = set(BUILT_IN_EDITOR_SECTIONS) | custom_ids
+        clean_layout, seen = [], set()
+        for item in sections:
+            if not isinstance(item, dict):
+                return None
+            section_id = str(item.get("id", ""))
+            if section_id not in valid_ids or section_id in seen:
+                return None
+            seen.add(section_id)
+            width = item.get("width", 100)
+            if width not in {50, 75, 90, 100}:
+                width = 100
+            try:
+                min_height = max(0, min(640, int(item.get("min_height", 0))))
+            except (TypeError, ValueError):
+                min_height = 0
+            clean_layout.append({
+                "id": section_id,
+                "visible": item.get("visible") is not False,
+                "width": width,
+                "min_height": min_height,
+            })
+        for section_id in BUILT_IN_EDITOR_SECTIONS:
+            if section_id not in seen:
+                clean_layout.append({"id": section_id, "visible": True, "width": 100, "min_height": 0})
+        for section_id in custom_ids:
+            if section_id not in seen:
+                clean_layout.append({"id": section_id, "visible": True, "width": 100, "min_height": 0})
+        return clean_layout, clean_custom
+    except (TypeError, ValueError):
+        return None
+
+
+def validate_editor_theme(accent: str, background: str, font: str, spacing):
+    defaults = DEFAULT_SITE_CONTENT["editor_theme"]
+    accent = accent if isinstance(accent, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", accent) else defaults["accent"]
+    background = background if isinstance(background, str) and re.fullmatch(r"#[0-9A-Fa-f]{6}", background) else defaults["background"]
+    fonts = {"Cormorant Garamond", "Inter", "Georgia", "Arial"}
+    font = font if font in fonts else defaults["heading_font"]
+    try:
+        spacing = max(48, min(180, int(spacing)))
+    except (ValueError, TypeError):
+        spacing = defaults["section_spacing"]
+    return {"accent": accent, "background": background, "heading_font": font, "section_spacing": spacing}
+
 
 def is_allowed_file(filename: str) -> bool:
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def get_site_content() -> dict:
-    """Reads the custom site content from disk, falling back to defaults."""
+def _legacy_site_content() -> dict:
     content = dict(DEFAULT_SITE_CONTENT)
     if os.path.exists(CONTENT_FILE_PATH):
         try:
@@ -150,55 +233,114 @@ def get_site_content() -> dict:
                     content.update(saved)
         except Exception as e:
             logger.error(f"Error loading site_content.json: {e}")
+    if content.get("brand_name") == "Tulsa Wears":
+        content["brand_name"] = DEFAULT_SITE_CONTENT["brand_name"]
     return content
 
 
-def save_site_content(content_dict: dict) -> bool:
-    """Saves the given dictionary to database/site_content.json."""
+def get_site_content(preview_draft: bool = False) -> dict:
+    """Read the shared database document, importing the old JSON once."""
     try:
-        os.makedirs(os.path.dirname(CONTENT_FILE_PATH), exist_ok=True)
-        with open(CONTENT_FILE_PATH, "w", encoding="utf-8") as f:
-            json.dump(content_dict, f, indent=2, ensure_ascii=False)
+        document = SiteContent.query.get(2 if preview_draft else 1)
+        if not document:
+            content = _legacy_site_content()
+            save_site_content(content, publish=not preview_draft)
+            return content
+        content = dict(DEFAULT_SITE_CONTENT)
+        saved = json.loads(document.content_json)
+        if isinstance(saved, dict):
+            content.update(saved)
+        if content.get("brand_name") == "Tulsa Wears":
+            content["brand_name"] = DEFAULT_SITE_CONTENT["brand_name"]
+        return content
+    except Exception:
+        db.session.rollback()
+        logger.exception("Shared site content unavailable; using legacy content")
+        return _legacy_site_content()
+
+
+def save_site_content(content_dict: dict, publish: bool = True) -> bool:
+    """Persist a draft or published document and retain an immutable snapshot."""
+    try:
+        document_id = 1 if publish else 2
+        document = SiteContent.query.get(document_id)
+        if document is None:
+            document = SiteContent(id=document_id, content_json="{}", revision=0)
+            db.session.add(document)
+        payload = json.dumps(content_dict, indent=2, ensure_ascii=False)
+        snapshot = SiteContentRevision(content_json=payload, revision=0,
+                                       state="published" if publish else "draft")
+        db.session.add(snapshot)
+        db.session.flush()
+        revision = snapshot.id
+        document.content_json = payload
+        document.revision = revision
+        snapshot.revision = revision
+        db.session.commit()
         return True
-    except Exception as e:
-        logger.error(f"Error saving site_content.json: {e}")
+    except Exception:
+        db.session.rollback()
+        logger.exception("Error saving shared site content")
         return False
 
 
-def reset_site_content() -> dict:
-    """Resets site content back to default factory settings."""
-    save_site_content(DEFAULT_SITE_CONTENT)
+def reset_site_content(publish: bool = True) -> dict:
+    """Publish factory defaults as a new version without deleting history."""
+    save_site_content(DEFAULT_SITE_CONTENT, publish=publish)
     return dict(DEFAULT_SITE_CONTENT)
 
 
+def publish_site_content() -> bool:
+    draft = SiteContent.query.get(2)
+    if not draft:
+        return False
+    try:
+        return save_site_content(json.loads(draft.content_json), publish=True)
+    except Exception:
+        db.session.rollback()
+        logger.exception("Could not publish draft site content")
+        return False
+
+
+def restore_site_content_revision(revision: int) -> bool:
+    snapshot = SiteContentRevision.query.filter_by(revision=revision).first()
+    if not snapshot:
+        return False
+    try:
+        return save_site_content(json.loads(snapshot.content_json), publish=True)
+    except Exception:
+        db.session.rollback()
+        logger.exception("Could not restore site content revision")
+        return False
+
+
 def process_image_upload(file_storage, upload_folder: str, prefix: str = "cms") -> str:
-    """Saves uploaded image file safely into upload_folder with binary verification."""
+    """Validate, optimize, and persist public CMS imagery in shared Blob storage."""
     if not file_storage or not file_storage.filename:
         return ""
     if not is_allowed_file(file_storage.filename):
         return ""
-
-    filename = secure_filename(file_storage.filename)
-    ext = filename.rsplit(".", 1)[1].lower() if "." in filename else "jpg"
-
-    # SVG is text/xml based, for binary images verify with PIL
-    if ext != "svg":
-        try:
-            from PIL import Image
-            pos = file_storage.stream.tell()
-            img = Image.open(file_storage.stream)
-            img.verify()
-            file_storage.stream.seek(pos)
-        except Exception as e:
-            logger.warning(f"Rejected invalid or malicious image upload: {e}")
-            try:
-                file_storage.stream.seek(0)
-            except Exception:
-                pass
+    from PIL import Image
+    try:
+        file_storage.stream.seek(0)
+        raw = file_storage.stream.read(16 * 1024 * 1024 + 1)
+        if not raw or len(raw) > 16 * 1024 * 1024:
             return ""
-
-    unique_name = f"{prefix}_{os.urandom(6).hex()}.{ext}"
-    target_path = os.path.join(upload_folder, unique_name)
-    
-    file_storage.save(target_path)
-    return unique_name
+        with Image.open(io.BytesIO(raw)) as source:
+            source.load()
+            image = source.convert("RGBA" if "A" in source.getbands() else "RGB")
+        image.thumbnail((2400, 2400), Image.Resampling.LANCZOS)
+        output = io.BytesIO()
+        quality = 86
+        image.save(output, format="WEBP", quality=quality, method=5)
+        while output.tell() > 3 * 1024 * 1024 and quality > 50:
+            quality -= 8
+            output = io.BytesIO()
+            image.save(output, format="WEBP", quality=quality, method=5)
+        if output.tell() > 3 * 1024 * 1024:
+            return ""
+        from services.media_storage import put_public_image
+        return put_public_image(f"storefront/{prefix}", output.getvalue())
+    except Exception as exc:
+        logger.warning("Storefront image rejected or Blob upload unavailable (%s)", type(exc).__name__)
+        return ""

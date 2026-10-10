@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <meta name="description" content="Secure bespoke checkout at {{ brand_name }}. Hand-tailored Indian ethnic fashion delivered to your doorstep.">
     <title>Checkout — {{ brand_name }}</title>
 
@@ -36,6 +37,7 @@
         </nav>
 
         <div class="nav-right">
+            {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}" class="ai-link">My account</a>{% endif %}
             <a href="{{ url_for('home') }}#ai-studio" class="ai-link">
                 ✦ AI Studio
             </a>
@@ -95,6 +97,7 @@
                 <!-- Left: Form -->
                 <div>
                     <form action="{% if is_cart_checkout %}{{ url_for('checkout') }}{% else %}{{ url_for('buy_now', product_id=product.id) }}{% endif %}" method="POST" id="mainCheckoutForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                         
                         <!-- Step 1: Customer Account & Contact -->
                         <div class="checkout-card">
@@ -140,10 +143,10 @@
 
                                 {% if not current_customer %}
                                 <div class="luxury-input-group form-full-col" id="passwordGroup">
-                                    <label for="accountPassword">Create Account Password <span style="color: var(--accent-burgundy);">*</span></label>
-                                    <input id="accountPassword" type="password" name="account_password" class="luxury-text-input" placeholder="Choose a secure password (min 4 characters)" required minlength="4">
+                                    <label for="accountPassword">Create an account (optional)</label>
+                                    <input id="accountPassword" type="password" name="account_password" class="luxury-text-input" placeholder="Leave blank to check out as a guest" minlength="12" autocomplete="new-password">
                                     <span style="font-size: 11px; color: var(--text-muted); margin-top: 4px; display: block;">
-                                        🔒 A private customer profile will be created so you can monitor tailoring progress and track shipments.
+                                        Use 12 or more characters to create a customer account. Guest checkout is also available.
                                     </span>
                                 </div>
                                 {% endif %}
@@ -483,7 +486,7 @@
             try {
                 const res = await fetch('/api/coupon/apply', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content },
                     body: JSON.stringify({ code: code, subtotal: subtotal })
                 });
                 const data = await res.json();
@@ -554,6 +557,10 @@
                 const data = await res.json();
 
                 if (data.success) {
+                    if (data.csrf_token) {
+                        document.querySelector('meta[name="csrf-token"]').content = data.csrf_token;
+                        document.querySelectorAll('input[name="csrf_token"]').forEach(input => input.value = data.csrf_token);
+                    }
                     if (data.name) document.getElementById("name").value = data.name;
                     if (data.phone) document.getElementById("phone").value = data.phone;
                     if (data.email) document.getElementById("email").value = data.email;

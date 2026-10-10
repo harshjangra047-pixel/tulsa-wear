@@ -6,6 +6,7 @@ import secrets
 import re
 import io
 import csv
+import json
 
 import razorpay
 
@@ -25,7 +26,8 @@ from flask import (
     redirect,
     flash,
     Response,
-    send_file
+    send_file,
+    g
 )
 
 from datetime import datetime, timedelta
@@ -42,14 +44,21 @@ from models.trend_upload import TrendUpload
 from models.contact_inquiry import ContactInquiry
 from models.coupon import Coupon
 from models.customer_user import CustomerUser
+from models.site_content import SiteContent, SiteContentRevision
+from models.customer_address import CustomerAddress
+from models.editor_preview_token import EditorPreviewToken
 from models.traffic_log import TrafficLog
 from services.ai_stylist import ask_ai_stylist, ask_ai_about_product
 from services.site_content import (
     get_site_content,
     save_site_content,
     reset_site_content,
-    process_image_upload
+    process_image_upload,
+    publish_site_content,
+    validate_editor_layout,
+    validate_editor_theme
 )
+from services.private_storage import read_payment_proof, upload_payment_proof
 import urllib.parse
 import random
 
@@ -59,6 +68,7 @@ import random
 # =========================================
 
 load_dotenv()
+PRODUCTION_RUNTIME = os.getenv("FLASK_ENV") == "production" or os.getenv("VERCEL") == "1"
 
 
 # =========================================
@@ -87,6 +97,8 @@ def product_image_url(image, fallback="editorial-hero.jpg"):
 SECRET_KEY_FILE = os.path.join(app.root_path, ".session_secret")
 if os.getenv("FLASK_SECRET_KEY"):
     app.secret_key = os.getenv("FLASK_SECRET_KEY")
+elif PRODUCTION_RUNTIME:
+    raise RuntimeError("FLASK_SECRET_KEY must be configured in production")
 elif os.path.exists(SECRET_KEY_FILE):
     try:
         with open(SECRET_KEY_FILE, "r") as f:
@@ -116,13 +128,7 @@ app.config["TEMPLATES_AUTO_RELOAD"] = True
 # Media upload configuration
 UPLOAD_FOLDER = os.path.join(app.root_path, "static", "images")
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-# Vercel's deployed filesystem is read-only. Use /tmp for runtime payment-proof
-# uploads. Note: /tmp is temporary on serverless deployments; permanent storage
-# should be moved to object/blob storage for production.
-PAYMENT_PROOFS_FOLDER = os.path.join("/tmp", "payment_proofs")
-os.makedirs(PAYMENT_PROOFS_FOLDER, exist_ok=True)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-app.config["PAYMENT_PROOFS_FOLDER"] = PAYMENT_PROOFS_FOLDER
 app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB max
 
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "webp", "avif"}
@@ -198,11 +204,30 @@ def add_security_headers(response):
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    if getattr(g, "editor_preview", False):
+        response.headers.pop("X-Frame-Options", None)
+        response.headers["Cache-Control"] = "no-store"
     return response
 
 @app.context_processor
 def inject_global_vars():
-    cms = get_site_content()
+    preview_token = request.args.get("editor_preview", "")
+    preview_record = None
+    if preview_token:
+        preview_record = EditorPreviewToken.query.filter_by(
+            token_hash=hashlib.sha256(preview_token.encode("utf-8")).hexdigest()
+        ).first()
+    token_preview = bool(preview_record and preview_record.expires_at > datetime.utcnow())
+    is_admin_draft_preview = (request.path == "/" and request.args.get("preview") == "1" and session.get("admin_authenticated")) or token_preview
+    g.editor_preview = bool(is_admin_draft_preview)
+    cms = get_site_content(preview_draft=bool(is_admin_draft_preview))
+    theme = cms.get("editor_theme", {})
+    cms["editor_theme"] = validate_editor_theme(
+        theme.get("accent"), theme.get("background"), theme.get("heading_font"), theme.get("section_spacing")
+    )
+    layout = validate_editor_layout(json.dumps(cms.get("editor_sections", [])), json.dumps(cms.get("custom_sections", [])))
+    if layout:
+        cms["editor_sections"], cms["custom_sections"] = layout
     try:
         admin_user = AdminUser.query.first()
         delivery_days = admin_user.default_delivery_days if admin_user else 10
@@ -240,7 +265,9 @@ def inject_global_vars():
         studio_email=email,
         studio_address=address,
         studio_hours=hours,
-        current_customer=current_customer
+        current_customer=current_customer,
+        editor_preview=bool(is_admin_draft_preview),
+        csrf_token=session.setdefault("csrf_token", secrets.token_urlsafe(32))
     )
 
 
@@ -254,6 +281,8 @@ BASE_DIR = os.path.abspath(
 
 # Use hosted PostgreSQL on Vercel; keep SQLite as the local fallback.
 DATABASE_URL = os.getenv("DATABASE_URL")
+if PRODUCTION_RUNTIME and not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL must point to the shared persistent database in production")
 
 if DATABASE_URL:
     if DATABASE_URL.startswith("postgres://"):
@@ -337,7 +366,9 @@ def ensure_schema_migrations():
             "payment_screenshot": "VARCHAR(255)",
             "customer_id": "INTEGER",
             "coupon_code": "VARCHAR(50)",
-            "discount_amount": "FLOAT DEFAULT 0.0"
+            "discount_amount": "FLOAT DEFAULT 0.0",
+            "manual_payment_verified_by": "VARCHAR(80)",
+            "manual_payment_verified_at": "TIMESTAMP"
         }
 
         with db.engine.begin() as connection:
@@ -385,12 +416,14 @@ def ensure_schema_migrations():
                     connection.execute(
                         text(f"ALTER TABLE admin_users ADD COLUMN {col_name} {col_type}")
                     )
-            # Update permanent phone and studio contacts
-            connection.execute(
-                text("UPDATE admin_users SET studio_phone = '+91 93504 39667', studio_whatsapp = '919350439667', permanent_phone = '9350439667'")
-            )
 
     # Ensure tables exist
+    # Additive shared-content tables; existing catalog/order tables are untouched.
+    SiteContent.__table__.create(bind=db.engine, checkfirst=True)
+    SiteContentRevision.__table__.create(bind=db.engine, checkfirst=True)
+    CustomerAddress.__table__.create(bind=db.engine, checkfirst=True)
+    EditorPreviewToken.__table__.create(bind=db.engine, checkfirst=True)
+
     try:
         db.create_all()
     except Exception:
@@ -402,7 +435,10 @@ def ensure_schema_migrations():
                 username=os.getenv("ADMIN_USERNAME", "admin"),
                 default_delivery_days=10
             )
-            default_admin.set_password(os.getenv("ADMIN_PASSWORD", "atelier-admin-2026"))
+            initial_admin_password = os.getenv("ADMIN_PASSWORD")
+            if not initial_admin_password:
+                raise RuntimeError("Set ADMIN_PASSWORD before initializing the first admin account")
+            default_admin.set_password(initial_admin_password)
             db.session.add(default_admin)
             db.session.commit()
 
@@ -427,6 +463,25 @@ def ensure_schema_migrations():
             db.session.commit()
     except Exception as e:
         db.session.rollback()
+
+    # The storefront is the sole migration owner. The admin portal checks this
+    # version before serving requests and never applies a second copy of DDL.
+    required_tables = {
+        "products", "orders", "site_content", "site_content_revisions",
+        "customer_addresses", "editor_preview_tokens",
+    }
+    present_tables = set(inspect(db.engine).get_table_names())
+    missing_tables = required_tables - present_tables
+    if missing_tables:
+        raise RuntimeError("Storefront schema migration incomplete; required tables are missing")
+    with db.engine.begin() as connection:
+        connection.execute(text(
+            "CREATE TABLE IF NOT EXISTS tulsa_schema_migrations "
+            "(version INTEGER PRIMARY KEY, applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+        ))
+        connection.execute(text(
+            "INSERT INTO tulsa_schema_migrations (version) VALUES (1) ON CONFLICT DO NOTHING"
+        ))
 
 
 # =========================================
@@ -461,6 +516,19 @@ def track_site_traffic():
         db.session.commit()
     except Exception:
         db.session.rollback()
+
+
+@app.before_request
+def protect_account_and_checkout_posts():
+    protected_endpoints = {
+        "customer_register", "customer_login", "customer_dashboard",
+        "checkout", "buy_now", "submit_payment_proof"
+    }
+    if request.method == "POST" and request.endpoint in protected_endpoints:
+        expected = session.get("csrf_token", "")
+        supplied = request.headers.get("X-CSRF-Token") or request.form.get("csrf_token", "")
+        if not expected or not supplied or not secrets.compare_digest(expected, supplied):
+            return jsonify({"success": False, "message": "Session expired. Refresh the page and try again."}), 400
 
 
 # =========================================
@@ -876,9 +944,12 @@ def checkout():
         customer = None
         if customer_id:
             customer = CustomerUser.query.get(customer_id)
-        if not customer and phone:
-            customer = CustomerUser.query.filter_by(phone=phone).first()
-            if not customer:
+            if not customer or customer.phone != phone:
+                flash("Sign in to the account that owns this mobile number, or continue with another number as a guest.", "danger")
+                return redirect(url_for("checkout"))
+        elif account_password and len(account_password) >= 12:
+            # Never attach an order to an existing account based on phone alone.
+            if not CustomerUser.query.filter_by(phone=phone).first():
                 customer = CustomerUser(
                     name=name,
                     phone=phone,
@@ -887,8 +958,7 @@ def checkout():
                     city=city,
                     pincode=pincode
                 )
-                if account_password:
-                    customer.set_password(account_password)
+                customer.set_password(account_password)
                 db.session.add(customer)
                 db.session.commit()
                 try:
@@ -897,18 +967,7 @@ def checkout():
                     db.session.commit()
                 except Exception:
                     pass
-            else:
-                if not customer.address:
-                    customer.address = address
-                    customer.city = city
-                    customer.pincode = pincode
-                if account_password and not customer.password_hash:
-                    customer.set_password(account_password)
-                db.session.commit()
-
-            session["customer_id"] = customer.id
-            session["customer_name"] = customer.name
-            session["customer_phone"] = customer.phone
+                _establish_customer_session(customer)
 
         new_order = Order(
             product_id=cart_items[0]["product"].id,
@@ -944,6 +1003,14 @@ def checkout():
         db.session.add(new_order)
         db.session.commit()
 
+        if customer:
+            session["customer_id"] = customer.id
+            session["customer_name"] = customer.name
+            session["customer_phone"] = customer.phone
+        else:
+            accessible_orders = session.get("authorized_order_ids", [])
+            session["authorized_order_ids"] = (accessible_orders + [new_order.id])[-20:]
+
         # Clear cart and coupon upon order creation
         session["cart"] = []
         session.pop("applied_coupon", None)
@@ -966,7 +1033,7 @@ def checkout():
             db.session.commit()
 
         admin_cfg = AdminUser.query.first()
-        active_razorpay_key = (admin_cfg.razorpay_key_id if (admin_cfg and admin_cfg.razorpay_key_id) else RAZORPAY_KEY_ID)
+        active_razorpay_key = RAZORPAY_KEY_ID
         active_upi_id = admin_cfg.upi_id if admin_cfg else ""
         active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
 
@@ -1091,9 +1158,12 @@ def buy_now(product_id):
         customer = None
         if customer_id:
             customer = CustomerUser.query.get(customer_id)
-        if not customer and phone:
-            customer = CustomerUser.query.filter_by(phone=phone).first()
-            if not customer:
+            if not customer or customer.phone != phone:
+                flash("Sign in to the account that owns this mobile number, or continue with another number as a guest.", "danger")
+                return redirect(url_for("buy_now", product_id=product.id))
+        elif account_password and len(account_password) >= 12:
+            # Never attach an order to an existing account based on phone alone.
+            if not CustomerUser.query.filter_by(phone=phone).first():
                 customer = CustomerUser(
                     name=name,
                     phone=phone,
@@ -1102,8 +1172,7 @@ def buy_now(product_id):
                     city=city,
                     pincode=pincode
                 )
-                if account_password:
-                    customer.set_password(account_password)
+                customer.set_password(account_password)
                 db.session.add(customer)
                 db.session.commit()
                 try:
@@ -1112,18 +1181,7 @@ def buy_now(product_id):
                     db.session.commit()
                 except Exception:
                     pass
-            else:
-                if not customer.address:
-                    customer.address = address
-                    customer.city = city
-                    customer.pincode = pincode
-                if account_password and not customer.password_hash:
-                    customer.set_password(account_password)
-                db.session.commit()
-
-            session["customer_id"] = customer.id
-            session["customer_name"] = customer.name
-            session["customer_phone"] = customer.phone
+                _establish_customer_session(customer)
 
         new_order = Order(
             product_id=product.id,
@@ -1159,6 +1217,14 @@ def buy_now(product_id):
         db.session.add(new_order)
         db.session.commit()
 
+        if customer:
+            session["customer_id"] = customer.id
+            session["customer_name"] = customer.name
+            session["customer_phone"] = customer.phone
+        else:
+            accessible_orders = session.get("authorized_order_ids", [])
+            session["authorized_order_ids"] = (accessible_orders + [new_order.id])[-20:]
+
         session.pop("applied_coupon", None)
         session.modified = True
 
@@ -1191,7 +1257,7 @@ def buy_now(product_id):
         # =================================
 
         admin_cfg = AdminUser.query.first()
-        active_razorpay_key = (admin_cfg.razorpay_key_id if (admin_cfg and admin_cfg.razorpay_key_id) else RAZORPAY_KEY_ID)
+        active_razorpay_key = RAZORPAY_KEY_ID
         active_upi_id = admin_cfg.upi_id if admin_cfg else ""
         active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
 
@@ -1234,14 +1300,22 @@ def buy_now(product_id):
 # PAYMENT PROOF VIEW & SECURE SUBMISSION
 # =========================================
 
+def _can_access_order(order):
+    customer_id = session.get("customer_id")
+    if customer_id and order.customer_id == customer_id:
+        return True
+    return order.id in session.get("authorized_order_ids", [])
+
 @app.route("/payment-step/<int:order_id>", methods=["GET"])
 @app.route("/submit-payment-proof/<int:order_id>", methods=["GET"])
 @app.route("/confirm-dev-payment/<int:order_id>", methods=["GET"])
 def view_payment_step(order_id):
     order = Order.query.get_or_404(order_id)
+    if not _can_access_order(order):
+        return "Not found", 404
     product = Product.query.get(order.product_id) or Product.query.first()
     admin_cfg = AdminUser.query.first()
-    active_razorpay_key = (admin_cfg.razorpay_key_id if (admin_cfg and admin_cfg.razorpay_key_id) else RAZORPAY_KEY_ID)
+    active_razorpay_key = RAZORPAY_KEY_ID
     active_upi_id = admin_cfg.upi_id if admin_cfg else ""
     active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
     return render_template(
@@ -1264,39 +1338,51 @@ def view_payment_step(order_id):
 )
 def submit_payment_proof(order_id):
     order = Order.query.get_or_404(order_id)
+    if not _can_access_order(order):
+        return "Not found", 404
+    if order.status != "Payment Pending":
+        return "Order is no longer accepting payment submissions", 409
 
-    payment_method = request.form.get(
-        "payment_method",
-        "UPI (GPay / PhonePe / QR)"
-    )
+    payment_method = request.form.get("payment_method", "").strip()
+    if payment_method not in {"UPI (GPay / PhonePe / QR)", "Cash on Delivery"}:
+        return "Invalid payment method", 400
+
+    if payment_method == "Cash on Delivery":
+        if order.status not in {"Payment Pending", "COD Pending"}:
+            return "Order payment is already being processed", 409
+        order.payment_method = "Cash on Delivery"
+        order.status = "COD Pending"
+        order.advance_paid = 0.0
+        order.balance_due = order.price
+        db.session.commit()
+        return redirect(url_for("order_success", order_id=order.id))
 
     upi_utr = request.form.get("upi_utr", "").strip()
     if not validate_utr(upi_utr):
         flash("⚠️ Please enter a genuine UPI UTR / Transaction Reference ID (min 8 alphanumeric characters from your payment app).", "danger")
         return redirect(url_for("view_payment_step", order_id=order.id))
 
-    # Payment Screenshot Upload Handling with PIL binary verification
+    # Store submitted payment evidence privately; it is never payment confirmation.
     if "payment_screenshot" in request.files:
         file = request.files["payment_screenshot"]
-        if file and file.filename and allowed_file(file.filename):
-            if is_valid_image_file(file):
-                ext = file.filename.rsplit(".", 1)[1].lower()
-                safe_name = f"proof_{order.id}_{int(time.time())}_{uuid.uuid4().hex[:4]}.{ext}"
-                save_path = os.path.join(PAYMENT_PROOFS_FOLDER, safe_name)
-                file.save(save_path)
-                order.payment_screenshot = f"payment_proofs/{safe_name}"
-            else:
-                flash("⚠️ The uploaded file is not a valid or readable image. Please attach a real JPG, PNG, or WebP screenshot.", "danger")
-                return redirect(url_for("view_payment_step", order_id=order.id))
-        else:
-            flash("⚠️ Please select a valid screenshot image file (JPG, PNG, or WebP).", "danger")
+        if not file or not file.filename:
+            flash("Please select a JPG, PNG, or WebP payment screenshot.", "danger")
+            return redirect(url_for("view_payment_step", order_id=order.id))
+        try:
+            order.payment_screenshot = upload_payment_proof(file, order.id)
+        except ValueError as exc:
+            flash(str(exc), "danger")
+            return redirect(url_for("view_payment_step", order_id=order.id))
+        except Exception as exc:
+            app.logger.warning("Private payment-proof storage unavailable (%s)", type(exc).__name__)
+            flash("Private proof storage is not configured or is temporarily unavailable. No payment proof was saved.", "danger")
             return redirect(url_for("view_payment_step", order_id=order.id))
     else:
         flash("⚠️ Payment screenshot is required to verify your transaction.", "danger")
         return redirect(url_for("view_payment_step", order_id=order.id))
 
     order.payment_method = payment_method
-    order.status = "Pending Approval"
+    order.status = "Payment Verification Required"
     order.upi_utr = upi_utr
 
     if not order.tracking_id:
@@ -1311,12 +1397,9 @@ def submit_payment_proof(order_id):
     order.estimated_delivery_days = est_days
     order.estimated_delivery_date = (datetime.now() + timedelta(days=est_days)).strftime("%A, %d %b %Y")
 
-    if "COD" in payment_method.upper() or "CASH" in payment_method.upper():
-        order.advance_paid = 99.0
-        order.balance_due = max(0.0, order.price - 99.0)
-    else:
-        order.advance_paid = order.price
-        order.balance_due = 0.0
+    # A customer-provided UTR or image is a claim only, never a payment record.
+    order.advance_paid = 0.0
+    order.balance_due = order.price
 
     try:
         traffic = TrafficLog(
@@ -1353,6 +1436,12 @@ def payment(order_id):
         order_id
     )
 
+    if not _can_access_order(order):
+        return jsonify({"success": False, "message": "Order not found."}), 404
+
+    if not razorpay_client:
+        return jsonify({"success": False, "message": "Online card payment is not configured."}), 503
+
 
     data = request.get_json(
         silent=True
@@ -1381,6 +1470,11 @@ def payment(order_id):
     razorpay_signature = data.get(
         "razorpay_signature"
     )
+
+    if order.status != "Payment Pending":
+        if order.status == "Confirmed" and order.razorpay_payment_id == razorpay_payment_id:
+            return jsonify({"success": True, "redirect_url": url_for("order_success", order_id=order.id)})
+        return jsonify({"success": False, "message": "This order is no longer awaiting payment."}), 409
 
 
     # =====================================
@@ -1456,11 +1550,18 @@ def payment(order_id):
     # GET PAYMENT DETAILS
     # =====================================
 
-    payment_details = (
-        razorpay_client.payment.fetch(
-            razorpay_payment_id
-        )
-    )
+    try:
+        payment_details = razorpay_client.payment.fetch(razorpay_payment_id)
+    except Exception:
+        app.logger.exception("Razorpay payment lookup failed")
+        return jsonify({"success": False, "message": "Payment status could not be confirmed."}), 502
+
+    expected_amount = int(round((order.price or 0) * 100))
+    if (payment_details.get("order_id") != order.razorpay_order_id
+            or int(payment_details.get("amount", -1)) != expected_amount
+            or str(payment_details.get("currency", "")).upper() != "INR"
+            or payment_details.get("status") != "captured"):
+        return jsonify({"success": False, "message": "The payment is not captured for the expected order amount."}), 400
 
 
     payment_method = payment_details.get(
@@ -1518,6 +1619,17 @@ def payment(order_id):
     )
 
 
+@app.route("/payment-failed/<int:order_id>", methods=["POST"])
+def payment_failed(order_id):
+    order = Order.query.get_or_404(order_id)
+    if not _can_access_order(order):
+        return jsonify({"success": False}), 404
+    if order.status != "Confirmed" and not order.razorpay_payment_id:
+        order.status = "Payment Failed"
+        db.session.commit()
+    return jsonify({"success": True})
+
+
 # =========================================
 # ORDER SUCCESS
 # =========================================
@@ -1529,6 +1641,10 @@ def order_success(order_id):
     order = Order.query.get_or_404(
         order_id
     )
+    if not _can_access_order(order):
+        return "Not found", 404
+    if order.status not in {"Confirmed", "Payment Verification Required", "COD Pending"}:
+        return redirect(url_for("view_payment_step", order_id=order.id))
 
     import urllib.parse
     wa_lines = [
@@ -1571,6 +1687,30 @@ def return_policy():
 # CUSTOMER AUTHENTICATION (REGISTER / LOGIN / LOGOUT)
 # =========================================
 
+def customer_required(view):
+    @functools.wraps(view)
+    def wrapped(*args, **kwargs):
+        if not session.get("customer_id"):
+            return redirect(url_for("checkout"))
+        customer = db.session.get(CustomerUser, session["customer_id"])
+        if not customer:
+            session.pop("customer_id", None)
+            session.pop("customer_name", None)
+            session.pop("customer_phone", None)
+            return redirect(url_for("checkout"))
+        return view(customer, *args, **kwargs)
+    return wrapped
+
+
+def _establish_customer_session(customer):
+    cart = session.get("cart", [])
+    session.clear()
+    session["cart"] = cart
+    session["csrf_token"] = secrets.token_urlsafe(32)
+    session["customer_id"] = customer.id
+    session["customer_name"] = customer.name
+    session["customer_phone"] = customer.phone
+
 @app.route("/customer/register", methods=["POST"])
 def customer_register():
     data = request.get_json() if request.is_json else request.form
@@ -1582,10 +1722,10 @@ def customer_register():
     city = (data.get("city") or "").strip()
     pincode = (data.get("pincode") or "").strip()
 
-    if not name or not phone:
+    if not name or not phone or len(password) < 12:
         if request.is_json:
-            return jsonify({"success": False, "message": "Full Name and Mobile Number are required."}), 400
-        flash("Full Name and Mobile Number are required.", "danger")
+            return jsonify({"success": False, "message": "Name, mobile number, and a password of at least 12 characters are required."}), 400
+        flash("Name, mobile number, and a password of at least 12 characters are required.", "danger")
         return redirect(request.referrer or url_for("checkout"))
 
     is_valid_phone, clean_phone = validate_indian_phone(phone)
@@ -1601,15 +1741,9 @@ def customer_register():
 
     existing = CustomerUser.query.filter_by(phone=phone).first()
     if existing:
-        if password and not existing.password_hash:
-            existing.set_password(password)
-        session["customer_id"] = existing.id
-        session["customer_name"] = existing.name
-        session["customer_phone"] = existing.phone
-        db.session.commit()
         if request.is_json:
-            return jsonify({"success": True, "message": f"Welcome back, {existing.name}!", "customer_id": existing.id, "name": existing.name})
-        flash(f"Welcome back, {existing.name}!", "success")
+            return jsonify({"success": False, "message": "An account already uses this mobile number. Sign in with its password."}), 409
+        flash("An account already uses this mobile number. Sign in with its password.", "danger")
         return redirect(request.referrer or url_for("checkout"))
 
     new_cust = CustomerUser(
@@ -1620,14 +1754,11 @@ def customer_register():
         city=city,
         pincode=pincode
     )
-    if password:
-        new_cust.set_password(password)
+    new_cust.set_password(password)
     db.session.add(new_cust)
     db.session.commit()
 
-    session["customer_id"] = new_cust.id
-    session["customer_name"] = new_cust.name
-    session["customer_phone"] = new_cust.phone
+    _establish_customer_session(new_cust)
 
     try:
         t = TrafficLog(event_type="register", ip_address=request.remote_addr, page_url="/customer/register", customer_id=new_cust.id)
@@ -1637,7 +1768,7 @@ def customer_register():
         pass
 
     if request.is_json:
-        return jsonify({"success": True, "message": "Account created successfully.", "customer_id": new_cust.id, "name": new_cust.name})
+        return jsonify({"success": True, "message": "Account created successfully.", "customer_id": new_cust.id, "name": new_cust.name, "csrf_token": session["csrf_token"]})
     flash("Account created successfully!", "success")
     return redirect(request.referrer or url_for("checkout"))
 
@@ -1648,10 +1779,10 @@ def customer_login():
     phone = (data.get("phone") or "").strip()
     password = (data.get("password") or "").strip()
 
-    if not phone:
+    if not phone or not password:
         if request.is_json:
-            return jsonify({"success": False, "message": "Mobile number is required."}), 400
-        flash("Mobile number is required.", "danger")
+            return jsonify({"success": False, "message": "Mobile number and password are required."}), 400
+        flash("Mobile number and password are required.", "danger")
         return redirect(request.referrer or url_for("checkout"))
 
     is_valid_phone, clean_phone = validate_indian_phone(phone)
@@ -1665,16 +1796,13 @@ def customer_login():
         flash("No account found with this phone number. Please register.", "danger")
         return redirect(request.referrer or url_for("checkout"))
 
-    if customer.password_hash and password:
-        if not customer.check_password(password):
-            if request.is_json:
-                return jsonify({"success": False, "message": "Incorrect password."}), 401
-            flash("Incorrect password.", "danger")
-            return redirect(request.referrer or url_for("checkout"))
+    if not customer.check_password(password):
+        if request.is_json:
+            return jsonify({"success": False, "message": "Incorrect password."}), 401
+        flash("Incorrect password.", "danger")
+        return redirect(request.referrer or url_for("checkout"))
 
-    session["customer_id"] = customer.id
-    session["customer_name"] = customer.name
-    session["customer_phone"] = customer.phone
+    _establish_customer_session(customer)
 
     try:
         t = TrafficLog(event_type="login", ip_address=request.remote_addr, page_url="/customer/login", customer_id=customer.id)
@@ -1693,7 +1821,8 @@ def customer_login():
             "email": customer.email or "",
             "address": customer.address or "",
             "city": customer.city or "",
-            "pincode": customer.pincode or ""
+            "pincode": customer.pincode or "",
+            "csrf_token": session["csrf_token"]
         })
     flash(f"Welcome back, {customer.name}!", "success")
     return redirect(request.referrer or url_for("checkout"))
@@ -1708,13 +1837,56 @@ def customer_logout():
     return redirect(url_for("home"))
 
 
+@app.route("/customer/dashboard", methods=["GET", "POST"])
+@customer_required
+def customer_dashboard(customer):
+    if request.method == "POST":
+        action = request.form.get("action")
+        if action == "profile":
+            name = request.form.get("name", "").strip()
+            email = request.form.get("email", "").strip()
+            if not name:
+                flash("Name is required.", "danger")
+            else:
+                customer.name = name
+                customer.email = email or None
+                db.session.commit()
+                session["customer_name"] = name
+                flash("Profile updated.", "success")
+        elif action == "address":
+            data = {key: request.form.get(key, "").strip() for key in
+                    ("label", "recipient_name", "phone", "address", "city", "pincode")}
+            valid_phone, cleaned_phone = validate_indian_phone(data["phone"])
+            clean_pin = re.sub(r"\D", "", data["pincode"])
+            if not all(data[key] for key in ("recipient_name", "address", "city")) or not valid_phone or len(clean_pin) != 6:
+                flash("Enter a recipient, valid Indian mobile number, full address, city and six-digit PIN code.", "danger")
+            else:
+                db.session.add(CustomerAddress(
+                    customer_id=customer.id, label=data["label"] or "Home",
+                    recipient_name=data["recipient_name"], phone=cleaned_phone,
+                    address=data["address"], city=data["city"], pincode=clean_pin))
+                db.session.commit()
+                flash("Delivery address saved.", "success")
+        elif action == "delete-address":
+            address = db.session.get(CustomerAddress, request.form.get("address_id", type=int))
+            if address and address.customer_id == customer.id:
+                db.session.delete(address)
+                db.session.commit()
+                flash("Delivery address removed.", "success")
+        return redirect(url_for("customer_dashboard"))
+
+    orders = Order.query.filter_by(customer_id=customer.id).order_by(Order.created_at.desc()).all()
+    addresses = CustomerAddress.query.filter_by(customer_id=customer.id).order_by(CustomerAddress.created_at.desc()).all()
+    return render_template("customer-dashboard.html", customer=customer, orders=orders, addresses=addresses)
+
+
 # =========================================
 # ADMIN AUTHENTICATION SETUP
 # =========================================
 
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "atelier-admin-2026")
-ADMIN_PASSWORD_HASH = generate_password_hash(ADMIN_PASSWORD)
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+ADMIN_PASSWORD_HASH = generate_password_hash(ADMIN_PASSWORD) if ADMIN_PASSWORD else None
 
 
 def admin_required(f):
@@ -1763,7 +1935,7 @@ def admin_login():
         except Exception:
             pass
 
-        if not valid and username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD_HASH, password):
+        if not valid and ADMIN_PASSWORD_HASH and username == ADMIN_USERNAME and check_password_hash(ADMIN_PASSWORD_HASH, password):
             valid = True
 
         if valid:
@@ -1922,6 +2094,19 @@ def admin_forgot_password():
 # ADMIN ORDERS & STATUS MANAGEMENT
 # =========================================
 
+@app.route("/admin/payment-proof/<path:filename>")
+@admin_required
+def serve_payment_proof(filename):
+    stored = read_payment_proof(filename)
+    if not stored:
+        return "Not found", 404
+    content, content_type = stored
+    response = send_file(io.BytesIO(content), mimetype=content_type, as_attachment=False)
+    response.headers["Cache-Control"] = "private, no-store"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
 @app.route("/admin/orders")
 @admin_required
 def admin_orders():
@@ -2005,9 +2190,28 @@ def admin_orders():
 @admin_required
 def admin_quick_approve_order(order_id):
     order = Order.query.get_or_404(order_id)
+    if order.status == "Confirmed" and (order.razorpay_payment_id or order.manual_payment_verified_at):
+        flash("This payment is already confirmed.", "info")
+        return redirect(url_for("admin_orders"))
+    flash("An order cannot be marked paid with a quick status change. Verify a Razorpay capture or trusted bank record first.", "warning")
+    return redirect(url_for("admin_orders"))
+
+
+@app.route("/admin/orders/verify-manual-payment/<int:order_id>", methods=["POST"])
+@admin_required
+def admin_verify_manual_payment(order_id):
+    order = Order.query.get_or_404(order_id)
+    if (order.status != "Payment Verification Required" or not order.upi_utr
+            or request.form.get("bank_record_checked") != "yes"):
+        flash("Confirm that the UTR matches a trusted bank/payment-provider record before verifying.", "danger")
+        return redirect(url_for("admin_orders"))
+    order.manual_payment_verified_by = session.get("admin_user", "Admin")
+    order.manual_payment_verified_at = datetime.utcnow()
     order.status = "Confirmed"
+    order.advance_paid = order.price
+    order.balance_due = 0.0
     db.session.commit()
-    flash(f"✓ Order #{order.id} payment verified and approved! Status updated to Confirmed.", "success")
+    flash(f"Order #{order.id} payment verified against the payment record.", "success")
     return redirect(url_for("admin_orders"))
 
 
@@ -2019,6 +2223,9 @@ def admin_update_order_status(order_id):
     new_status = request.form.get("status", "").strip()
 
     if new_status:
+        if new_status == "Confirmed" and not (order.razorpay_payment_id or order.manual_payment_verified_at):
+            flash("An unpaid order cannot be marked Confirmed. Verify its Razorpay capture or trusted bank record first.", "danger")
+            return redirect(url_for("admin_orders"))
         order.status = new_status
         db.session.commit()
 
@@ -2572,15 +2779,28 @@ def admin_upload_section_image():
 @app.route("/admin/customizer", methods=["GET", "POST"])
 @admin_required
 def admin_customizer():
-    cms = get_site_content()
+    cms = get_site_content(preview_draft=True)
 
     if request.method == "POST":
         data = request.form.to_dict()
 
         # Update text values from form
         for key, value in data.items():
-            if key != "action" and not key.endswith("_file"):
+            if key not in {"action", "editor_sections_json", "custom_sections_json", "editor_accent", "editor_background", "editor_heading_font", "editor_section_spacing"} and not key.endswith("_file"):
                 cms[key] = value.strip()
+
+        if "editor_sections_json" in data:
+            layout = validate_editor_layout(data.get("editor_sections_json", ""), data.get("custom_sections_json", "[]"))
+            if layout is None:
+                flash("The section layout was invalid. The saved draft was left unchanged.", "danger")
+                return redirect(url_for("admin_customizer"))
+            cms["editor_sections"], cms["custom_sections"] = layout
+        cms["editor_theme"] = validate_editor_theme(
+            data.get("editor_accent", cms.get("editor_theme", {}).get("accent", "#C9A96E")),
+            data.get("editor_background", cms.get("editor_theme", {}).get("background", "#F7F4EF")),
+            data.get("editor_heading_font", cms.get("editor_theme", {}).get("heading_font", "Cormorant Garamond")),
+            data.get("editor_section_spacing", cms.get("editor_theme", {}).get("section_spacing", 96)),
+        )
 
         # Process image file uploads
         image_fields = {
@@ -2608,46 +2828,65 @@ def admin_customizer():
                         cms[cms_key] = saved_filename
                         updated_count += 1
 
-        # Synchronize studio contact details to AdminUser model
-        admin_user = AdminUser.query.first()
-        if admin_user:
-            if "studio_phone" in data and data["studio_phone"]:
-                admin_user.studio_phone = data["studio_phone"]
-            if "studio_whatsapp" in data and data["studio_whatsapp"]:
-                admin_user.studio_whatsapp = data["studio_whatsapp"]
-            if "studio_email" in data and data["studio_email"]:
-                admin_user.studio_email = data["studio_email"]
-            if "studio_address" in data and data["studio_address"]:
-                admin_user.studio_address = data["studio_address"]
-            if "studio_hours" in data and data["studio_hours"]:
-                admin_user.studio_hours = data["studio_hours"]
-            db.session.commit()
-
-        save_site_content(cms)
+        save_site_content(cms, publish=False)
 
         if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
             return jsonify({
                 "status": "success",
-                "message": "Website redesigned and updated successfully!",
+                "message": "Draft saved. Publish it when ready.",
                 "cms": cms
             })
 
-        flash("✨ Website redesign saved! All updated text, banners, and photos are now live.", "success")
+        flash("Draft saved. Preview it and publish when you are ready.", "success")
         return redirect(url_for("admin_customizer"))
 
     return render_template(
         "admin-customizer.html",
         cms=cms,
         total_products=Product.query.count(),
-        server_host=request.host_url.rstrip("/")
+        server_host=request.host_url.rstrip("/"),
+        revisions=SiteContentRevision.query.order_by(SiteContentRevision.id.desc()).limit(20).all()
     )
+
+
+@app.route("/admin/customizer/publish", methods=["POST"])
+@admin_required
+def admin_customizer_publish():
+    if not publish_site_content():
+        flash("No saved draft was available to publish.", "danger")
+        return redirect(url_for("admin_customizer"))
+    cms = get_site_content()
+    admin_user = AdminUser.query.first()
+    if admin_user:
+        admin_user.studio_phone = cms.get("studio_phone", cms.get("contact_phone", admin_user.studio_phone))
+        admin_user.studio_whatsapp = cms.get("studio_whatsapp", cms.get("contact_whatsapp", admin_user.studio_whatsapp))
+        admin_user.studio_email = cms.get("studio_email", cms.get("contact_email", admin_user.studio_email))
+        admin_user.studio_address = cms.get("studio_address", cms.get("contact_address", admin_user.studio_address))
+        admin_user.studio_hours = cms.get("studio_hours", cms.get("contact_hours", admin_user.studio_hours))
+        db.session.commit()
+    flash("The saved storefront draft is now live.", "success")
+    return redirect(url_for("admin_customizer"))
+
+
+@app.route("/admin/customizer/restore/<int:revision>", methods=["POST"])
+@admin_required
+def admin_customizer_restore(revision):
+    snapshot = SiteContentRevision.query.filter_by(revision=revision).first_or_404()
+    try:
+        import json
+        save_site_content(json.loads(snapshot.content_json), publish=False)
+        flash("Revision restored as a draft. Publish it to make it live.", "success")
+    except Exception:
+        db.session.rollback()
+        flash("That revision could not be restored.", "danger")
+    return redirect(url_for("admin_customizer"))
 
 
 @app.route("/admin/customizer/reset", methods=["POST"])
 @admin_required
 def admin_customizer_reset():
-    reset_site_content()
-    flash("Website text and design reset to original atelier defaults.", "info")
+    reset_site_content(publish=False)
+    flash("Factory defaults are saved as a draft. Publish to make them live.", "info")
     return redirect(url_for("admin_customizer"))
 
 
@@ -2704,15 +2943,11 @@ def admin_settings():
         elif action == "update_payment_settings":
             upi_id = request.form.get("upi_id", "").strip()
             upi_payee_name = request.form.get("upi_payee_name", "").strip()
-            razorpay_key_id = request.form.get("razorpay_key_id", "").strip()
-            razorpay_key_secret = request.form.get("razorpay_key_secret", "").strip()
 
             admin_user.upi_id = upi_id
             admin_user.upi_payee_name = upi_payee_name or "Tulsa Wears"
-            admin_user.razorpay_key_id = razorpay_key_id
-            admin_user.razorpay_key_secret = razorpay_key_secret
             db.session.commit()
-            flash("Bank Account UPI & Payment Gateway settings saved! Customers can now pay directly to your account.", "success")
+            flash("UPI display settings saved. Razorpay credentials are read only from server environment variables.", "success")
 
         elif action == "update_contact_settings":
             studio_phone = request.form.get("studio_phone", "").strip()

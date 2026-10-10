@@ -807,7 +807,7 @@
         <div class="customizer-header">
             <div class="header-title-group">
                 <h1>🎨 Website Designer & Visual Studio</h1>
-                <p>Edit and redesign all website text, headlines, descriptions, button labels, and photos in real time.</p>
+                <p>Edit the shared draft, preview it at desktop, tablet and mobile sizes, then publish deliberately.</p>
             </div>
 
             <div class="header-actions">
@@ -818,8 +818,9 @@
                 </form>
 
                 <button type="button" class="btn-gold-save" id="topSaveBtn">
-                    💾 Save & Publish Changes
+                    💾 Save Draft
                 </button>
+                <button type="button" class="btn-gold-save" id="topPublishBtn">Publish Saved Draft</button>
             </div>
         </div>
 
@@ -840,6 +841,28 @@
 
         <!-- MAIN FORM -->
         <form id="cmsForm" action="{{ url_for('admin_customizer') }}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="editor_sections_json" id="editorSectionsJson">
+            <input type="hidden" name="custom_sections_json" id="customSectionsJson">
+            <section class="cms-section" style="margin-bottom:20px;padding:20px;background:#fff;border:1px solid var(--admin-border);border-radius:6px">
+                <h2 style="margin:0 0 6px">Page sections</h2>
+                <p>Reorder sections, hide or show them, and add up to eight safe text sections.</p>
+                <div id="sectionManagerList" style="display:grid;gap:8px"></div>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:14px;padding-top:14px;border-top:1px solid var(--admin-border)">
+                    <label>Selected section width <select id="selectedSectionWidth"><option value="100">100%</option><option value="90">90%</option><option value="75">75%</option><option value="50">50%</option></select></label>
+                    <label>Minimum height <output id="selectedSectionHeightOutput">0px</output><input id="selectedSectionHeight" type="range" min="0" max="640" step="40" value="0" style="display:block;width:100%"></label>
+                </div>
+                <small>Drag list rows to reorder. Width and minimum height adapt to narrow screens.</small>
+                <button type="button" id="addCustomSection" class="btn-admin-secondary" style="margin-top:12px">+ Add text section</button>
+            </section>
+            <section style="margin-bottom:20px;padding:20px;background:#fff;border:1px solid var(--admin-border);border-radius:6px">
+                <h2 style="margin:0 0 12px">Storefront style</h2>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px">
+                    <label>Accent <input type="color" name="editor_accent" value="{{ cms.get('editor_theme', {}).get('accent', '#C9A96E') }}"></label>
+                    <label>Background <input type="color" name="editor_background" value="{{ cms.get('editor_theme', {}).get('background', '#F7F4EF') }}"></label>
+                    <label>Heading font <select name="editor_heading_font"><option>Cormorant Garamond</option><option>Inter</option><option>Georgia</option><option>Arial</option></select></label>
+                    <label>Section spacing <input name="editor_section_spacing" type="range" min="48" max="180" step="8" value="{{ cms.get('editor_theme', {}).get('section_spacing', 96) }}"></label>
+                </div>
+            </section>
 
             <div class="workspace-split">
 
@@ -950,7 +973,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('hero_image', 'editorial-hero.jpg')) }}?v={{ cache_id }}" id="preview_hero_image" alt="Hero Image">
+                                        <img src="{{ product_image_url(cms.get('hero_image'), 'editorial-hero.jpg') }}?v={{ cache_id }}" id="preview_hero_image" alt="Hero Image">
                                         <span class="thumb-tag">Current</span>
                                     </div>
                                     <div class="upload-controls">
@@ -1003,7 +1026,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat1_image', 'editorial-category-1.jpg')) }}?v={{ cache_id }}" id="preview_mood1" alt="Mood 1">
+                                        <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'editorial-category-1.jpg') }}?v={{ cache_id }}" id="preview_mood1" alt="Mood 1">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1033,7 +1056,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat2_image', 'editorial-category-2.jpg')) }}?v={{ cache_id }}" id="preview_mood2" alt="Mood 2">
+                                        <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'editorial-category-2.jpg') }}?v={{ cache_id }}" id="preview_mood2" alt="Mood 2">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1063,7 +1086,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat3_image', 'editorial-category-3.jpg')) }}?v={{ cache_id }}" id="preview_mood3" alt="Mood 3">
+                                        <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-category-3.jpg') }}?v={{ cache_id }}" id="preview_mood3" alt="Mood 3">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1093,7 +1116,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat4_image', 'editorial-category-4.jpg')) }}?v={{ cache_id }}" id="preview_mood4" alt="Mood 4">
+                                        <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'editorial-category-4.jpg') }}?v={{ cache_id }}" id="preview_mood4" alt="Mood 4">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1150,7 +1173,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('collection_image', 'editorial-collection.jpg')) }}?v={{ cache_id }}" id="preview_coll" alt="Collection Image">
+                                        <img src="{{ product_image_url(cms.get('collection_image'), 'editorial-collection.jpg') }}?v={{ cache_id }}" id="preview_coll" alt="Collection Image">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1207,7 +1230,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('bridal_image', 'editorial-bridal.jpg')) }}?v={{ cache_id }}" id="preview_bridal" alt="Bridal Image">
+                                        <img src="{{ product_image_url(cms.get('bridal_image'), 'editorial-bridal.jpg') }}?v={{ cache_id }}" id="preview_bridal" alt="Bridal Image">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1259,7 +1282,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('seasonal_img1', 'editorial-seasonal-1.jpg')) }}?v={{ cache_id }}" id="preview_seas1" alt="Seasonal 1">
+                                        <img src="{{ product_image_url(cms.get('seasonal_img1'), 'editorial-seasonal-1.jpg') }}?v={{ cache_id }}" id="preview_seas1" alt="Seasonal 1">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1289,7 +1312,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('seasonal_img2', 'editorial-seasonal-2.jpg')) }}?v={{ cache_id }}" id="preview_seas2" alt="Seasonal 2">
+                                        <img src="{{ product_image_url(cms.get('seasonal_img2'), 'editorial-seasonal-2.jpg') }}?v={{ cache_id }}" id="preview_seas2" alt="Seasonal 2">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1319,7 +1342,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('seasonal_img3', 'editorial-seasonal-3.jpg')) }}?v={{ cache_id }}" id="preview_seas3" alt="Seasonal 3">
+                                        <img src="{{ product_image_url(cms.get('seasonal_img3'), 'editorial-seasonal-3.jpg') }}?v={{ cache_id }}" id="preview_seas3" alt="Seasonal 3">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1376,7 +1399,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('trends_image', 'editorial-trends.jpg')) }}?v={{ cache_id }}" id="preview_trends" alt="Trends Image">
+                                        <img src="{{ product_image_url(cms.get('trends_image'), 'editorial-trends.jpg') }}?v={{ cache_id }}" id="preview_trends" alt="Trends Image">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1492,7 +1515,7 @@
                             <div class="image-picker-box">
                                 <div class="image-picker-flex">
                                     <div class="current-thumb-wrap">
-                                        <img src="{{ url_for('static', filename='images/' + cms.get('designer_image', 'editorial-designer.jpg')) }}?v={{ cache_id }}" id="preview_des" alt="Designer Portrait">
+                                        <img src="{{ product_image_url(cms.get('designer_image'), 'editorial-designer.jpg') }}?v={{ cache_id }}" id="preview_des" alt="Designer Portrait">
                                     </div>
                                     <div class="upload-controls">
                                         <label class="custom-file-btn">
@@ -1626,8 +1649,9 @@
     <!-- Mobile Bottom Floating Action Bar -->
     <div class="mobile-bottom-bar">
         <button type="button" class="btn-gold-save" id="bottomSaveBtn">
-            💾 Save & Publish
+            💾 Save Draft
         </button>
+        <button type="button" class="btn-gold-save" id="bottomPublishBtn">Publish Draft</button>
         <button type="button" class="btn-mobile-preview-toggle" id="mobilePreviewScrollBtn">
             👁️ Preview
         </button>
@@ -1686,6 +1710,35 @@
             }
         }
 
+        async function optimizeCmsUploads(form) {
+            const inputs = [...form.querySelectorAll('input[type="file"]')].filter(input => input.files?.length);
+            const items = inputs.flatMap(input => [...input.files].map(file => ({input, file})));
+            if (!items.length) return;
+            if (items.some(({file}) => !file.type.startsWith('image/') || file.size > 20 * 1024 * 1024)) throw new Error('Choose image files no larger than 20 MB each.');
+            const images = await Promise.all(items.map(({file}) => new Promise((resolve, reject) => {
+                const url=URL.createObjectURL(file), image=new Image();
+                image.onload=()=>{URL.revokeObjectURL(url);resolve(image);};
+                image.onerror=()=>{URL.revokeObjectURL(url);reject(new Error('One selected image could not be read.'));};
+                image.src=url;
+            })));
+            let dimension=2000, quality=.82, optimized=[];
+            for(let pass=0;pass<6;pass++) {
+                optimized=await Promise.all(items.map(async ({file},index)=>{
+                    const image=images[index], scale=Math.min(1,dimension/Math.max(image.naturalWidth,image.naturalHeight));
+                    const canvas=document.createElement('canvas'); canvas.width=Math.max(1,Math.round(image.naturalWidth*scale)); canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+                    const context=canvas.getContext('2d'); if(!context) throw new Error('This browser cannot optimize images.');
+                    context.drawImage(image,0,0,canvas.width,canvas.height);
+                    const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));
+                    if(!blob) throw new Error('Image optimization failed.');
+                    return new File([blob],(file.name.replace(/\.[^.]+$/,'')||'storefront')+'.webp',{type:'image/webp'});
+                }));
+                if(optimized.reduce((sum,file)=>sum+file.size,0)<=3.2*1024*1024) break;
+                dimension=Math.max(900,Math.round(dimension*.8)); quality=Math.max(.42,quality-.08);
+            }
+            if(optimized.reduce((sum,file)=>sum+file.size,0)>3.2*1024*1024) throw new Error('Selected images exceed the safe combined upload limit. Save fewer images at once.');
+            items.forEach(({input},index)=>{const transfer=new DataTransfer();transfer.items.add(optimized[index]);input.files=transfer.files;});
+        }
+
         // Device Switcher
         const previewIframe = document.getElementById('livePreviewIframe');
         const btnDesktop = document.getElementById('btnDeviceDesktop');
@@ -1724,8 +1777,15 @@
         const cmsForm = document.getElementById('cmsForm');
         const topSaveBtn = document.getElementById('topSaveBtn');
         const bottomSaveBtn = document.getElementById('bottomSaveBtn');
+        const topPublishBtn = document.getElementById('topPublishBtn');
+        const bottomPublishBtn = document.getElementById('bottomPublishBtn');
 
-        function submitCmsForm() {
+        async function submitCmsForm() {
+            if (submitCmsForm.busy) return;
+            submitCmsForm.busy = true;
+            try { await optimizeCmsUploads(cmsForm); }
+            catch (error) { alert(error.message); submitCmsForm.busy=false; return; }
+            persistEditorLayout();
             if (topSaveBtn) {
                 topSaveBtn.disabled = true;
                 topSaveBtn.innerHTML = '⏳ Saving...';
@@ -1739,6 +1799,88 @@
 
         topSaveBtn?.addEventListener('click', submitCmsForm);
         bottomSaveBtn?.addEventListener('click', submitCmsForm);
+        function publishSavedDraft() {
+            if (!confirm('Publish the last saved draft to the live storefront? Save draft first if you have unsaved edits.')) return;
+            cmsForm.action = '{{ url_for("admin_customizer_publish") }}';
+            cmsForm.submit();
+        }
+        topPublishBtn?.addEventListener('click', publishSavedDraft);
+        bottomPublishBtn?.addEventListener('click', publishSavedDraft);
+
+        const editorSectionLabels = {{ cms.get('editor_sections', [])|map(attribute='id')|list|tojson }};
+        const editorNames = {
+            'hero-section':'Hero', 'mood-portals':'Category portals', 'curved-carousel':'Product carousel',
+            'look-builder':'Look builder', 'best-sellers':'Best sellers', 'collections':'Collection',
+            'bridal':'Bridal edit', 'seasonal':'Seasonal edit', 'campaign-gallery':'Campaign gallery',
+            'trends':'Trends', 'categories':'Categories', 'shop-price':'Shop by price', 'process':'Craft process',
+            'about':'About the studio', 'contact':'Custom order', 'ai-studio':'AI style studio',
+            'feedback':'Customer feedback', 'faq-section':'FAQ', 'contact-us':'Contact details',
+            'instagram-section':'Instagram gallery', 'newsletter-section':'Newsletter'
+        };
+        let editorSections = {{ cms.get('editor_sections', [])|tojson }};
+        let customSections = {{ cms.get('custom_sections', [])|tojson }};
+        const editorList = document.getElementById('sectionManagerList');
+        const editorSectionInput = document.getElementById('editorSectionsJson');
+        const customSectionInput = document.getElementById('customSectionsJson');
+        let selectedSectionId = null;
+        let draggingSectionId = null;
+        const sectionWidthControl = document.getElementById('selectedSectionWidth');
+        const sectionHeightControl = document.getElementById('selectedSectionHeight');
+        const previewOrigin = new URL('{{ website_url }}').origin;
+        function persistEditorLayout() {
+            if (!editorSectionInput) return;
+            editorSectionInput.value = JSON.stringify(editorSections);
+            customSectionInput.value = JSON.stringify(customSections);
+        }
+        function renderEditorSections() {
+            if (!editorList) return;
+            editorList.replaceChildren();
+            editorSections.forEach((section, index) => {
+                const row = document.createElement('div');
+                row.draggable = true;
+                row.addEventListener('click', event => { if(event.target.tagName==='BUTTON'||event.target.tagName==='INPUT')return; selectedSectionId=section.id; renderEditorSections(); });
+                row.addEventListener('dragstart', () => { draggingSectionId=section.id; });
+                row.addEventListener('dragover', event => event.preventDefault());
+                row.addEventListener('drop', event => { event.preventDefault(); const from=editorSections.findIndex(item=>item.id===draggingSectionId); const to=editorSections.findIndex(item=>item.id===section.id); if(from<0||to<0||from===to)return; const [moved]=editorSections.splice(from,1); editorSections.splice(to,0,moved); renderEditorSections(); updateEditorPreview(); });
+                row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:9px;border:1px solid #e4ddd2;flex-wrap:wrap';
+                row.style.outline = section.id === selectedSectionId ? '2px solid #c5a059' : '';
+                const label = document.createElement('span');
+                label.style.flex = '1';
+                label.textContent = customSections.find(item => item.id === section.id)?.title || editorNames[section.id] || section.id;
+                row.append(label);
+                const toggle = document.createElement('input'); toggle.type = 'checkbox'; toggle.checked = section.visible !== false; toggle.setAttribute('aria-label', 'Show section');
+                toggle.addEventListener('change', () => { section.visible = toggle.checked; persistEditorLayout(); }); row.append(toggle);
+                [['↑', -1], ['↓', 1]].forEach(([caption, delta]) => {
+                    const button = document.createElement('button'); button.type = 'button'; button.textContent = caption; button.disabled = index + delta < 0 || index + delta >= editorSections.length;
+                    button.addEventListener('click', () => { [editorSections[index], editorSections[index + delta]] = [editorSections[index + delta], editorSections[index]]; renderEditorSections(); updateEditorPreview(); }); row.append(button);
+                });
+                if (section.id.startsWith('custom-')) { const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove'; remove.addEventListener('click', () => { editorSections = editorSections.filter(item => item.id !== section.id); customSections = customSections.filter(item => item.id !== section.id); renderEditorSections(); }); row.append(remove); }
+                editorList.append(row);
+            });
+            persistEditorLayout();
+            const selected = editorSections.find(item => item.id === selectedSectionId);
+            if (sectionWidthControl) { sectionWidthControl.disabled = !selected; sectionWidthControl.value = String(selected?.width || 100); }
+            if (sectionHeightControl) { sectionHeightControl.disabled = !selected; sectionHeightControl.value = String(selected?.min_height || 0); document.getElementById('selectedSectionHeightOutput').value = (selected?.min_height || 0) + 'px'; }
+        }
+        function updateEditorPreview() { persistEditorLayout(); previewIframe?.contentWindow?.postMessage({type:'tulsa-editor-layout',layout:editorSections}, previewOrigin); }
+        sectionWidthControl?.addEventListener('change', () => { const item=editorSections.find(section=>section.id===selectedSectionId); if(item){item.width=Number(sectionWidthControl.value);updateEditorPreview();} });
+        sectionHeightControl?.addEventListener('input', () => { const item=editorSections.find(section=>section.id===selectedSectionId); if(item){item.min_height=Number(sectionHeightControl.value);document.getElementById('selectedSectionHeightOutput').value=sectionHeightControl.value+'px';updateEditorPreview();} });
+        window.addEventListener('message', event => {
+            if (event.origin !== previewOrigin || event.source !== previewIframe?.contentWindow) return;
+            if (event.data?.type === 'tulsa-editor-section') { selectedSectionId=event.data.id; renderEditorSections(); }
+            if (event.data?.type === 'tulsa-editor-field') { const input=document.querySelector(`[name="${CSS.escape(event.data.key)}"]`); if(input && ['INPUT','TEXTAREA'].includes(input.tagName)) input.value=event.data.value; }
+        });
+        document.getElementById('addCustomSection')?.addEventListener('click', () => {
+            if (customSections.length >= 8) { alert('You can add up to eight text sections.'); return; }
+            const title = prompt('Section heading (up to 120 characters):'); if (!title?.trim()) return;
+            const body = prompt('Section text (up to 1,200 characters):') || '';
+            const bytes = crypto.getRandomValues(new Uint8Array(4));
+            const id = 'custom-' + Array.from(bytes).map(value => value.toString(16).padStart(2, '0')).join('');
+            customSections.push({id, title: title.trim().slice(0, 120), body: body.slice(0, 1200), background: 'ivory'});
+            editorSections.push({id, visible: true}); renderEditorSections();
+        });
+        cmsForm?.addEventListener('submit', persistEditorLayout);
+        renderEditorSections();
 
         // Mobile Preview Scroll Helper
         const mobilePreviewScrollBtn = document.getElementById('mobilePreviewScrollBtn');

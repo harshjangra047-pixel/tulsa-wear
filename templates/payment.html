@@ -351,6 +351,7 @@
             enctype="multipart/form-data"
             onsubmit="return validatePaymentSubmission(event)"
         >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 
             <!-- 1. CHOOSE PAYMENT METHOD -->
             <div style="margin-bottom: 20px;">
@@ -369,13 +370,13 @@
                     </div>
                 </label>
 
-                <!-- Method: COD with ₹99 Advance -->
+                <!-- Cash on delivery is recorded separately and remains unpaid until collection. -->
                 <label class="method-option" id="opt-cod">
                     <input type="radio" name="payment_method" value="Cash on Delivery" onchange="switchPaymentMethod(this.value)">
                     <div style="flex: 1;">
-                        <div style="font-weight: 600; font-size: 14px;">Cash on Delivery (COD) — <span style="color: #2e7d32;">₹99 Advance Security</span></div>
+                        <div style="font-weight: 600; font-size: 14px;">Cash on Delivery (COD)</div>
                         <div style="font-size: 12px; color: #555; margin-top: 3px; line-height: 1.4;">
-                            Pay <strong>₹99 advance online via UPI</strong> to confirm courier dispatch. Balance <strong>₹{{ "{:,.0f}".format(order.price - 99) }}</strong> payable in cash upon delivery.
+                            The order remains unpaid until cash is collected on delivery.
                         </div>
                     </div>
                 </label>
@@ -447,7 +448,6 @@
                     name="payment_screenshot"
                     id="paymentScreenshotInput"
                     accept="image/*"
-                    required
                     style="display: none;"
                     onchange="handleProofPreview(this)"
                 >
@@ -476,7 +476,6 @@
                     id="upiUtrInput"
                     placeholder="Enter 12-digit UTR / UPI Ref ID (e.g. 423456789012)"
                     class="utr-input-field"
-                    required
                     minlength="6"
                     maxlength="35"
                 >
@@ -518,7 +517,7 @@ const upiName = "{{ upi_payee_name or 'Tulsa Wears' }}";
 
 function switchPaymentMethod(method) {
     const isCod = method.includes('Cash on Delivery');
-    const payAmount = isCod ? 99 : basePrice;
+    const payAmount = basePrice;
 
     // Update radio option styles
     document.querySelectorAll('.method-option').forEach(el => el.classList.remove('selected'));
@@ -530,10 +529,13 @@ function switchPaymentMethod(method) {
 
     // Update Amount Text
     document.getElementById('displayAmount').innerText = '₹' + Math.round(payAmount).toLocaleString();
+    document.getElementById('qrDisplayBox').style.display = isCod ? 'none' : '';
+    document.getElementById('uploadDropzone').style.display = isCod ? 'none' : '';
+    document.querySelector('.utr-section').style.display = isCod ? 'none' : '';
 
     // Update QR Code and Mobile Link
     if (upiId) {
-        const note = encodeURIComponent('Order #' + orderId + (isCod ? ' COD Adv' : ''));
+        const note = encodeURIComponent('Order #' + orderId);
         const upiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + payAmount + '&cu=INR&tn=' + note;
 
         const mobileLink = document.getElementById('upiMobileLink');
@@ -585,17 +587,52 @@ function clearSelectedScreenshot() {
     document.getElementById('uploadDropzone').classList.remove('has-file');
 }
 
+async function compressProofForServer(form, file) {
+    const targetBytes = 3 * 1024 * 1024;
+    if (file.size <= targetBytes) return file;
+    const url = URL.createObjectURL(file);
+    try {
+        const image = new Image();
+        image.src = url;
+        await image.decode();
+        const scale = Math.min(1, 1800 / Math.max(image.naturalWidth, image.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Your browser cannot optimize this screenshot. Choose an image under 3 MB.');
+        context.drawImage(image, 0, 0, canvas.width, canvas.height);
+        let quality = 0.86;
+        let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+        while (blob && blob.size > targetBytes && quality > 0.48) {
+            quality -= 0.08;
+            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
+        }
+        if (!blob || blob.size > targetBytes) throw new Error('Screenshot could not be reduced below 3 MB. Choose a smaller image.');
+        return new File([blob], 'payment-proof.webp', {type:'image/webp', lastModified:Date.now()});
+    } finally { URL.revokeObjectURL(url); }
+}
+
 // Form validation: customer can only place order after providing UTR and screenshot
 function validatePaymentSubmission(event) {
+    const form = event.currentTarget;
     const fileInput = document.getElementById('paymentScreenshotInput');
     const utrInput = document.getElementById('upiUtrInput');
     const alertBox = document.getElementById('validationAlert');
     const submitBtn = document.getElementById('placeOrderBtn');
 
     const utrVal = utrInput.value.trim().toUpperCase();
+    const isCod = document.querySelector('input[name="payment_method"]:checked')?.value === 'Cash on Delivery';
     const hasFile = fileInput.files && fileInput.files.length > 0;
 
     let errors = [];
+
+    if (isCod) {
+        alertBox.style.display = 'none';
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Placing COD Order...';
+        return true;
+    }
 
     if (!hasFile) {
         errors.push("Please upload your payment confirmation screenshot.");
@@ -624,6 +661,25 @@ function validatePaymentSubmission(event) {
         alertBox.innerHTML = '⚠️ ' + errors.join('<br>⚠️ ');
         alertBox.style.display = 'block';
         alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return false;
+    }
+
+    if (hasFile && fileInput.files[0].size > 3 * 1024 * 1024) {
+        event.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.innerText = 'Optimizing private screenshot…';
+        compressProofForServer(form, fileInput.files[0]).then(file => {
+            const transfer = new DataTransfer();
+            transfer.items.add(file);
+            fileInput.files = transfer.files;
+            document.getElementById('previewFileSize').innerText = (file.size / 1024).toFixed(1) + ' KB after optimization';
+            form.submit();
+        }).catch(error => {
+            alertBox.textContent = error.message;
+            alertBox.style.display = 'block';
+            submitBtn.disabled = false;
+            submitBtn.innerText = 'Submit Payment Details';
+        });
         return false;
     }
 

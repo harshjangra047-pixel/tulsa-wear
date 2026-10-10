@@ -56,6 +56,16 @@
         rel="stylesheet"
         href="{{ url_for('static', filename='css/atelier-3d.css') }}?v={{ cache_id }}"
     >
+    <style>
+      :root {
+        --accent-gold: {{ cms.get('editor_theme', {}).get('accent', '#C9A96E') }};
+        --editor-page-background: {{ cms.get('editor_theme', {}).get('background', '#F7F4EF') }};
+        --editor-section-spacing: {{ cms.get('editor_theme', {}).get('section_spacing', 96) }}px;
+        --editor-heading-font: '{{ cms.get('editor_theme', {}).get('heading_font', 'Cormorant Garamond') }}', serif;
+      }
+      .custom-editor-section { padding: var(--editor-section-spacing) var(--page-padding); }
+      .custom-editor-section h2 { font-family: var(--editor-heading-font); }
+    </style>
 
 </head>
 
@@ -78,7 +88,7 @@
     <header class="navbar" id="top">
 
         <a href="{{ url_for('home') }}" class="logo">
-            {{ brand_name|upper }}
+            TULSA — BY ANJALI
         </a>
 
 
@@ -120,6 +130,7 @@
             <a href="{{ url_for('bag') }}" class="bag-link">
                 Bag ({{ session.get('cart', [])|length }})
             </a>
+            {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}" class="ai-link">My account</a>{% endif %}
 
             <button
                 id="menuButton"
@@ -146,27 +157,27 @@
 
         <section class="hero section-wave wave-dark-to-ivory" id="hero-section">
 
-            <div class="hero-background" style="background-image: url('{{ url_for('static', filename='images/' + cms.get('hero_image', 'editorial-hero.jpg')) }}?v={{ cache_id }}');"></div>
+            <div class="hero-background" data-editor-image="hero_image_file" style="background-image: url('{{ product_image_url(cms.get('hero_image'), 'editorial-hero.jpg') }}?v={{ cache_id }}');"></div>
 
             <div class="hero-overlay"></div>
 
             <div class="hero-content">
 
-                <p class="eyebrow hero-eyebrow">
+                <p class="eyebrow hero-eyebrow" data-editor-field="hero_badge">
                     {{ cms.get('hero_badge', '✦ ' ~ brand_name|upper ~ ' — ATELIER COUTURE ✦') }}
                 </p>
 
                 <h1>
-                    {{ cms.get('hero_title_line1', 'The Art of') }}<br>
-                    <span class="italic">{{ cms.get('hero_title_line2', 'Handmade') }}</span>
+                    <span data-editor-field="hero_title_line1">{{ cms.get('hero_title_line1', 'The Art of') }}</span><br>
+                    <span class="italic" data-editor-field="hero_title_line2">{{ cms.get('hero_title_line2', 'Handmade') }}</span>
                 </h1>
 
-                <p class="hero-sub">
+                <p class="hero-sub" data-editor-field="hero_subtitle">
                     {{ cms.get('hero_subtitle', 'Handcrafted silhouettes shaped slowly by fabric, memory and modern craft. Artisanal Indian couture for discerning souls.') }}
                 </p>
 
                 <div class="hero-actions">
-                    <a href="{{ cms.get('hero_cta1_link', '#curved-carousel') }}" class="btn-luxury-gold">
+                    <a href="{{ cms.get('hero_cta1_link', '#curved-carousel') }}" class="btn-luxury-gold" data-editor-field="hero_cta1_text">
                         {{ cms.get('hero_cta1_text', 'Explore Collection →') }}
                     </a>
                     <a href="{{ cms.get('hero_cta2_link', '#ai-studio') }}" class="btn-luxury-outline">
@@ -200,7 +211,7 @@
 
                 <a href="{{ url_for('shop', category='Plazo / Kurta') }}" class="arched-card reveal reveal-delay-1">
                     <div class="arched-media">
-                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat1_image', 'editorial-category-1.jpg')) }}?v={{ cache_id }}" 
+                        <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'editorial-category-1.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat1_title', 'Plazo & Kurta') }}" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
@@ -215,7 +226,7 @@
 
                 <a href="{{ url_for('shop', category='Salwar Kameez') }}" class="arched-card reveal reveal-delay-2">
                     <div class="arched-media">
-                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat2_image', 'editorial-category-2.jpg')) }}?v={{ cache_id }}" 
+                        <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'editorial-category-2.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
@@ -230,7 +241,7 @@
 
                 <a href="{{ url_for('shop', category='Party Wear') }}" class="arched-card reveal reveal-delay-3">
                     <div class="arched-media">
-                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat3_image', 'editorial-category-3.jpg')) }}?v={{ cache_id }}" 
+                        <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-category-3.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat3_title', 'Party Wear') }}" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
@@ -245,7 +256,7 @@
 
                 <a href="{{ url_for('shop', category='Wedding Wear') }}" class="arched-card reveal reveal-delay-4">
                     <div class="arched-media">
-                        <img src="{{ url_for('static', filename='images/' + cms.get('mood_cat4_image', 'editorial-category-4.jpg')) }}?v={{ cache_id }}" 
+                        <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'editorial-category-4.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat4_title', 'Wedding Regalia') }}" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
@@ -491,7 +502,7 @@
 
                 <div class="featured-image reveal-scale">
                     <img
-                        src="{{ url_for('static', filename='images/' + cms.get('collection_image', 'editorial-collection.jpg')) }}?v={{ cache_id }}"
+                        src="{{ product_image_url(cms.get('collection_image'), 'editorial-collection.jpg') }}?v={{ cache_id }}"
                         alt="Featured collection"
                         loading="lazy"
                     >
@@ -541,7 +552,7 @@
                 <!-- Left Dramatic Editorial Portrait -->
                 <div class="bridal-hero-card reveal">
                     <div class="bridal-hero-media">
-                        <img src="{{ url_for('static', filename='images/' + cms.get('bridal_image', 'editorial-bridal.jpg')) }}?v={{ cache_id }}" 
+                        <img src="{{ product_image_url(cms.get('bridal_image'), 'editorial-bridal.jpg') }}?v={{ cache_id }}"
                              alt="The Bridal Edit" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
@@ -604,7 +615,7 @@
 
                 <div class="seasonal-image reveal-scale">
                     <img
-                        src="{{ url_for('static', filename='images/' + cms.get('seasonal_img1', 'editorial-seasonal-1.jpg')) }}?v={{ cache_id }}"
+                        src="{{ product_image_url(cms.get('seasonal_img1'), 'editorial-seasonal-1.jpg') }}?v={{ cache_id }}"
                         alt="Autumn winter editorial"
                         loading="lazy"
                     >
@@ -616,7 +627,7 @@
 
                 <div class="seasonal-image reveal-scale reveal-delay-1">
                     <img
-                        src="{{ url_for('static', filename='images/' + cms.get('seasonal_img2', 'editorial-seasonal-2.jpg')) }}?v={{ cache_id }}"
+                        src="{{ product_image_url(cms.get('seasonal_img2'), 'editorial-seasonal-2.jpg') }}?v={{ cache_id }}"
                         alt="Handmade fashion detail"
                         loading="lazy"
                     >
@@ -628,7 +639,7 @@
 
                 <div class="seasonal-image reveal-scale reveal-delay-2">
                     <img
-                        src="{{ url_for('static', filename='images/' + cms.get('seasonal_img3', 'editorial-seasonal-3.jpg')) }}?v={{ cache_id }}"
+                        src="{{ product_image_url(cms.get('seasonal_img3'), 'editorial-seasonal-3.jpg') }}?v={{ cache_id }}"
                         alt="Fabric texture detail"
                         loading="lazy"
                     >
@@ -741,13 +752,13 @@
 
                 <div class="trends-frame-stack reveal-scale">
                     <div class="stack-frame stack-frame-main">
-                        <img src="{{ url_for('static', filename='images/' + cms.get('trends_image', 'editorial-trends.jpg')) }}?v={{ cache_id }}" 
+                        <img src="{{ product_image_url(cms.get('trends_image'), 'editorial-trends.jpg') }}?v={{ cache_id }}"
                              alt="Latest Fashion Trends Main" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                     </div>
                     <div class="stack-frame stack-frame-secondary">
-                        <img src="{{ url_for('static', filename='images/' + cms.get('seasonal_img1', 'editorial-seasonal-1.jpg')) }}?v={{ cache_id }}" 
+                        <img src="{{ product_image_url(cms.get('seasonal_img1'), 'editorial-seasonal-1.jpg') }}?v={{ cache_id }}"
                              alt="Latest Fashion Trends Accent" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
@@ -993,7 +1004,7 @@
             <div class="designer-image reveal-scale">
 
                 <img
-                    src="{{ url_for('static', filename='images/' + cms.get('designer_image', 'editorial-designer.jpg')) }}?v={{ cache_id }}"
+                    src="{{ product_image_url(cms.get('designer_image'), 'editorial-designer.jpg') }}?v={{ cache_id }}"
                     alt="Fashion designer in the studio"
                     loading="lazy"
                 >
@@ -1368,7 +1379,7 @@
              FAQ
         ========================================== -->
 
-        <section class="faq-section">
+        <section class="faq-section" id="faq-section">
 
             <div class="section-heading reveal">
 
@@ -1718,6 +1729,14 @@
         </section>
 
 
+        {% for custom_section in cms.get('custom_sections', []) %}
+        <section id="{{ custom_section.id }}" class="custom-editor-section {% if custom_section.background == 'dark' %}dark-section{% endif %}" style="background: {% if custom_section.background == 'dark' %}#1e1b18{% elif custom_section.background == 'cream' %}#f1ece2{% else %}var(--editor-page-background){% endif %};">
+            <div style="max-width:900px;margin:auto">
+                <h2>{{ custom_section.title }}</h2>
+                <p style="line-height:1.8;white-space:pre-line">{{ custom_section.body }}</p>
+            </div>
+        </section>
+        {% endfor %}
     </main>
 
 
@@ -1836,6 +1855,65 @@
     <script
         src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"
     ></script>
+
+    <script>
+      (() => {
+        const main = document.querySelector('main');
+        const layout = {{ cms.get('editor_sections', [])|tojson }};
+        layout.forEach(item => {
+          const section = document.getElementById(item.id);
+          if (!section || !section.matches('section')) return;
+          section.hidden = item.visible === false;
+          section.style.setProperty('--editor-section-width', (item.width || 100) + '%');
+          section.style.setProperty('--editor-section-min-height', item.min_height ? item.min_height + 'px' : '0px');
+          section.style.maxWidth = `var(--editor-section-width, 100%)`;
+          section.style.minHeight = item.min_height ? `${item.min_height}px` : '';
+          section.style.marginInline = 'auto';
+          main.appendChild(section);
+        });
+        if (window.matchMedia('(max-width: 600px)').matches) {
+          layout.forEach(item => { const section=document.getElementById(item.id); if(section) section.style.maxWidth='100%'; });
+        }
+        const previewAllowed = {{ editor_preview|tojson }};
+        if (previewAllowed) {
+          main.querySelectorAll('section[id]').forEach(section => section.addEventListener('click', event => {
+            if (event.target.closest('[data-editor-field]')) return;
+            event.stopPropagation();
+            parent.postMessage({type:'tulsa-editor-section',id:section.id}, '*');
+          }));
+          window.addEventListener('message', event => {
+            if (event.source !== parent || event.data?.type !== 'tulsa-editor-layout' || !Array.isArray(event.data.layout)) return;
+            event.data.layout.forEach(item => {
+              const section=document.getElementById(item.id);
+              if(!section || !section.matches('section')) return;
+              section.hidden=item.visible===false;
+              section.style.maxWidth=window.matchMedia('(max-width: 600px)').matches?'100%':`${item.width||100}%`;
+              section.style.minHeight=item.min_height?`${item.min_height}px`:'';
+            });
+            event.data.layout.forEach(item=>{const section=document.getElementById(item.id);if(section)section.parentNode.appendChild(section);});
+          });
+        }
+      })();
+    </script>
+
+    {% if editor_preview %}
+    <script>
+      document.querySelectorAll('[data-editor-field]').forEach((element) => {
+        element.contentEditable = 'true';
+        element.setAttribute('aria-label', 'Click to edit ' + element.dataset.editorField.replaceAll('_', ' '));
+        element.style.outline = '1px dashed #c5a059';
+        element.addEventListener('input', () => parent.postMessage({
+          type: 'tulsa-editor-field', key: element.dataset.editorField,
+          value: element.innerText.trim()
+        }, '*'));
+      });
+      document.querySelectorAll('[data-editor-image]').forEach((element) => {
+        element.addEventListener('click', () => parent.postMessage({
+          type: 'tulsa-editor-image', field: element.dataset.editorImage
+        }, '*'));
+      });
+    </script>
+    {% endif %}
 
 
 </body>

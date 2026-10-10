@@ -1050,7 +1050,7 @@
                                 <!-- Payment Screenshot Thumbnail & Modal Trigger -->
                                 <div style="margin-top: 8px;">
                                     {% if order.payment_screenshot %}
-                                        {% set proof_url = url_for('static', filename='images/payment_proofs/' ~ order.payment_screenshot) if not order.payment_screenshot.startswith('http') else order.payment_screenshot %}
+                                        {% set proof_url = url_for('serve_payment_proof', filename=order.payment_screenshot) %}
                                         <div style="display: inline-flex; align-items: center; gap: 8px;">
                                             <img src="{{ proof_url }}" alt="Screenshot Order #{{ order.id }}"
                                                  onclick="openProofModal('{{ proof_url }}', '{{ order.id }}', '{{ order.upi_utr or '' }}')"

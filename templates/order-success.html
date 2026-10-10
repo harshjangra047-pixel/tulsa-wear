@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order Status: Pending Verification — {{ brand_name }}</title>
+    <title>{% if order.status == 'Confirmed' %}Payment confirmed{% elif order.status == 'COD Pending' %}COD order received{% else %}Payment verification pending{% endif %} — {{ brand_name }}</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -62,11 +62,11 @@
                 </div>
 
                 <p class="eyebrow" style="color: #b26a00; font-weight: 600;">
-                    STATUS: PENDING VERIFICATION & APPROVAL
+                    STATUS: {{ order.status|upper }}
                 </p>
 
                 <h1 style="font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 4vw, 44px); font-weight: 500; margin: 8px 0 12px; line-height: 1.15;">
-                    Order #{{ order.id }} Received with Gratitude
+                    {% if order.status == 'Confirmed' %}Payment received{% elif order.status == 'COD Pending' %}COD order received{% else %}Order #{{ order.id }} received{% endif %}
                 </h1>
 
                 <p style="color: var(--text-muted); font-size: 15px; max-width: 580px; margin: 0 auto 24px; line-height: 1.6;">
@@ -76,9 +76,9 @@
                 <!-- Approval Notice Card -->
                 <div style="background: #fffdf5; border: 1px solid #ffe082; border-left: 4px solid #b26a00; padding: 18px 22px; text-align: left; border-radius: 2px; margin: 0 auto 28px; max-width: 720px; line-height: 1.6; font-size: 13px;">
                     <strong style="color: #b26a00; font-size: 14px; display: block; margin-bottom: 4px;">
-                        ⏱️ Payment Verification & Atelier Approval Notice:
+                        {% if order.status == 'Confirmed' %}✓ Payment confirmed{% elif order.status == 'COD Pending' %}Cash on delivery{% else %}⏱️ Payment verification required{% endif %}
                     </strong>
-                    Your order status is currently in <strong>Pending Approval</strong>. Our verification concierge will review and verify your payment submission <strong>within 1–2 hours</strong>. Upon verification, your order will transition to <strong>Confirmed</strong> and bespoke tailoring will begin immediately!
+                    {% if order.status == 'Confirmed' %}Your Razorpay payment has been verified and your order is confirmed.{% elif order.status == 'COD Pending' %}Your order is recorded as cash on delivery. No payment has been recorded yet; the balance is due when your delivery arrives.{% else %}Your UPI reference and screenshot were received for review. They are not payment confirmation; your order will remain unpaid until the studio verifies the transaction against its trusted payment records.{% endif %}
                 </div>
 
                 <!-- Tracking ID Card -->

@@ -452,22 +452,8 @@
                                 </small>
                             </div>
 
-                            <!-- Razorpay Key ID -->
-                            <div class="form-group">
-                                <label for="razorpay_key_id">Razorpay Key ID (Optional)</label>
-                                <input type="text" id="razorpay_key_id" name="razorpay_key_id" class="form-control" value="{{ admin_user.razorpay_key_id or '' }}" placeholder="rzp_live_xxxxxxxxxxxx">
-                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
-                                    Optional. Obtained from your Razorpay Dashboard → API Keys.
-                                </small>
-                            </div>
-
-                            <!-- Razorpay Key Secret -->
-                            <div class="form-group">
-                                <label for="razorpay_key_secret">Razorpay Key Secret (Optional)</label>
-                                <input type="password" id="razorpay_key_secret" name="razorpay_key_secret" class="form-control" value="{{ admin_user.razorpay_key_secret or '' }}" placeholder="••••••••••••••••••••">
-                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">
-                                    Kept securely encrypted. Never exposed to customers.
-                                </small>
+                            <div class="form-group" style="grid-column:1/-1">
+                                <p style="color:var(--muted);font-size:12px">Razorpay API credentials must be configured in the server environment. They are not stored or displayed in this settings page.</p>
                             </div>
                         </div>
 
