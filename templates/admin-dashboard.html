@@ -1,0 +1,871 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atelier Mission Control — {{ brand_name }} Admin Portal</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Stylesheet -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+
+    <style>
+        :root {
+            --admin-bg: #f7f5f0;
+            --admin-card-bg: #ffffff;
+            --admin-border: #e6dfd5;
+            --admin-dark: #171614;
+            --admin-gold: #c5a059;
+            --admin-burgundy: #5a1e28;
+            --admin-green: #2e7d32;
+            --admin-amber: #e65100;
+            --admin-blue: #1565c0;
+        }
+
+        body {
+            background-color: var(--admin-bg);
+            color: var(--admin-dark);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Top Admin Navbar */
+        .admin-nav {
+            background: #11100e;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 9999;
+            padding: 0 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 64px;
+        }
+
+        .admin-logo-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+        }
+
+        .admin-brand {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 0.2em;
+            color: #fff;
+            text-transform: uppercase;
+        }
+
+        .admin-badge {
+            background: linear-gradient(135deg, var(--admin-gold), #8a6d3b);
+            color: #111;
+            font-size: 9px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 2px;
+        }
+
+        .admin-menu-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .admin-menu-link {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 2px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .admin-menu-link:hover,
+        .admin-menu-link.active {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .admin-menu-link.active {
+            border-bottom: 2px solid var(--admin-gold);
+        }
+
+        .admin-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-live-store {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 2px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-live-store:hover {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn-admin-logout {
+            background: rgba(192, 57, 43, 0.2);
+            border: 1px solid rgba(192, 57, 43, 0.4);
+            color: #ff7675;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 2px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-admin-logout:hover {
+            background: #c0392b;
+            color: #fff;
+        }
+
+        /* Container */
+        .admin-portal-wrap {
+            max-width: 1540px;
+            margin: 0 auto;
+            padding: 32px 32px 80px;
+        }
+
+        /* Header Greeting */
+        .portal-hero {
+            background: #fff;
+            border: 1px solid var(--admin-border);
+            padding: 28px 32px;
+            border-radius: 4px;
+            margin-bottom: 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+        }
+
+        .portal-title h1 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: clamp(30px, 3.5vw, 42px);
+            font-weight: 500;
+            margin: 4px 0 8px;
+            color: var(--admin-dark);
+            line-height: 1.1;
+        }
+
+        .atelier-address-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #faf7f2;
+            border: 1px solid #ebd9c4;
+            color: var(--admin-burgundy);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 20px;
+            letter-spacing: 0.04em;
+        }
+
+        .portal-quick-actions {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-portal-action {
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            padding: 10px 18px;
+            border-radius: 2px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary-action {
+            background: var(--admin-dark);
+            color: #fff;
+            border: 1px solid var(--admin-dark);
+        }
+
+        .btn-primary-action:hover {
+            background: #2a2926;
+        }
+
+        .btn-secondary-action {
+            background: #fff;
+            color: var(--admin-dark);
+            border: 1px solid var(--admin-border);
+        }
+
+        .btn-secondary-action:hover {
+            background: #fcfbf9;
+            border-color: var(--admin-dark);
+        }
+
+        /* KPI Stat Cards Grid */
+        .portal-kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-bottom: 32px;
+        }
+
+        .portal-kpi-card {
+            background: #fff;
+            border: 1px solid var(--admin-border);
+            padding: 22px 24px;
+            border-radius: 4px;
+            position: relative;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .portal-kpi-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+            border-color: var(--admin-dark);
+        }
+
+        .portal-kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .kpi-rev::before { background: var(--admin-green); }
+        .kpi-orders::before { background: var(--admin-blue); }
+        .kpi-appr::before { background: var(--admin-amber); }
+        .kpi-prods::before { background: var(--admin-gold); }
+        .kpi-coupons::before { background: var(--admin-burgundy); }
+        .kpi-bespoke::before { background: #6c5ce7; }
+
+        .kpi-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #888;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .kpi-main-val {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--admin-dark);
+            line-height: 1.1;
+        }
+
+        .kpi-sub-label {
+            font-size: 11px;
+            color: #777;
+            margin-top: 6px;
+        }
+
+        /* 2-Column Split: Orders + Management */
+        .portal-main-split {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 28px;
+            margin-bottom: 32px;
+        }
+
+        .portal-card {
+            background: #fff;
+            border: 1px solid var(--admin-border);
+            border-radius: 4px;
+            padding: 26px 28px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+
+        .card-title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--admin-border);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-title-row h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 24px;
+            font-weight: 500;
+            margin: 0;
+            color: var(--admin-dark);
+        }
+
+        .card-title-row a {
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--admin-burgundy);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .card-title-row a:hover {
+            text-decoration: underline;
+        }
+
+        /* Orders Table */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .portal-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            text-align: left;
+        }
+
+        .portal-table th {
+            padding: 12px 14px;
+            background: #faf7f2;
+            color: #666;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-weight: 600;
+            border-bottom: 1px solid var(--admin-border);
+        }
+
+        .portal-table td {
+            padding: 14px 14px;
+            border-bottom: 1px solid var(--admin-border);
+            vertical-align: middle;
+        }
+
+        .portal-table tr:hover td {
+            background: #fdfcf9;
+        }
+
+        .status-badge {
+            display: inline-block;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            border-radius: 2px;
+        }
+
+        .status-pending-approval {
+            background: #fff3e0;
+            color: #e65100;
+            border: 1px solid #ffe0b2;
+        }
+
+        .status-confirmed {
+            background: #e8f5e9;
+            color: #2e7d32;
+            border: 1px solid #c8e6c9;
+        }
+
+        .status-shipped {
+            background: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+
+        .status-delivered {
+            background: #f3e5f5;
+            color: #7b1fa2;
+            border: 1px solid #e1bee7;
+        }
+
+        /* Sidebar Modules */
+        .sidebar-module {
+            margin-bottom: 24px;
+        }
+
+        .sidebar-module:last-child {
+            margin-bottom: 0;
+        }
+
+        .module-item-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0eae1;
+            font-size: 12px;
+        }
+
+        .module-item-row:last-child {
+            border-bottom: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            .portal-main-split {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            font-size: 20px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .mobile-admin-drawer {
+            display: none;
+            position: fixed;
+            top: 64px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(17, 16, 14, 0.98);
+            backdrop-filter: blur(10px);
+            z-index: 9998;
+            padding: 24px;
+            overflow-y: auto;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mobile-admin-drawer.open {
+            display: flex;
+        }
+
+        .mobile-drawer-link {
+            color: #fff;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            text-decoration: none;
+            padding: 12px 16px;
+            border-radius: 4px;
+            border-left: 3px solid transparent;
+            background: rgba(255, 255, 255, 0.04);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .mobile-drawer-link.active {
+            border-left-color: var(--admin-gold);
+            background: rgba(197, 160, 89, 0.15);
+            color: var(--admin-gold);
+            font-weight: 600;
+        }
+
+        @media (max-width: 900px) {
+            .admin-menu-links {
+                display: none;
+            }
+
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .admin-portal-wrap {
+                padding: 16px 12px;
+            }
+
+            .portal-hero {
+                padding: 20px 16px;
+            }
+
+            .portal-quick-actions {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================================
+         TOP ADMIN NAVIGATION
+    ========================================== -->
+    <header class="admin-nav">
+        <a href="{{ url_for('admin_dashboard') }}" class="admin-logo-box">
+            <span class="admin-brand">{{ brand_name }}</span>
+            <span class="admin-badge">ADMIN PORTAL</span>
+        </a>
+
+        <nav class="admin-menu-links">
+            <a href="{{ url_for('admin_dashboard') }}" class="admin-menu-link active">📊 Mission Control</a>
+            <a href="{{ url_for('admin_customizer') }}" class="admin-menu-link" style="color: var(--admin-gold); font-weight: 600;">🎨 Website Designer</a>
+            <a href="{{ url_for('admin_orders') }}" class="admin-menu-link">📦 Orders</a>
+            <a href="{{ url_for('admin_products') }}" class="admin-menu-link">👗 Products ({{ product_count }})</a>
+            <a href="{{ url_for('admin_coupons') }}" class="admin-menu-link">🎟️ Coupons</a>
+            <a href="{{ url_for('admin_custom_orders') }}" class="admin-menu-link">✂️ Bespoke Orders</a>
+            <a href="{{ url_for('admin_inquiries') }}" class="admin-menu-link">💬 Inquiries</a>
+            <a href="{{ url_for('admin_feedback') }}" class="admin-menu-link">⭐ Feedback</a>
+            <a href="{{ url_for('admin_settings') }}" class="admin-menu-link">⚙️ Studio Settings</a>
+        </nav>
+
+        <div class="admin-nav-actions">
+            <a href="{{ url_for('home') }}" target="_blank" class="btn-live-store" title="Open storefront in new tab">
+                👁️ Live Store ↗
+            </a>
+            <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle navigation">
+                ☰
+            </button>
+            <a href="{{ url_for('admin_backup_database') }}" class="btn-live-store" title="Download SQLite DB Backup">
+                💾 Backup DB
+            </a>
+            <a href="{{ url_for('admin_logout') }}" class="btn-admin-logout">
+                Logout
+            </a>
+        </div>
+    </header>
+
+    <!-- Mobile Slide-out Drawer Menu -->
+    <div class="mobile-admin-drawer" id="mobileAdminDrawer">
+        <a href="{{ url_for('admin_dashboard') }}" class="mobile-drawer-link active">📊 Mission Control / Dashboard</a>
+        <a href="{{ url_for('admin_customizer') }}" class="mobile-drawer-link" style="color: var(--admin-gold); font-weight: 700;">🎨 Website Designer & CMS (Text & Images)</a>
+        <a href="{{ url_for('admin_orders') }}" class="mobile-drawer-link">📦 Orders ({{ total_orders }})</a>
+        <a href="{{ url_for('admin_products') }}" class="mobile-drawer-link">👗 Product Catalog & Photos</a>
+        <a href="{{ url_for('admin_coupons') }}" class="mobile-drawer-link">🎟️ Discount Coupons</a>
+        <a href="{{ url_for('admin_custom_orders') }}" class="mobile-drawer-link">✂️ Bespoke Custom Orders</a>
+        <a href="{{ url_for('admin_inquiries') }}" class="mobile-drawer-link">💬 Client Inquiries</a>
+        <a href="{{ url_for('admin_feedback') }}" class="mobile-drawer-link">⭐ Customer Reviews</a>
+        <a href="{{ url_for('admin_trends') }}" class="mobile-drawer-link">✦ AI Concierge Trends</a>
+        <a href="{{ url_for('admin_settings') }}" class="mobile-drawer-link">⚙️ Studio Settings & Payments</a>
+        <a href="{{ url_for('home') }}" target="_blank" class="mobile-drawer-link" style="color: var(--admin-gold);">👁️ Open Live Storefront ↗</a>
+        <a href="{{ url_for('admin_logout') }}" class="mobile-drawer-link" style="color: #ff7675; margin-top: 14px;">🚪 Sign Out of Admin</a>
+    </div>
+
+    <!-- =========================================
+         MAIN PORTAL CONTENT
+    ========================================== -->
+    <main class="admin-portal-wrap">
+        
+        <!-- Welcome Hero Banner -->
+        <div class="portal-hero">
+            <div class="portal-title">
+                <span class="eyebrow" style="color: var(--admin-burgundy); font-weight: 600;">EXECUTIVE MISSION CONTROL</span>
+                <h1>Tulsa Wears Atelier Management</h1>
+                <div class="atelier-address-tag">
+                    <span>📍</span> {{ admin_user.studio_address if admin_user and admin_user.studio_address else 'Tulsa Wears Atelier, Hansi, Haryana, India - 125033' }}
+                </div>
+            </div>
+
+            <div class="portal-quick-actions">
+                <a href="{{ url_for('admin_customizer') }}" class="btn-portal-action btn-primary-action" style="background: linear-gradient(135deg, #111, #2d261e); border-color: var(--admin-gold);">
+                    <span>🎨</span> Redesign Website (Text & Images)
+                </a>
+                <a href="{{ url_for('admin_orders') }}" class="btn-portal-action btn-primary-action">
+                    <span>📦</span> Manage Orders ({{ total_orders }})
+                </a>
+                <a href="{{ url_for('admin_products') }}" class="btn-portal-action btn-secondary-action">
+                    <span>+</span> Add New Garment
+                </a>
+                <a href="{{ url_for('admin_export_orders_csv') }}" class="btn-portal-action btn-secondary-action">
+                    <span>📄</span> Export Orders CSV
+                </a>
+            </div>
+        </div>
+
+        <!-- KPI Metrics Grid -->
+        <div class="portal-kpi-grid">
+            <!-- Total Revenue -->
+            <div class="portal-kpi-card kpi-rev">
+                <div class="kpi-head">
+                    <span>Gross Revenue</span>
+                    <span>₹</span>
+                </div>
+                <div class="kpi-main-val">₹{{ "{:,.0f}".format(total_revenue) }}</div>
+                <div class="kpi-sub-label">{{ total_orders }} total orders logged</div>
+            </div>
+
+            <!-- Pending Verification -->
+            <a href="{{ url_for('admin_orders') }}" class="portal-kpi-card kpi-appr">
+                <div class="kpi-head">
+                    <span>Pending Verification</span>
+                    <span style="color: var(--admin-amber);">⏱️ 1-2h SLA</span>
+                </div>
+                <div class="kpi-main-val" style="color: var(--admin-amber);">{{ pending_approval_count }}</div>
+                <div class="kpi-sub-label">Awaiting payment verification</div>
+            </a>
+
+            <!-- Confirmed / In Crafting -->
+            <a href="{{ url_for('admin_orders') }}" class="portal-kpi-card kpi-orders">
+                <div class="kpi-head">
+                    <span>In Tailoring</span>
+                    <span>🪡</span>
+                </div>
+                <div class="kpi-main-val">{{ confirmed_count }}</div>
+                <div class="kpi-sub-label">Verified & being tailored</div>
+            </a>
+
+            <!-- Products in Catalog -->
+            <a href="{{ url_for('admin_products') }}" class="portal-kpi-card kpi-prods">
+                <div class="kpi-head">
+                    <span>Garments Archive</span>
+                    <span>👗</span>
+                </div>
+                <div class="kpi-main-val">{{ product_count }}</div>
+                <div class="kpi-sub-label">{% if low_stock_count > 0 %}<strong style="color: #c0392b;">{{ low_stock_count }} Low Stock</strong>{% else %}Stock levels healthy{% endif %}</div>
+            </a>
+
+            <!-- Active Coupons -->
+            <a href="{{ url_for('admin_coupons') }}" class="portal-kpi-card kpi-coupons">
+                <div class="kpi-head">
+                    <span>Promo Coupons</span>
+                    <span>🎟️</span>
+                </div>
+                <div class="kpi-main-val">{{ coupon_count }}</div>
+                <div class="kpi-sub-label">Active promotional codes</div>
+            </a>
+
+            <!-- Bespoke Commissions -->
+            <a href="{{ url_for('admin_custom_orders') }}" class="portal-kpi-card kpi-bespoke">
+                <div class="kpi-head">
+                    <span>Bespoke & Inquiries</span>
+                    <span>💬</span>
+                </div>
+                <div class="kpi-main-val">{{ custom_orders_count + inquiries_count }}</div>
+                <div class="kpi-sub-label">{{ custom_orders_count }} custom orders, {{ inquiries_count }} inquiries</div>
+            </a>
+        </div>
+
+        <!-- 2-Column Main Split -->
+        <div class="portal-main-split">
+            <!-- Left Column: Recent Orders -->
+            <div class="portal-card">
+                <div class="card-title-row">
+                    <h2>Recent Client Orders</h2>
+                    <a href="{{ url_for('admin_orders') }}">View All Orders ({{ total_orders }}) →</a>
+                </div>
+
+                {% if recent_orders and recent_orders|length > 0 %}
+                <div class="table-responsive">
+                    <table class="portal-table">
+                        <thead>
+                            <tr>
+                                <th>Order / Tracking</th>
+                                <th>Client Details</th>
+                                <th>Bespoke Silhouette</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in recent_orders %}
+                            <tr>
+                                <td>
+                                    <strong>#{{ order.id }}</strong>
+                                    <div style="font-family: monospace; font-size: 10px; color: #777;">
+                                        {{ order.tracking_id or 'TW-TRACK-' ~ order.id }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <strong>{{ order.customer_name }}</strong>
+                                    <div style="font-size: 11px; color: #666;">
+                                        📞 {{ order.phone }} • {{ order.city }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 500;">Size {{ order.size or 'M' }}</div>
+                                    <div style="font-size: 10px; color: #888;">Top: {{ order.top_length or '30' }}" | Sleeves: {{ order.sleeves_length or '18' }}"</div>
+                                </td>
+                                <td>
+                                    <strong style="font-size: 13px;">₹{{ "{:,.0f}".format(order.price) }}</strong>
+                                    <div style="font-size: 10px; color: #888;">{{ order.payment_method or 'UPI' }}</div>
+                                </td>
+                                <td>
+                                    {% if order.status and 'approval' in order.status|lower %}
+                                    <span class="status-badge status-pending-approval">⏳ Approval Pending</span>
+                                    {% elif order.status and 'confirm' in order.status|lower %}
+                                    <span class="status-badge status-confirmed">✓ Confirmed</span>
+                                    {% elif order.status and 'ship' in order.status|lower %}
+                                    <span class="status-badge status-shipped">📦 Shipped</span>
+                                    {% elif order.status and 'deliver' in order.status|lower %}
+                                    <span class="status-badge status-delivered">★ Delivered</span>
+                                    {% else %}
+                                    <span class="status-badge status-confirmed">{{ order.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 6px;">
+                                        <a href="{{ url_for('admin_order_invoice', order_id=order.id) }}" target="_blank" class="category-pill" style="padding: 4px 8px; font-size: 10px;" title="Print Tax Invoice">
+                                            📄 Invoice
+                                        </a>
+                                        <a href="https://wa.me/{{ order.phone }}?text=Namaste%20{{ order.customer_name }}!%20This%20is%20Tulsa%20Wears%20Atelier%20regarding%20Order%20%23{{ order.id }}." target="_blank" class="category-pill" style="padding: 4px 8px; font-size: 10px; background: #e8f5e9; color: #2e7d32;" title="Chat with Client">
+                                            💬
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 40px 20px; color: #888;">
+                    <p>No customer orders logged in database yet.</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Right Column: Studio Management Hub -->
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                <!-- Atelier Physical Details Card -->
+                <div class="portal-card">
+                    <div class="card-title-row">
+                        <h2>Atelier Profile</h2>
+                        <a href="{{ url_for('admin_settings') }}">Edit ⚙️</a>
+                    </div>
+
+                    <div style="font-size: 13px; line-height: 1.6;">
+                        <div style="margin-bottom: 12px;">
+                            <strong style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #888;">Workshop Location</strong>
+                            <span>{{ admin_user.studio_address if admin_user and admin_user.studio_address else 'Tulsa Wears Atelier, Hansi, Haryana, India - 125033' }}</span>
+                        </div>
+
+                        <div style="margin-bottom: 12px;">
+                            <strong style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #888;">Official Phone & WhatsApp</strong>
+                            <span>📞 {{ admin_user.studio_phone if admin_user and admin_user.studio_phone else '+91 93504 39667' }}</span>
+                        </div>
+
+                        <div style="margin-bottom: 12px;">
+                            <strong style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #888;">Client Support Email</strong>
+                            <span>✉️ {{ admin_user.studio_email if admin_user and admin_user.studio_email else 'contact@tulsawear.com' }}</span>
+                        </div>
+
+                        <div>
+                            <strong style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: #888;">Operating Schedule</strong>
+                            <span>{{ admin_user.studio_hours if admin_user and admin_user.studio_hours else 'Mon – Sat: 10:00 AM – 7:00 PM IST' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fast Actions & Tools -->
+                <div class="portal-card">
+                    <div class="card-title-row">
+                        <h2>Quick Toolset</h2>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <a href="{{ url_for('admin_customizer') }}" class="btn-portal-action btn-primary-action" style="justify-content: flex-start; background: var(--admin-dark); border-color: var(--admin-gold);">
+                            <span>🎨</span> Redesign Website Text & Imagery (Visual CMS)
+                        </a>
+                        <a href="{{ url_for('admin_products') }}" class="btn-portal-action btn-secondary-action" style="justify-content: flex-start;">
+                            <span>👗</span> Manage Silhouettes & Inventory
+                        </a>
+                        <a href="{{ url_for('admin_coupons') }}" class="btn-portal-action btn-secondary-action" style="justify-content: flex-start;">
+                            <span>🎟️</span> Create / Toggle Discount Coupons
+                        </a>
+                        <a href="{{ url_for('admin_custom_orders') }}" class="btn-portal-action btn-secondary-action" style="justify-content: flex-start;">
+                            <span>✂️</span> Review Bespoke Bridal Orders ({{ custom_orders_count }})
+                        </a>
+                        <a href="{{ url_for('admin_inquiries') }}" class="btn-portal-action btn-secondary-action" style="justify-content: flex-start;">
+                            <span>💬</span> Respond to Customer Inquiries ({{ inquiries_count }})
+                        </a>
+                        <a href="{{ url_for('admin_feedback') }}" class="btn-portal-action btn-secondary-action" style="justify-content: flex-start;">
+                            <span>⭐</span> Moderate Reviews & Testimonials
+                        </a>
+                        <a href="{{ url_for('admin_backup_database') }}" class="btn-portal-action btn-primary-action" style="justify-content: flex-start;">
+                            <span>💾</span> Download Complete SQLite Backup
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Latest Handcrafted Silhouettes Shelf -->
+        <div class="portal-card">
+            <div class="card-title-row">
+                <h2>Catalog Archive Overview ({{ product_count }} Garments)</h2>
+                <a href="{{ url_for('admin_products') }}">Manage All Products →</a>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px;">
+                {% for prod in recent_products %}
+                <div style="background: #faf7f2; border: 1px solid var(--admin-border); border-radius: 4px; overflow: hidden; display: flex; flex-direction: column;">
+                    <div style="aspect-ratio: 3/4; overflow: hidden; background: #eee;">
+                        {% if prod.image %}
+                        <img src="{{ product_image_url(prod.image) }}" alt="{{ prod.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% endif %}
+                    </div>
+                    <div style="padding: 12px; flex: 1; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <span style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.1em; color: #888;">{{ prod.category }}</span>
+                            <h4 style="font-family: 'Cormorant Garamond', serif; font-size: 16px; margin: 2px 0 4px; font-weight: 500;">{{ prod.name }}</h4>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-top: 8px;">
+                            <strong style="font-size: 13px;">₹{{ "{:,.0f}".format(prod.price) }}</strong>
+                            <span style="font-size: 10px; color: {% if prod.stock <= 5 %}#c0392b{% else %}#2e7d32{% endif %}; font-weight: 600;">
+                                Stock: {{ prod.stock }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileAdminDrawer = document.getElementById('mobileAdminDrawer');
+        if (mobileMenuBtn && mobileAdminDrawer) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileAdminDrawer.classList.toggle('open');
+                mobileMenuBtn.innerText = mobileAdminDrawer.classList.contains('open') ? '✕' : '☰';
+            });
+        }
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Tulsa Admin">
+    <meta name="theme-color" content="#111111">
+    <title>Customer Orders & Analytics Dashboard — {{ brand_name }} Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Chart.js for Analytics Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        .admin-orders-section {
+            padding: 100px 36px 80px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .admin-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .admin-heading h1 {
+            font-size: clamp(30px, 3.2vw, 44px);
+            font-weight: 400;
+            margin-top: 6px;
+        }
+
+        /* KPI STATS CARDS */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .kpi-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 18px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card:hover, .kpi-card.active-kpi {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+            border-color: #111;
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #ddd;
+        }
+
+        .kpi-all::before { background: #111; }
+        .kpi-approval::before { background: #e65100; }
+        .kpi-confirmed::before { background: #2e7d32; }
+        .kpi-pending::before { background: #f57f17; }
+        .kpi-processing::before { background: #f57f17; }
+        .kpi-shipped::before { background: #1565c0; }
+        .kpi-delivered::before { background: #7b1fa2; }
+        .kpi-revenue::before { background: #00897b; }
+        .kpi-advance::before { background: #43a047; }
+
+        .kpi-label {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-value {
+            font-size: 26px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.1;
+        }
+
+        .kpi-subtext {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        /* ANALYTICS CHARTS SECTION */
+        .analytics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.6fr;
+            gap: 24px;
+            margin-bottom: 36px;
+        }
+
+        @media (max-width: 1024px) {
+            .analytics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .chart-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 24px 28px;
+            border-radius: 4px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #f0eae1;
+            padding-bottom: 12px;
+        }
+
+        .chart-card-header h3 {
+            font-size: 18px;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .chart-canvas-container {
+            position: relative;
+            flex: 1;
+            min-height: 260px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* FILTER CONTROLS BAR */
+        .filter-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .status-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 7px 14px;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .filter-btn:hover, .filter-btn.active-filter {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+        }
+
+        .table-search-input {
+            padding: 8px 14px;
+            border: 1px solid var(--border);
+            font-size: 12px;
+            border-radius: 20px;
+            outline: none;
+            width: 240px;
+            background: #fff;
+            font-family: inherit;
+        }
+
+        .table-search-input:focus {
+            border-color: #111;
+        }
+
+        /* ORDERS TABLE */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 2px;
+            font-weight: 600;
+        }
+
+        .status-confirmed { background: #e8f5e9; color: #2e7d32; }
+        .status-processing { background: #fff8e1; color: #f57f17; }
+        .status-shipped { background: #e3f2fd; color: #1565c0; }
+        .status-delivered { background: #f3e5f5; color: #7b1fa2; }
+        .status-pending { background: #fff3e0; color: #e65100; }
+        .status-cancelled { background: #ffebee; color: #c62828; }
+
+        .status-select {
+            font-size: 11px;
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            background: #fff;
+            border-radius: 2px;
+            cursor: pointer;
+            color: var(--text);
+            font-family: inherit;
+        }
+
+        .logout-btn {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #c0392b;
+            padding: 6px 14px;
+            border: 1px solid #f5c6cb;
+            text-decoration: none;
+            border-radius: 2px;
+        }
+
+        .logout-btn:hover {
+            background: #fdf0ed;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .orders-table th {
+            text-align: left;
+            padding: 14px 14px;
+            background: #efebe4;
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .orders-table td {
+            padding: 16px 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .orders-table tr:hover {
+            background: #faf8f5;
+        }
+
+        .orders-table-wrapper {
+            background: #fff;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.02);
+            border-radius: 4px;
+        }
+
+        .tracking-chip {
+            display: inline-block;
+            background: #f4f0eb;
+            color: #111;
+            font-family: monospace;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 2px;
+            margin-top: 4px;
+        }
+
+        .address-box {
+            font-size: 12px;
+            line-height: 1.4;
+            color: #444;
+            max-width: 230px;
+        }
+
+        .measurements-box {
+            font-size: 12px;
+            line-height: 1.45;
+            background: #faf8f5;
+            padding: 8px 10px;
+            border-radius: 2px;
+            border: 1px solid #f0eae1;
+            max-width: 220px;
+        }
+
+        .payment-pill {
+            font-size: 11px;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        .wa-chat-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #25d366;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-decoration: none;
+            border-radius: 2px;
+            margin-top: 6px;
+        }
+
+        .wa-chat-btn:hover {
+            background: #20ba59;
+        }
+
+        /* TRAFFIC & LINK CLICKS ANALYTICS PANEL */
+        .traffic-panel {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 24px 28px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.02);
+        }
+
+        .traffic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0eae1;
+            padding-bottom: 14px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .traffic-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            gap: 16px;
+        }
+
+        .traffic-stat-card {
+            background: #faf8f5;
+            border: 1px solid #ede8e1;
+            padding: 16px;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .traffic-stat-card .label {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .traffic-stat-card .val {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.1;
+        }
+
+        .traffic-stat-card .sub {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .traffic-log-drawer {
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #f0eae1;
+            display: none;
+        }
+
+        .traffic-log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+
+        .traffic-log-table th {
+            text-align: left;
+            padding: 8px 10px;
+            background: #f4f0eb;
+            font-size: 9px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .traffic-log-table td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 11px;
+        }
+
+        .badge-event {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 2px;
+            font-size: 9px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .badge-visit { background: #e3f2fd; color: #1565c0; }
+        .badge-register { background: #e8f5e9; color: #2e7d32; }
+        .badge-login { background: #ede7f6; color: #512da8; }
+        .badge-order { background: #fff3e0; color: #e65100; font-weight: 700; }
+
+        /* PAYMENT PROOF MODAL */
+        .proof-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 999999;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .proof-modal.active {
+            display: flex;
+        }
+
+        .proof-modal-content {
+            background: #fff;
+            max-width: 620px;
+            width: 100%;
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .proof-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0eae1;
+            background: #faf8f5;
+        }
+
+        .proof-modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            text-align: center;
+            background: #1c1c1c;
+        }
+
+        .proof-modal-img {
+            max-width: 100%;
+            max-height: 60vh;
+            object-fit: contain;
+            border-radius: 2px;
+        }
+
+        .proof-modal-footer {
+            padding: 14px 20px;
+            border-top: 1px solid #f0eae1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        /* MOBILE APP-LIKE SUB-NAV & RESPONSIVENESS */
+        .admin-subnav {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .navbar .nav-links {
+                display: none !important;
+            }
+            .admin-subnav {
+                display: flex !important;
+                overflow-x: auto;
+                white-space: nowrap;
+                background: #1c1b1a;
+                padding: 10px 14px;
+                gap: 12px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: none;
+                position: sticky;
+                top: 68px;
+                z-index: 99;
+                border-bottom: 1px solid #333;
+            }
+            .admin-subnav::-webkit-scrollbar {
+                display: none;
+            }
+            .admin-subnav a {
+                color: #c7c4be;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                text-decoration: none;
+                flex-shrink: 0;
+                padding: 4px 6px;
+            }
+            .admin-subnav a.active {
+                color: #fff;
+                font-weight: 600;
+                border-bottom: 2px solid #e0a96d;
+            }
+            .admin-orders-section {
+                padding: 24px 14px 40px !important;
+            }
+            .admin-heading {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            .admin-heading h1 {
+                font-size: 26px !important;
+            }
+            .kpi-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 10px !important;
+            }
+            .kpi-card {
+                padding: 14px 12px !important;
+            }
+            .kpi-value {
+                font-size: 20px !important;
+            }
+            .analytics-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px !important;
+            }
+            .chart-canvas-container {
+                min-height: 220px !important;
+            }
+            .status-pills {
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 6px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .filter-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            select.status-select {
+                font-size: 16px !important; /* Prevents iOS Safari auto-zoom */
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <a href="{{ url_for('home') }}" class="logo">{{ brand_name|upper }} ADMIN</a>
+
+        <nav class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('admin_customizer') }}" style="color: #c5a059; font-weight: 600;">🎨 Website Designer</a>
+            <a href="{{ url_for('admin_orders') }}" style="border-bottom: 1px solid var(--text); padding-bottom: 4px;">Orders & Analytics</a>
+            <a href="{{ url_for('admin_products') }}">Products & Photos</a>
+            <a href="{{ url_for('admin_custom_orders') }}">Custom Requests</a>
+            <a href="{{ url_for('admin_coupons') }}">Coupons</a>
+            <a href="{{ url_for('admin_inquiries') }}">Inquiries</a>
+            <a href="{{ url_for('admin_trends') }}">AI Trends & Scans</a>
+            <a href="{{ url_for('admin_feedback') }}">Reviews</a>
+            <a href="{{ url_for('admin_settings') }}">Settings</a>
+            <a href="{{ url_for('home') }}">View Website</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+                Sign Out
+            </a>
+        </div>
+    </header>
+
+    <!-- App-like Sticky Subnav for Mobile iOS / Android -->
+    <div class="admin-subnav">
+        <a href="{{ url_for('admin_dashboard') }}">📊 Home</a>
+        <a href="{{ url_for('admin_customizer') }}" style="color: #c5a059; font-weight: 700;">🎨 Designer</a>
+        <a href="{{ url_for('admin_orders') }}" class="active">📦 Orders</a>
+        <a href="{{ url_for('admin_products') }}">👗 Products</a>
+        <a href="{{ url_for('admin_custom_orders') }}">✨ Custom</a>
+        <a href="{{ url_for('admin_trends') }}">✦ AI Scans</a>
+        <a href="{{ url_for('admin_feedback') }}">★ Reviews</a>
+        <a href="{{ url_for('admin_settings') }}">⚙️ Settings</a>
+        <a href="{{ url_for('home') }}">🌐 Website</a>
+    </div>
+
+    <main>
+        <section class="admin-orders-section">
+
+            <div class="admin-heading">
+                <div>
+                    <p class="eyebrow">STUDIO INTELLIGENCE & DISPATCH DASHBOARD</p>
+                    <h1>Customer Orders & Analytics</h1>
+                    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+                        Live overview of order statuses, payment collections, tailoring dimensions, and delivery tracking.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <a href="{{ url_for('admin_export_orders_csv') }}" style="background: #2e7d32; color: #fff; padding: 8px 14px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; border-radius: 2px; display: inline-flex; align-items: center; gap: 6px;" title="Export all orders for courier logistics">
+                        <span>📥 Export Orders (CSV)</span>
+                    </a>
+                    <form action="{{ url_for('admin_clear_all_orders') }}" method="POST" onsubmit="return confirm('Reset and clear all test orders? This will keep your portal pure, fresh, and at 0 orders ready for genuine customers.');">
+                        <button type="submit" style="background: #fff; border: 1px solid #f5c6cb; color: #c0392b; padding: 8px 14px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px; display: inline-flex; align-items: center; gap: 6px;">
+                            <span>🗑️ Clear Test Orders</span>
+                        </button>
+                    </form>
+                    <a href="{{ url_for('home') }}" target="_blank" style="background: var(--text); color: var(--background); padding: 8px 14px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; text-decoration: none; border-radius: 2px; display: inline-flex; align-items: center; gap: 6px;">
+                        <span>🌐 View Website →</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Flashed Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                    <div style="background: {% if category == 'success' %}#e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9{% else %}#e3f2fd; color: #0d47a1; border: 1px solid #bbdefb{% endif %}; padding: 14px 18px; font-size: 13px; margin-bottom: 24px; border-radius: 4px; display: flex; align-items: center; justify-content: space-between;">
+                        <span>{{ message }}</span>
+                        <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; font-size:16px; cursor:pointer;">&times;</button>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <!-- 0. TRAFFIC & CUSTOMER FUNNEL ANALYTICS -->
+            <div class="traffic-panel">
+                <div class="traffic-header">
+                    <div>
+                        <p class="eyebrow" style="margin-bottom: 2px;">REAL-TIME TRAFFIC & CONVERSION FUNNEL</p>
+                        <h3 style="font-size: 20px; font-weight: 500; margin: 0;">Store Visitors, Link Clicks & Customer Engagement</h3>
+                    </div>
+                    <div>
+                        <button type="button" onclick="toggleTrafficDrawer()" style="background: #faf8f5; border: 1px solid var(--border); padding: 8px 14px; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 2px;">
+                            👁️ View Recent Visitor Log ({{ recent_traffic|length if recent_traffic else 0 }}) ▾
+                        </button>
+                    </div>
+                </div>
+
+                <div class="traffic-stats-grid">
+                    <div class="traffic-stat-card">
+                        <div class="label">
+                            <span>Link Clicks & Hits</span>
+                            <span>🖱️</span>
+                        </div>
+                        <div class="val">{{ stats.total_clicks if stats else 0 }}</div>
+                        <div class="sub">Total link clicks & events</div>
+                    </div>
+
+                    <div class="traffic-stat-card">
+                        <div class="label">
+                            <span>Page Visits</span>
+                            <span>👁️</span>
+                        </div>
+                        <div class="val">{{ stats.total_visits if stats else 0 }}</div>
+                        <div class="sub">Today: +{{ stats.today_visits if stats else 0 }} visits</div>
+                    </div>
+
+                    <div class="traffic-stat-card">
+                        <div class="label">
+                            <span>Customer Accounts</span>
+                            <span>👤</span>
+                        </div>
+                        <div class="val">{{ stats.total_customers if stats else 0 }}</div>
+                        <div class="sub">Registered shopper accounts</div>
+                    </div>
+
+                    <div class="traffic-stat-card">
+                        <div class="label">
+                            <span>Customer Logins</span>
+                            <span>🔑</span>
+                        </div>
+                        <div class="val">{{ stats.total_logins if stats else 0 }}</div>
+                        <div class="sub">Today: +{{ stats.today_logins if stats else 0 }} logins</div>
+                    </div>
+
+                    <div class="traffic-stat-card" style="border-left: 3px solid #e65100;">
+                        <div class="label">
+                            <span>Awaiting Approval</span>
+                            <span style="color: #e65100;">⏳</span>
+                        </div>
+                        <div class="val" style="color: #e65100;">{{ stats.pending_approval if stats else 0 }}</div>
+                        <div class="sub">Needs UTR & Proof check</div>
+                    </div>
+
+                    <div class="traffic-stat-card" style="border-left: 3px solid #2e7d32;">
+                        <div class="label">
+                            <span>Conversion Rate</span>
+                            <span style="color: #2e7d32;">📈</span>
+                        </div>
+                        <div class="val" style="color: #2e7d32;">{{ stats.conversion_rate if stats else 0 }}%</div>
+                        <div class="sub">Orders / Unique Visits</div>
+                    </div>
+                </div>
+
+                <!-- Collapsible Recent Traffic Activity Log -->
+                <div class="traffic-log-drawer" id="trafficLogDrawer">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <strong style="font-size: 13px;">Latest 20 Traffic Events & Visitor Hits</strong>
+                        <span style="font-size: 11px; color: var(--muted);">Real-time tracking</span>
+                    </div>
+                    {% if recent_traffic and recent_traffic|length > 0 %}
+                    <div style="overflow-x: auto;">
+                        <table class="traffic-log-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Event Type</th>
+                                    <th>Page Visited / Target</th>
+                                    <th>Visitor IP</th>
+                                    <th>Referrer / Origin</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in recent_traffic %}
+                                <tr>
+                                    <td style="white-space: nowrap; color: var(--muted);">
+                                        {{ log.timestamp.strftime('%d %b %H:%M:%S') if log.timestamp else '' }}
+                                    </td>
+                                    <td>
+                                        <span class="badge-event badge-{{ log.event_type }}">
+                                            {{ log.event_type }}
+                                        </span>
+                                    </td>
+                                    <td style="font-family: monospace; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ log.page_url or '/' }}
+                                    </td>
+                                    <td style="color: var(--muted); font-family: monospace;">
+                                        {{ log.ip_address or 'Local' }}
+                                    </td>
+                                    <td style="color: var(--muted); font-size: 10px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ log.referrer or 'Direct / Bookmark' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p style="font-size: 12px; color: var(--muted); margin: 10px 0;">No traffic logged yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 1. KPI SUMMARY STATS CARDS -->
+            <div class="kpi-grid">
+                <!-- Total Orders -->
+                <div class="kpi-card kpi-all active-kpi" onclick="filterTableByStatus('all', this)">
+                    <div class="kpi-label">
+                        <span>Total Orders</span>
+                        <span>📦</span>
+                    </div>
+                    <div class="kpi-value">{{ stats.total if stats else orders|length }}</div>
+                    <div class="kpi-subtext">Click to view all</div>
+                </div>
+
+                <!-- Pending Approval (Priority) -->
+                <div class="kpi-card kpi-approval" onclick="filterTableByStatus('pending_approval', this)">
+                    <div class="kpi-label">
+                        <span>Pending Approval</span>
+                        <span style="color: #e65100;">⏳</span>
+                    </div>
+                    <div class="kpi-value" style="color: #e65100;">{{ stats.pending_approval if stats else 0 }}</div>
+                    <div class="kpi-subtext">Awaiting 1-2 hr verification</div>
+                </div>
+
+                <!-- Order Received / Confirmed -->
+                <div class="kpi-card kpi-confirmed" onclick="filterTableByStatus('confirmed', this)">
+                    <div class="kpi-label">
+                        <span>Confirmed / Received</span>
+                        <span style="color: #2e7d32;">✓</span>
+                    </div>
+                    <div class="kpi-value" style="color: #2e7d32;">{{ stats.confirmed if stats else 0 }}</div>
+                    <div class="kpi-subtext">Verified orders</div>
+                </div>
+
+                <!-- Payment / COD Advance Pending -->
+                <div class="kpi-card kpi-pending" onclick="filterTableByStatus('pending', this)">
+                    <div class="kpi-label">
+                        <span>Payment Pending</span>
+                        <span style="color: #e65100;">⏳</span>
+                    </div>
+                    <div class="kpi-value" style="color: #e65100;">{{ stats.pending if stats else 0 }}</div>
+                    <div class="kpi-subtext">Awaiting advance / auth</div>
+                </div>
+
+                <!-- In Production / Processing -->
+                <div class="kpi-card kpi-processing" onclick="filterTableByStatus('processing', this)">
+                    <div class="kpi-label">
+                        <span>In Production</span>
+                        <span style="color: #f57f17;">✂️</span>
+                    </div>
+                    <div class="kpi-value" style="color: #f57f17;">{{ stats.processing if stats else 0 }}</div>
+                    <div class="kpi-subtext">Artisans tailoring</div>
+                </div>
+
+                <!-- Dispatched / Shipped -->
+                <div class="kpi-card kpi-shipped" onclick="filterTableByStatus('shipped', this)">
+                    <div class="kpi-label">
+                        <span>Dispatched</span>
+                        <span style="color: #1565c0;">🚚</span>
+                    </div>
+                    <div class="kpi-value" style="color: #1565c0;">{{ stats.shipped if stats else 0 }}</div>
+                    <div class="kpi-subtext">In transit with courier</div>
+                </div>
+
+                <!-- Delivered -->
+                <div class="kpi-card kpi-delivered" onclick="filterTableByStatus('delivered', this)">
+                    <div class="kpi-label">
+                        <span>Delivered</span>
+                        <span style="color: #7b1fa2;">🏠</span>
+                    </div>
+                    <div class="kpi-value" style="color: #7b1fa2;">{{ stats.delivered if stats else 0 }}</div>
+                    <div class="kpi-subtext">Completed deliveries</div>
+                </div>
+
+                <!-- Total Revenue -->
+                <div class="kpi-card kpi-revenue">
+                    <div class="kpi-label">
+                        <span>Total Revenue</span>
+                        <span style="color: #00897b;">₹</span>
+                    </div>
+                    <div class="kpi-value" style="font-size: 22px; color: #00897b;">
+                        ₹{{ "{:,.0f}".format(stats.total_revenue if stats else 0) }}
+                    </div>
+                    <div class="kpi-subtext">Cumulative garment value</div>
+                </div>
+
+                <!-- COD Advance vs Balance -->
+                <div class="kpi-card kpi-advance">
+                    <div class="kpi-label">
+                        <span>COD Security Advance</span>
+                        <span style="color: #43a047;">💳</span>
+                    </div>
+                    <div class="kpi-value" style="font-size: 22px; color: #43a047;">
+                        ₹{{ "{:,.0f}".format(stats.total_advance if stats else 0) }}
+                    </div>
+                    <div class="kpi-subtext">Due on Delivery: ₹{{ "{:,.0f}".format(stats.total_balance if stats else 0) }}</div>
+                </div>
+            </div>
+
+            <!-- 2. ANALYTICS GRAPHS SECTION -->
+            <div class="analytics-grid">
+                <!-- Doughnut Chart: Order Status Breakdown -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div>
+                            <p class="eyebrow" style="margin-bottom: 2px;">STATUS BREAKDOWN</p>
+                            <h3>Order Status Distribution</h3>
+                        </div>
+                        <span style="font-size: 11px; color: var(--muted); font-weight: 500;">
+                            {{ stats.total if stats else orders|length }} Total
+                        </span>
+                    </div>
+                    <div class="chart-canvas-container">
+                        <canvas id="orderStatusChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Bar / Line Chart: Order Volume & Revenue Trend -->
+                <div class="chart-card">
+                    <div class="chart-card-header">
+                        <div>
+                            <p class="eyebrow" style="margin-bottom: 2px;">SALES INTELLIGENCE</p>
+                            <h3>Order Volume & Revenue Trend</h3>
+                        </div>
+                        <span style="font-size: 11px; color: var(--muted); font-weight: 500;">
+                            Chronological Timeline
+                        </span>
+                    </div>
+                    <div class="chart-canvas-container">
+                        <canvas id="orderTrendChart" style="max-height: 250px;"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. STATUS FILTER PILLS & SEARCH -->
+            <div class="filter-bar">
+                <div class="status-pills">
+                    <button type="button" class="filter-btn active-filter" onclick="filterTableByStatus('all', this)">All ({{ stats.total if stats else orders|length }})</button>
+                    <button type="button" class="filter-btn" style="border-color: #e65100; color: #e65100;" onclick="filterTableByStatus('pending_approval', this)">⏳ Pending Approval ({{ stats.pending_approval if stats else 0 }})</button>
+                    <button type="button" class="filter-btn" onclick="filterTableByStatus('confirmed', this)">Confirmed ({{ stats.confirmed if stats else 0 }})</button>
+                    <button type="button" class="filter-btn" onclick="filterTableByStatus('pending', this)">Pending ({{ stats.pending if stats else 0 }})</button>
+                    <button type="button" class="filter-btn" onclick="filterTableByStatus('processing', this)">Processing ({{ stats.processing if stats else 0 }})</button>
+                    <button type="button" class="filter-btn" onclick="filterTableByStatus('shipped', this)">Shipped ({{ stats.shipped if stats else 0 }})</button>
+                    <button type="button" class="filter-btn" onclick="filterTableByStatus('delivered', this)">Delivered ({{ stats.delivered if stats else 0 }})</button>
+                    {% if stats and stats.cancelled > 0 %}
+                    <button type="button" class="filter-btn" onclick="filterTableByStatus('cancelled', this)">Cancelled ({{ stats.cancelled }})</button>
+                    {% endif %}
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="text" id="orderSearchInput" onkeyup="searchOrdersTable()" placeholder="🔍 Search customer, city, tracking..." class="table-search-input">
+                    <span id="orderCountDisplay" style="font-size: 11px; color: var(--muted); font-weight: 500; white-space: nowrap;">
+                        Showing {{ orders|length }} orders
+                    </span>
+                </div>
+            </div>
+
+            {% if orders and orders|length > 0 %}
+
+            <!-- 4. ORDERS DATA TABLE -->
+            <div class="orders-table-wrapper">
+                <table class="orders-table" id="ordersTable">
+                    <thead>
+                        <tr>
+                            <th>Order & Tracking</th>
+                            <th>Customer & Contact</th>
+                            <th>Full Delivery Address</th>
+                            <th>Sizing & Tailoring Specs</th>
+                            <th>Garment & Total</th>
+                            <th>Payment & Proof (UTR / Screenshot)</th>
+                            <th>Est. Delivery</th>
+                            <th>Status & Dispatch</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        {% set s = (order.status or '')|lower %}
+                        <tr class="order-row" data-status="{% if 'approval' in s %}pending_approval{% elif 'confirm' in s %}confirmed{% elif 'process' in s or 'product' in s %}processing{% elif 'ship' in s %}shipped{% elif 'deliver' in s %}delivered{% elif 'cancel' in s %}cancelled{% else %}pending{% endif %}">
+                            <!-- Order ID & Tracking -->
+                            <td>
+                                <strong style="font-size: 14px;">#{{ order.id }}</strong>
+                                <div>
+                                    <span class="tracking-chip">{{ order.tracking_id or ('TW-TRACK-' ~ order.id) }}</span>
+                                </div>
+                                <a href="{{ url_for('track_order', query=order.tracking_id or order.id) }}" target="_blank" style="font-size: 10px; color: var(--muted); text-decoration: underline; display: block; margin-top: 4px;">
+                                    View Tracking Page ↗
+                                </a>
+                            </td>
+
+                            <!-- Customer & Contact -->
+                            <td>
+                                <strong style="font-size: 13px;" class="cell-customer-name">{{ order.customer_name }}</strong>
+                                <div style="font-size: 12px; color: var(--muted);">{{ order.email }}</div>
+                                <div style="font-size: 12px; font-weight: 500; margin-top: 2px;" class="cell-phone">📞 {{ order.phone }}</div>
+
+                                <!-- WhatsApp Chat Button -->
+                                {% set clean_phone = (order.phone or '')|replace(' ', '')|replace('-', '')|replace('+', '') %}
+                                <a href="https://wa.me/{{ clean_phone if clean_phone.startswith('91') else ('91' ~ clean_phone) }}?text=Namaste%20{{ order.customer_name|urlencode }}!%20This%20is%20Tulsa%20Wears%20regarding%20your%20Order%20%23{{ order.id }}%20(Tracking:%20{{ order.tracking_id }})." target="_blank" class="wa-chat-btn">
+                                    💬 WhatsApp
+                                </a>
+                            </td>
+
+                            <!-- Full Delivery Address -->
+                            <td>
+                                <div class="address-box cell-address">
+                                    <strong>{{ order.customer_name }}</strong><br>
+                                    {{ order.address }}<br>
+                                    <strong>City:</strong> <span class="cell-city">{{ order.city }}</span><br>
+                                    <strong>PIN Code:</strong> {{ order.pincode }}
+                                </div>
+                            </td>
+
+                            <!-- Sizing & Tailoring Specs -->
+                            <td>
+                                <div class="measurements-box">
+                                    <div><strong>Size:</strong> <span style="color: #2e7d32; font-weight: 600;">{{ order.size or 'M' }}</span></div>
+                                    <div><strong>Top Length:</strong> {{ order.top_length or '30' }}"</div>
+                                    <div><strong>Sleeves Length:</strong> {{ order.sleeves_length or '18' }}"</div>
+                                    {% if order.bust %}<div><strong>Bust:</strong> {{ order.bust }}"</div>{% endif %}
+                                    {% if order.waist %}<div><strong>Waist:</strong> {{ order.waist }}"</div>{% endif %}
+                                    {% if order.hip %}<div><strong>Hip:</strong> {{ order.hip }}"</div>{% endif %}
+                                    {% if order.shoulder %}<div><strong>Shoulder:</strong> {{ order.shoulder }}"</div>{% endif %}
+                                </div>
+                            </td>
+
+                            <!-- Garment & Total -->
+                            <td>
+                                <div style="font-weight: 500; font-size: 13px; max-width: 180px;" class="cell-garment">{{ order.product_name }}</div>
+                                <div style="font-size: 15px; font-weight: 600; margin-top: 4px;">₹{{ "{:,.0f}".format(order.price) }}</div>
+                                {% if order.coupon_code %}
+                                <div style="margin-top: 4px; font-size: 10px; background: #e8f5e9; color: #2e7d32; padding: 2px 6px; border-radius: 2px; font-weight: 600; display: inline-block;">
+                                    🏷️ {{ order.coupon_code }} (-₹{{ "{:,.0f}".format(order.discount_amount) }})
+                                </div>
+                                {% endif %}
+                            </td>
+
+                            <!-- Payment & Proof (UTR / Screenshot) -->
+                            <td>
+                                <div style="font-weight: 500;">{{ order.payment_method or 'Pending' }}</div>
+
+                                <!-- UTR Number Badge & Copy Button -->
+                                {% if order.upi_utr %}
+                                <div style="margin-top: 4px; font-size: 11px; background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; padding: 3px 8px; border-radius: 3px; font-family: monospace; display: inline-flex; align-items: center; gap: 6px;">
+                                    <span>UTR: <strong>{{ order.upi_utr }}</strong></span>
+                                    <button type="button" onclick="navigator.clipboard.writeText('{{ order.upi_utr }}'); alert('Copied UTR: {{ order.upi_utr }}');" style="background: none; border: none; cursor: pointer; font-size: 11px; padding: 0;" title="Copy UTR">📋</button>
+                                </div>
+                                {% else %}
+                                <div style="font-size: 10px; color: var(--muted); margin-top: 4px;">No UTR submitted</div>
+                                {% endif %}
+
+                                <!-- Payment Screenshot Thumbnail & Modal Trigger -->
+                                <div style="margin-top: 8px;">
+                                    {% if order.payment_screenshot %}
+                                        {% set proof_url = url_for('serve_payment_proof', filename=order.payment_screenshot) %}
+                                        <div style="display: inline-flex; align-items: center; gap: 8px;">
+                                            <img src="{{ proof_url }}" alt="Screenshot Order #{{ order.id }}"
+                                                 onclick="openProofModal('{{ proof_url }}', '{{ order.id }}', '{{ order.upi_utr or '' }}')"
+                                                 style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 2px solid #2e7d32; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.15);"
+                                                 title="Click to view full screenshot">
+                                            <div>
+                                                <button type="button" onclick="openProofModal('{{ proof_url }}', '{{ order.id }}', '{{ order.upi_utr or '' }}')" style="background: none; border: none; font-size: 10px; color: #2e7d32; font-weight: 600; text-decoration: underline; cursor: pointer; padding: 0; display: block;">
+                                                    🔍 View Proof
+                                                </button>
+                                                <span style="font-size: 9px; color: var(--muted);">Click to zoom</span>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span style="font-size: 10px; color: var(--muted); font-style: italic;">No screenshot attached</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="payment-pill" style="margin-top: 6px;">
+                                    <span style="color: #2e7d32; font-weight: 600;">Advance Paid: ₹{{ "{:,.0f}".format(order.advance_paid or 0) }}</span><br>
+                                    {% if order.balance_due and order.balance_due > 0 %}
+                                    <span style="color: #c0392b; font-weight: 600;">Due on Delivery: ₹{{ "{:,.0f}".format(order.balance_due) }}</span>
+                                    {% else %}
+                                    <span style="color: #2e7d32;">Paid in Full</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+
+                            <!-- Delivery Estimate -->
+                            <td>
+                                <div style="font-size: 12px; font-weight: 500; color: #1b5e20;">
+                                    {{ order.estimated_delivery_date or (order.estimated_delivery_days ~ ' Days') }}
+                                </div>
+                                <div style="font-size: 10px; color: var(--muted); margin-top: 2px;">
+                                    ({{ order.estimated_delivery_days or 10 }} working days)
+                                </div>
+                            </td>
+
+                            <!-- Status & Quick Update -->
+                            <td>
+                                <div style="margin-bottom: 8px;">
+                                    {% if 'approval' in s %}
+                                    <span class="status-badge" style="background: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; font-weight: 600;">
+                                        ⏳ PENDING APPROVAL
+                                    </span>
+                                    {% else %}
+                                    <span class="status-badge {% if 'confirm' in s %}status-confirmed{% elif 'ship' in s %}status-shipped{% elif 'deliver' in s %}status-delivered{% elif 'process' in s or 'product' in s %}status-processing{% elif 'cancel' in s %}status-cancelled{% else %}status-pending{% endif %}">
+                                        {{ order.status }}
+                                    </span>
+                                    {% endif %}
+                                </div>
+
+                                <!-- 1-Click Quick Approve Button if Pending Approval -->
+                                {% if 'approval' in s %}
+                                <form action="{{ url_for('admin_quick_approve_order', order_id=order.id) }}" method="POST" style="margin-bottom: 8px;">
+                                    <button type="submit" style="background: #2e7d32; color: #fff; border: none; padding: 7px 10px; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; cursor: pointer; border-radius: 3px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; width: 100%; box-shadow: 0 2px 6px rgba(46,125,50,0.25);">
+                                        ✓ Approve & Confirm
+                                    </button>
+                                </form>
+                                {% endif %}
+
+                                <div style="display: flex; flex-direction: column; gap: 6px;">
+                                    <a href="{{ url_for('admin_order_invoice', order_id=order.id) }}" target="_blank" style="background: #faf8f5; border: 1px solid var(--border); color: #111; padding: 5px 8px; font-size: 10px; font-weight: 600; text-decoration: none; border-radius: 2px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; text-transform: uppercase; letter-spacing: 0.05em;" title="Print A4 Packing Slip & Order Invoice">
+                                        <span>📄 Print Slip / Invoice ↗</span>
+                                    </a>
+
+                                    <form action="{{ url_for('admin_update_order_status', order_id=order.id) }}" method="POST" style="display: flex; gap: 4px; align-items: center;">
+                                        <select name="status" class="status-select">
+                                            <option value="Confirmed" {% if order.status == 'Confirmed' %}selected{% endif %}>Confirmed</option>
+                                            <option value="Pending Approval" {% if 'approval' in s %}selected{% endif %}>Pending Approval</option>
+                                            <option value="Processing" {% if order.status == 'Processing' %}selected{% endif %}>Processing</option>
+                                            <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                                            <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                            <option value="Payment Pending" {% if order.status == 'Payment Pending' %}selected{% endif %}>Payment Pending</option>
+                                            <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                        </select>
+                                        <button type="submit" style="background: none; border: 1px solid var(--border); padding: 5px 8px; font-size: 10px; cursor: pointer; border-radius: 2px;">
+                                            Save
+                                        </button>
+                                    </form>
+
+                                    <form action="{{ url_for('admin_delete_order', order_id=order.id) }}" method="POST" onsubmit="return confirm('Delete Order #{{ order.id }}?');">
+                                        <button type="submit" style="background: none; border: 1px solid #f5c6cb; color: #c0392b; padding: 3px 8px; font-size: 10px; cursor: pointer; border-radius: 2px; display: inline-flex; align-items: center; gap: 4px;">
+                                            <span>🗑️ Delete</span>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+
+                            <!-- Placed Date -->
+                            <td style="font-size: 11px; color: var(--muted); white-space: nowrap;">
+                                {{ order.created_at.strftime('%d %b %Y') if order.created_at else '' }}<br>
+                                {{ order.created_at.strftime('%I:%M %p') if order.created_at else '' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% else %}
+
+            <div style="background: #fff; border: 1px solid var(--border); text-align: center; padding: 80px 24px; border-radius: 4px; box-shadow: 0 4px 16px rgba(0,0,0,0.02); margin-top: 10px;">
+                <div style="width: 60px; height: 60px; line-height: 60px; border-radius: 50%; background: #faf5ee; margin: 0 auto 16px; font-size: 28px;">🌸</div>
+                <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 500; margin-bottom: 10px; color: #111;">Pure, Fresh & Ready for Genuine Orders</h3>
+                <p style="color: var(--muted); font-size: 14px; max-width: 520px; margin: 0 auto 24px; line-height: 1.6;">
+                    All test orders have been wiped clean. Your Tulsa Wears dashboard is 100% pure and fresh. As soon as a customer visits the store and completes an order, it will appear here in real-time with full shipping address, bespoke measurements, and instant WhatsApp chat.
+                </p>
+                <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+                    <a href="{{ url_for('home') }}" target="_blank" style="background: #111; color: #fff; padding: 12px 24px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; border-radius: 2px;">
+                        Open Customer Storefront →
+                    </a>
+                    <a href="{{ url_for('admin_products') }}" style="background: #fff; border: 1px solid var(--border); color: #111; padding: 12px 24px; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; border-radius: 2px;">
+                        Manage Products & Photos →
+                    </a>
+                </div>
+            </div>
+
+            {% endif %}
+
+        </section>
+    </main>
+
+    <!-- 5. CHART INITIALIZATION & CLIENT-SIDE FILTER SCRIPTS -->
+    <script>
+    // --- 1. Order Status Doughnut Chart ---
+    const confirmedCount = {{ stats.confirmed if stats else 0 }};
+    const pendingCount = {{ stats.pending if stats else 0 }};
+    const processingCount = {{ stats.processing if stats else 0 }};
+    const shippedCount = {{ stats.shipped if stats else 0 }};
+    const deliveredCount = {{ stats.delivered if stats else 0 }};
+    const cancelledCount = {{ stats.cancelled if stats else 0 }};
+
+    const statusCtx = document.getElementById('orderStatusChart');
+    if (statusCtx) {
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Confirmed / Received', 'Payment Pending', 'In Production', 'Dispatched', 'Delivered', 'Cancelled'],
+                datasets: [{
+                    data: [confirmedCount, pendingCount, processingCount, shippedCount, deliveredCount, cancelledCount],
+                    backgroundColor: [
+                        '#2e7d32', // Confirmed green
+                        '#e65100', // Pending orange
+                        '#f57f17', // Processing amber
+                        '#1565c0', // Shipped blue
+                        '#7b1fa2', // Delivered purple
+                        '#c62828'  // Cancelled red
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 12,
+                            font: { size: 11, family: 'Inter, sans-serif' },
+                            color: '#444'
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.raw || 0;
+                                const total = confirmedCount + pendingCount + processingCount + shippedCount + deliveredCount + cancelledCount;
+                                const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                                return ` ${context.label}: ${val} (${pct}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    }
+
+    // --- 2. Order Activity & Revenue Trend Chart ---
+    const trendDates = {{ (stats.trend_dates if stats else [])|tojson }};
+    const trendOrders = {{ (stats.trend_orders if stats else [])|tojson }};
+    const trendRevenue = {{ (stats.trend_revenue if stats else [])|tojson }};
+
+    const trendCtx = document.getElementById('orderTrendChart');
+    if (trendCtx) {
+        new Chart(trendCtx, {
+            type: 'bar',
+            data: {
+                labels: trendDates.length > 0 ? trendDates : ['Today'],
+                datasets: [
+                    {
+                        type: 'line',
+                        label: 'Revenue (₹)',
+                        data: trendRevenue.length > 0 ? trendRevenue : [0],
+                        borderColor: '#2e7d32',
+                        backgroundColor: 'rgba(46, 125, 50, 0.08)',
+                        borderWidth: 2,
+                        tension: 0.35,
+                        fill: true,
+                        yAxisID: 'y1',
+                        pointBackgroundColor: '#2e7d32',
+                        pointRadius: 4
+                    },
+                    {
+                        type: 'bar',
+                        label: 'Orders Placed',
+                        data: trendOrders.length > 0 ? trendOrders : [0],
+                        backgroundColor: 'rgba(30, 30, 30, 0.75)',
+                        hoverBackgroundColor: '#111',
+                        borderRadius: 3,
+                        yAxisID: 'y',
+                        barPercentage: 0.45
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Order Count', font: { size: 10 } },
+                        ticks: { stepSize: 1, precision: 0, font: { size: 10 } },
+                        grid: { color: 'rgba(0,0,0,0.04)' }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Revenue (₹)', font: { size: 10 } },
+                        ticks: {
+                            callback: function(v) { return '₹' + Number(v).toLocaleString('en-IN'); },
+                            font: { size: 10 }
+                        },
+                        grid: { drawOnChartArea: false }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10, family: 'Inter, sans-serif' } }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            font: { size: 11, family: 'Inter, sans-serif' }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                if (context.dataset.label.includes('Revenue')) {
+                                    return ` Revenue: ₹${Number(context.raw).toLocaleString('en-IN')}`;
+                                }
+                                return ` Orders: ${context.raw}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- 3. Client-Side Real-Time Filter by Status ---
+    let currentActiveFilter = 'all';
+
+    function filterTableByStatus(status, element) {
+        currentActiveFilter = status.toLowerCase();
+
+        // Update active filter pill style
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+        document.querySelectorAll('.kpi-card').forEach(card => card.classList.remove('active-kpi'));
+
+        if (element) {
+            if (element.classList.contains('filter-btn')) {
+                element.classList.add('active-filter');
+            } else if (element.classList.contains('kpi-card')) {
+                element.classList.add('active-kpi');
+            }
+        }
+
+        applyFilters();
+    }
+
+    // --- 4. Client-Side Search Filter ---
+    function searchOrdersTable() {
+        applyFilters();
+    }
+
+    function applyFilters() {
+        const query = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
+        const rows = document.querySelectorAll('#ordersTable tbody tr.order-row');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const rowStatus = row.getAttribute('data-status') || '';
+            const rowText = row.innerText.toLowerCase();
+
+            const matchesStatus = (currentActiveFilter === 'all') || (rowStatus === currentActiveFilter);
+            const matchesQuery = !query || rowText.includes(query);
+
+            if (matchesStatus && matchesQuery) {
+                row.style.display = '';
+                visibleCount++;
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const countDisplay = document.getElementById('orderCountDisplay');
+        if (countDisplay) {
+            countDisplay.innerText = `Showing ${visibleCount} of ${rows.length} orders`;
+        }
+    }
+
+    // --- 5. Traffic Drawer Toggle ---
+    function toggleTrafficDrawer() {
+        const drawer = document.getElementById('trafficLogDrawer');
+        if (drawer) {
+            drawer.style.display = drawer.style.display === 'block' ? 'none' : 'block';
+        }
+    }
+
+    // --- 6. Payment Proof Zoom Modal Handlers ---
+    function openProofModal(imgUrl, orderId, utr) {
+        const modal = document.getElementById('proofModal');
+        const img = document.getElementById('proofModalImg');
+        const title = document.getElementById('proofModalTitle');
+        const utrEl = document.getElementById('proofModalUtr');
+        const downloadLink = document.getElementById('proofModalDownload');
+        const approveForm = document.getElementById('proofModalApproveForm');
+
+        if (modal && img) {
+            img.src = imgUrl;
+            title.innerText = `Payment Proof — Order #${orderId}`;
+            utrEl.innerText = utr ? `UTR: ${utr}` : 'No UTR specified';
+            downloadLink.href = imgUrl;
+            approveForm.action = `/admin/orders/quick-approve/${orderId}`;
+            modal.classList.add('active');
+        }
+    }
+
+    function closeProofModal() {
+        const modal = document.getElementById('proofModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeProofModal();
+    });
+    </script>
+
+    <!-- 6. PAYMENT PROOF FULL-SCREEN MODAL -->
+    <div id="proofModal" class="proof-modal" onclick="if(event.target === this) closeProofModal()">
+        <div class="proof-modal-content">
+            <div class="proof-modal-header">
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 600;" id="proofModalTitle">Payment Proof</h3>
+                    <div style="font-size: 11px; color: #2e7d32; font-family: monospace; margin-top: 3px;" id="proofModalUtr"></div>
+                </div>
+                <button type="button" onclick="closeProofModal()" style="background:none; border:none; font-size: 24px; cursor:pointer; color: #666; line-height: 1;">&times;</button>
+            </div>
+            <div class="proof-modal-body">
+                <img id="proofModalImg" src="" alt="Payment Proof" class="proof-modal-img">
+            </div>
+            <div class="proof-modal-footer">
+                <a id="proofModalDownload" href="" target="_blank" download style="font-size: 11px; color: var(--text); text-decoration: underline;">
+                    Download Full Image ↗
+                </a>
+                <div style="display: flex; gap: 8px;">
+                    <form id="proofModalApproveForm" action="" method="POST" style="display: inline;">
+                        <button type="submit" style="background: #2e7d32; color: #fff; border: none; padding: 8px 16px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; cursor: pointer; border-radius: 2px;">
+                            ✓ Approve & Confirm Order
+                        </button>
+                    </form>
+                    <button type="button" onclick="closeProofModal()" style="background: #f0eae1; border: 1px solid var(--border); padding: 8px 14px; font-size: 11px; cursor: pointer; border-radius: 2px;">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

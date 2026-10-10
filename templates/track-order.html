@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Your Order — {{ brand_name }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .track-section {
+            padding: 120px 24px 80px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .track-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .track-header h1 {
+            font-size: clamp(32px, 4vw, 48px);
+            font-weight: 400;
+            margin-top: 8px;
+        }
+
+        .track-search-box {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 30px;
+            margin-bottom: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        .track-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .track-input {
+            flex: 1;
+            min-width: 260px;
+            padding: 14px 18px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .track-input:focus {
+            border-color: var(--text);
+        }
+
+        .track-btn {
+            background: var(--text);
+            color: #fff;
+            border: none;
+            padding: 14px 32px;
+            font-size: 11px;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .track-btn:hover {
+            background: #333;
+        }
+
+        .order-result-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            padding: 36px;
+            margin-top: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .tracking-badge {
+            background: #f4f0eb;
+            color: var(--text);
+            padding: 6px 14px;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            display: inline-block;
+            border-radius: 2px;
+        }
+
+        /* Timeline / Progress Bar */
+        .progress-tracker {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin: 40px 0 50px;
+        }
+
+        .progress-tracker::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 5%;
+            right: 5%;
+            height: 2px;
+            background: #e5e0d8;
+            z-index: 1;
+        }
+
+        .progress-step {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f4f0eb;
+            color: var(--muted);
+            border: 2px solid #e5e0d8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .step-active .step-circle {
+            background: #111;
+            color: #fff;
+            border-color: #111;
+        }
+
+        .step-done .step-circle {
+            background: #2e7d32;
+            color: #fff;
+            border-color: #2e7d32;
+        }
+
+        .step-label {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .step-active .step-label {
+            color: #111;
+            font-weight: 600;
+        }
+
+        .grid-two {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-top: 30px;
+        }
+
+        .info-box {
+            background: #faf8f5;
+            padding: 20px;
+            border: 1px solid #f0eae1;
+        }
+
+        .info-box h4 {
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 12px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .info-row span {
+            color: var(--muted);
+        }
+
+        .info-row strong {
+            font-weight: 500;
+            color: var(--text);
+            text-align: right;
+        }
+
+        .estimate-banner {
+            background: #eef7ee;
+            border: 1px solid #c8e6c9;
+            padding: 16px 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .whatsapp-support-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #25d366;
+            color: #fff;
+            padding: 12px 24px;
+            font-size: 12px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 2px;
+            margin-top: 24px;
+        }
+
+        .whatsapp-support-btn:hover {
+            background: #20ba59;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar navbar-solid" id="top">
+        <a href="{{ url_for('home') }}" class="logo">{{ brand_name|upper }}</a>
+        <nav class="nav-links">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('shop') }}">Collection</a>
+            <a href="{{ url_for('track_order') }}" style="border-bottom: 1px solid var(--text); padding-bottom: 4px;">Track Order</a>
+            <a href="{{ url_for('return_policy') }}">Returns & Refunds</a>
+            <a href="{{ url_for('contact') }}">Contact Us</a>
+        </nav>
+        <div class="nav-right">
+            <a href="{{ url_for('bag') }}" class="bag-link">Bag ({{ session.get('cart', [])|length }})</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="track-section">
+            <div class="track-header">
+                <p class="eyebrow">{{ brand_name|upper }} COURIER DISPATCH</p>
+                <h1>Track Your Garment</h1>
+                <p style="color: var(--muted); font-size: 14px; max-width: 500px; margin: 10px auto 0;">
+                    Enter your Tracking ID (e.g., TW-TRACK-XXXXX) or registered 10-digit phone number to inspect your order progress and estimated delivery.
+                </p>
+            </div>
+
+            <div class="track-search-box">
+                <form action="{{ url_for('track_order') }}" method="GET" class="track-form">
+                    <input type="text" name="query" class="track-input" placeholder="Enter Tracking ID (TW-TRACK-...) or Phone Number" value="{{ query or '' }}" required>
+                    <button type="submit" class="track-btn">Track Order →</button>
+                </form>
+            </div>
+
+            {% if error %}
+            <div style="background: #fff3f3; border: 1px solid #f5c6cb; color: #721c24; padding: 18px 24px; border-radius: 2px; margin-bottom: 30px; text-align: center;">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            {% if order %}
+            <div class="order-result-card">
+                <div class="result-header">
+                    <div>
+                        <div class="tracking-badge">{{ order.tracking_id or ('TW-TRACK-' ~ order.id) }}</div>
+                        <h2 style="font-size: 26px; font-weight: 500; margin-top: 10px;">Order #{{ order.id }} — {{ order.product_name }}</h2>
+                        <p style="color: var(--muted); font-size: 12px; margin-top: 4px;">
+                            Placed on {{ order.created_at.strftime('%A, %d %B %Y at %I:%M %p') if order.created_at else 'Recently' }}
+                        </p>
+                    </div>
+
+                    <div style="text-align: right;">
+                        <span style="font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted);">Order Status</span>
+                        <div style="font-size: 18px; font-weight: 600; color: #2e7d32; margin-top: 4px;">
+                            {{ order.status }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Crafting & Delivery Steps -->
+                {% set s = order.status|lower %}
+                <div class="progress-tracker">
+                    <div class="progress-step {% if 'confirm' in s or 'process' in s or 'ship' in s or 'deliver' in s %}step-done{% else %}step-active{% endif %}">
+                        <div class="step-circle">1</div>
+                        <div class="step-label">Confirmed</div>
+                    </div>
+
+                    <div class="progress-step {% if 'ship' in s or 'deliver' in s %}step-done{% elif 'process' in s %}step-active{% endif %}">
+                        <div class="step-circle">2</div>
+                        <div class="step-label">Handcrafted</div>
+                    </div>
+
+                    <div class="progress-step {% if 'deliver' in s %}step-done{% elif 'ship' in s %}step-active{% endif %}">
+                        <div class="step-circle">3</div>
+                        <div class="step-label">Dispatched</div>
+                    </div>
+
+                    <div class="progress-step {% if 'deliver' in s %}step-done{% endif %}">
+                        <div class="step-circle">4</div>
+                        <div class="step-label">Delivered</div>
+                    </div>
+                </div>
+
+                <!-- Estimated Delivery Banner -->
+                <div class="estimate-banner">
+                    <div>
+                        <strong style="color: #1b5e20; font-size: 15px;">📦 Estimated Delivery Date:</strong>
+                        <span style="color: #2e7d32; font-weight: 600; font-size: 15px; margin-left: 6px;">
+                            {{ order.estimated_delivery_date or 'Within 10 business days' }}
+                        </span>
+                    </div>
+                    <div style="font-size: 12px; color: #388e3c;">
+                        Crafted slowly & delivered safely via express courier
+                    </div>
+                </div>
+
+                <!-- Order Info Grid -->
+                <div class="grid-two">
+                    <!-- Delivery Address -->
+                    <div class="info-box">
+                        <h4>Delivery Address</h4>
+                        <div style="font-size: 14px; font-weight: 600; margin-bottom: 6px;">{{ order.customer_name }}</div>
+                        <div style="font-size: 13px; color: #444; line-height: 1.5;">
+                            {{ order.address }}<br>
+                            {{ order.city }} - {{ order.pincode }}<br>
+                            <strong>Phone:</strong> {{ order.phone }}<br>
+                            <strong>Email:</strong> {{ order.email }}
+                        </div>
+                    </div>
+
+                    <!-- Tailored Sizing Specs -->
+                    <div class="info-box">
+                        <h4>Bespoke Sizing & Fit</h4>
+                        <div class="info-row">
+                            <span>Selected Size:</span>
+                            <strong>{{ order.size or 'Standard (M)' }}</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Top Length:</span>
+                            <strong>{{ order.top_length or '30' }} inches</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Sleeves Length:</span>
+                            <strong>{{ order.sleeves_length or '18' }} inches</strong>
+                        </div>
+                        {% if order.bust %}
+                        <div class="info-row"><span>Bust:</span><strong>{{ order.bust }} in</strong></div>
+                        {% endif %}
+                        {% if order.waist %}
+                        <div class="info-row"><span>Waist:</span><strong>{{ order.waist }} in</strong></div>
+                        {% endif %}
+                        {% if order.hip %}
+                        <div class="info-row"><span>Hip:</span><strong>{{ order.hip }} in</strong></div>
+                        {% endif %}
+                        {% if order.shoulder %}
+                        <div class="info-row"><span>Shoulder:</span><strong>{{ order.shoulder }} in</strong></div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Payment Summary -->
+                    <div class="info-box">
+                        <h4>Payment Summary</h4>
+                        <div class="info-row">
+                            <span>Total Garment Value:</span>
+                            <strong>₹{{ "{:,.0f}".format(order.price) }}</strong>
+                        </div>
+                        <div class="info-row">
+                            <span>Payment Method:</span>
+                            <strong>{{ order.payment_method or 'Cash on Delivery (COD)' }}</strong>
+                        </div>
+                        <div class="info-row" style="color: #2e7d32;">
+                            <span>Advance Paid:</span>
+                            <strong>₹{{ "{:,.0f}".format(order.advance_paid) }}</strong>
+                        </div>
+                        {% if order.balance_due > 0 %}
+                        <div class="info-row" style="font-weight: 600; color: #c0392b;">
+                            <span>Cash Due upon Delivery:</span>
+                            <strong>₹{{ "{:,.0f}".format(order.balance_due) }}</strong>
+                        </div>
+                        {% else %}
+                        <div class="info-row" style="color: #2e7d32;">
+                            <span>Balance Due:</span>
+                            <strong>₹0 (Fully Paid)</strong>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Studio Contact -->
+                    <div class="info-box">
+                        <h4>Need Adjustments or Assistance?</h4>
+                        <p style="font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 12px;">
+                            Our atelier tailors each outfit individually. If you wish to update your measurement specs or change shipping details, contact us directly on WhatsApp.
+                        </p>
+                        <a href="https://wa.me/919350439667?text=Hello%20Tulsa%20Wears,%20I%20need%20assistance%20with%20my%20Order%20%23{{ order.id }}%20(Tracking:%20{{ order.tracking_id }})" target="_blank" class="whatsapp-support-btn" style="width: 100%; justify-content: center; margin-top: 8px;">
+                            💬 WhatsApp Studio Support (+91 93504 39667)
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-bottom">
+            <p>© 2025 {{ brand_name }}. All rights reserved.</p>
+            <p>Handcrafted slow fashion • Track your order anytime</p>
+        </div>
+    </footer>
+
+</body>
+</html>

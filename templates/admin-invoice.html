@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tax Invoice & Packaging Slip — #{{ order.id }} | {{ brand_name }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f7f6f2;
+            color: #111;
+            padding: 30px 16px;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .invoice-card {
+            max-width: 820px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 44px;
+            border: 1px solid #ddd;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+
+        /* Action Bar (Screen Only) */
+        .action-bar {
+            max-width: 820px;
+            margin: 0 auto 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 2px;
+            text-decoration: none;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-print {
+            background: #111;
+            color: #fff;
+            border: 1px solid #111;
+        }
+
+        .btn-print:hover {
+            background: #333;
+        }
+
+        .btn-back {
+            background: #fff;
+            color: #111;
+            border: 1px solid #ccc;
+        }
+
+        .btn-back:hover {
+            background: #f0eae1;
+        }
+
+        /* Header */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #111;
+            padding-bottom: 24px;
+            margin-bottom: 28px;
+        }
+
+        .logo-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .studio-details {
+            font-size: 11px;
+            color: #666;
+            margin-top: 4px;
+            line-height: 1.6;
+        }
+
+        .invoice-meta {
+            text-align: right;
+        }
+
+        .invoice-badge {
+            display: inline-block;
+            background: #111;
+            color: #fff;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            padding: 4px 10px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .meta-row {
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .meta-row strong {
+            color: #111;
+        }
+
+        /* 2-Column Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 28px;
+            margin-bottom: 28px;
+        }
+
+        .info-block {
+            background: #faf8f5;
+            border: 1px solid #ede8e1;
+            padding: 18px 20px;
+            border-radius: 4px;
+        }
+
+        .block-title {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #888;
+            font-weight: 700;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #e5ded4;
+            padding-bottom: 4px;
+        }
+
+        /* Tailoring Specs Table */
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+            font-size: 12px;
+        }
+
+        .spec-item {
+            background: #fff;
+            padding: 6px 8px;
+            border: 1px solid #ede8e1;
+            border-radius: 2px;
+        }
+
+        .spec-label {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: #888;
+        }
+
+        .spec-val {
+            font-weight: 600;
+            color: #111;
+        }
+
+        /* Items Table */
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+
+        .invoice-table th {
+            text-align: left;
+            background: #111;
+            color: #fff;
+            padding: 10px 14px;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+        }
+
+        .invoice-table td {
+            padding: 14px;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .total-summary-table {
+            width: 320px;
+            margin-left: auto;
+            border-collapse: collapse;
+            margin-bottom: 28px;
+        }
+
+        .total-summary-table td {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .total-summary-table .final-row td {
+            border-top: 2px solid #111;
+            font-size: 15px;
+            font-weight: 700;
+            padding-top: 10px;
+        }
+
+        /* Footer & Seal */
+        .invoice-footer {
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            margin-top: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .seal-box {
+            text-align: center;
+            border: 1px dashed #aaa;
+            padding: 12px 24px;
+            border-radius: 4px;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #444;
+        }
+
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .action-bar {
+                display: none !important;
+            }
+
+            .invoice-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SCREEN ONLY ACTION BAR -->
+    <div class="action-bar">
+        <a href="{{ url_for('admin_orders') }}" class="btn btn-back">
+            ← Return to Orders
+        </a>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-print" onclick="window.print()">
+                🖨️ Print Slip / Save PDF
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN INVOICE & PACKING SLIP CARD -->
+    <div class="invoice-card">
+
+        <!-- HEADER -->
+        <div class="invoice-header">
+            <div>
+                <div class="logo-title">{{ brand_name }}</div>
+                <div class="studio-details">
+                    <strong>Slow Handcrafted Luxury Fashion Atelier</strong><br>
+                    Atelier: {{ studio_address }}<br>
+                    Official Telephone: +91 93504 39667 • WhatsApp: +91 93504 39667<br>
+                    Client Services: {{ studio_email }}
+                </div>
+            </div>
+            <div class="invoice-meta">
+                <span class="invoice-badge">Official Packing Slip</span>
+                <div class="meta-row"><strong>Order Ref:</strong> #{{ order.id }}</div>
+                <div class="meta-row"><strong>Tracking ID:</strong> {{ order.tracking_id or ('TW-TRACK-' ~ order.id) }}</div>
+                <div class="meta-row"><strong>Date:</strong> {{ order.created_at.strftime('%d %b %Y, %I:%M %p') if order.created_at else '' }}</div>
+                <div class="meta-row"><strong>Status:</strong> <span style="text-transform: uppercase; font-weight: 600; color: #2e7d32;">{{ order.status }}</span></div>
+            </div>
+        </div>
+
+        <!-- 2-COLUMN INFO -->
+        <div class="info-grid">
+            <!-- Delivery Customer -->
+            <div class="info-block">
+                <div class="block-title">Deliver Parcel To</div>
+                <strong style="font-size: 15px;">{{ order.customer_name }}</strong><br>
+                <div style="margin-top: 4px; line-height: 1.5;">
+                    {{ order.address }}<br>
+                    <strong>City:</strong> {{ order.city }} • <strong>PIN Code:</strong> {{ order.pincode }}<br>
+                    <strong>Contact Phone:</strong> 📞 {{ order.phone }}<br>
+                    {% if order.email %}<strong>Email:</strong> {{ order.email }}<br>{% endif %}
+                </div>
+            </div>
+
+            <!-- Tailoring Measurements -->
+            <div class="info-block">
+                <div class="block-title">Master Tailoring & Sizing Specs</div>
+                <div style="margin-bottom: 4px;">
+                    <strong>Garment Size:</strong> <span style="color: #2e7d32; font-weight: 700; font-size: 14px;">{{ order.size or 'Standard' }}</span>
+                </div>
+                <div class="specs-grid">
+                    <div class="spec-item"><div class="spec-label">Top Length</div><div class="spec-val">{{ order.top_length or '30' }}"</div></div>
+                    <div class="spec-item"><div class="spec-label">Sleeves</div><div class="spec-val">{{ order.sleeves_length or '18' }}"</div></div>
+                    {% if order.bust %}<div class="spec-item"><div class="spec-label">Bust</div><div class="spec-val">{{ order.bust }}"</div></div>{% endif %}
+                    {% if order.waist %}<div class="spec-item"><div class="spec-label">Waist</div><div class="spec-val">{{ order.waist }}"</div></div>{% endif %}
+                    {% if order.hip %}<div class="spec-item"><div class="spec-label">Hip</div><div class="spec-val">{{ order.hip }}"</div></div>{% endif %}
+                    {% if order.shoulder %}<div class="spec-item"><div class="spec-label">Shoulder</div><div class="spec-val">{{ order.shoulder }}"</div></div>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- ITEMS TABLE -->
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Item Description</th>
+                    <th>Size / Specs</th>
+                    <th style="text-align: center;">Qty</th>
+                    <th style="text-align: right;">Unit Price</th>
+                    <th style="text-align: right;">Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <strong style="font-size: 14px;">{{ order.product_name }}</strong>
+                        <div style="font-size: 11px; color: #666; margin-top: 2px;">
+                            Handcrafted slow luxury textile • Hand embroidery & bespoke tailoring
+                        </div>
+                    </td>
+                    <td>Size {{ order.size or 'M' }}</td>
+                    <td style="text-align: center;">1</td>
+                    <td style="text-align: right;">₹{{ "{:,.0f}".format(order.price + (order.discount_amount or 0)) }}</td>
+                    <td style="text-align: right; font-weight: 600;">₹{{ "{:,.0f}".format(order.price + (order.discount_amount or 0)) }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- TOTALS & PAYMENT BREAKDOWN -->
+        <table class="total-summary-table">
+            <tr>
+                <td style="color: #666;">Subtotal:</td>
+                <td style="text-align: right;">₹{{ "{:,.0f}".format(order.price + (order.discount_amount or 0)) }}</td>
+            </tr>
+            {% if order.coupon_code %}
+            <tr style="color: #2e7d32;">
+                <td>Coupon ({{ order.coupon_code }}):</td>
+                <td style="text-align: right;">-₹{{ "{:,.0f}".format(order.discount_amount) }}</td>
+            </tr>
+            {% endif %}
+            <tr>
+                <td style="color: #666;">Delivery & Insured Shipping:</td>
+                <td style="text-align: right; color: #2e7d32; font-weight: 600;">Complimentary (₹0)</td>
+            </tr>
+            <tr class="final-row">
+                <td>Net Total:</td>
+                <td style="text-align: right;">₹{{ "{:,.0f}".format(order.price) }}</td>
+            </tr>
+            <tr>
+                <td style="color: #666;">Payment Method:</td>
+                <td style="text-align: right; font-weight: 500;">{{ order.payment_method }}</td>
+            </tr>
+            {% if order.upi_utr %}
+            <tr>
+                <td style="color: #666;">Banking UTR Reference:</td>
+                <td style="text-align: right; font-family: monospace; font-weight: 600;">{{ order.upi_utr }}</td>
+            </tr>
+            {% endif %}
+            <tr style="background: #e8f5e9;">
+                <td style="font-weight: 600; color: #1b5e20;">Advance Paid:</td>
+                <td style="text-align: right; font-weight: 700; color: #1b5e20;">₹{{ "{:,.0f}".format(order.advance_paid or 0) }}</td>
+            </tr>
+            {% if order.balance_due and order.balance_due > 0 %}
+            <tr style="background: #ffebee;">
+                <td style="font-weight: 700; color: #c62828;">CASH DUE ON DELIVERY:</td>
+                <td style="text-align: right; font-weight: 800; font-size: 14px; color: #c62828;">₹{{ "{:,.0f}".format(order.balance_due) }}</td>
+            </tr>
+            {% else %}
+            <tr style="background: #e8f5e9;">
+                <td style="color: #2e7d32; font-weight: 600;">Balance Due:</td>
+                <td style="text-align: right; color: #2e7d32; font-weight: 700;">₹0 (Paid in Full)</td>
+            </tr>
+            {% endif %}
+        </table>
+
+        <!-- RETURN & CARE COMMITMENT -->
+        <div style="background: #faf8f5; border: 1px solid #ede8e1; padding: 14px 18px; border-radius: 4px; font-size: 11px; color: #555; line-height: 1.5; margin-bottom: 24px;">
+            <strong>7-Day Handcrafted Return & Free Alteration Guarantee:</strong> Every piece is individually stitched with pure textiles. If the sizing needs minor fine-tuning, complimentary studio alterations are provided. For returns, doorstep pickup is arranged across India. Message WhatsApp Concierge: <strong>+91 93504 39667</strong>.
+        </div>
+
+        <!-- FOOTER & SIGN-OFF -->
+        <div class="invoice-footer">
+            <div>
+                <div>Thank you for choosing artisanal slow luxury.</div>
+                <div style="color: #999; font-size: 10px; margin-top: 2px;">Handmade with precision in Hansi, Haryana, India • Tulsa Wears</div>
+            </div>
+            <div class="seal-box">
+                <div style="font-size: 12px; margin-bottom: 2px;">✓ QUALITY VERIFIED</div>
+                <div>Master Atelier Dispatch</div>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

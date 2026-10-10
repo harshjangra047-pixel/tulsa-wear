@@ -1,0 +1,1921 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- =========================================
+         META & SEO
+    ========================================== -->
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <meta
+        name="description"
+        content="Handcrafted Indian fashion — clothing created slowly, thoughtfully and by hand. Explore curated collections of artisanal kurtas, salwar kameez, party wear and bridal ensembles."
+    >
+
+    <meta property="og:title" content="{{ brand_name }} — Handcrafted Slow Fashion">
+    <meta property="og:description" content="Clothing created slowly, thoughtfully and by hand. Artisanal Indian fashion for discerning souls.">
+    <meta property="og:type" content="website">
+
+    <title>{{ brand_name }} — Handcrafted Slow Fashion</title>
+
+
+    <!-- =========================================
+         GOOGLE FONTS
+    ========================================== -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- =========================================
+         WEBSITE CSS
+    ========================================== -->
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}"
+    >
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='css/atelier-3d.css') }}?v={{ cache_id }}"
+    >
+    <style>
+      :root {
+        --accent-gold: {{ cms.get('editor_theme', {}).get('accent', '#C9A96E') }};
+        --editor-page-background: {{ cms.get('editor_theme', {}).get('background', '#F7F4EF') }};
+        --editor-section-spacing: {{ cms.get('editor_theme', {}).get('section_spacing', 96) }}px;
+        --editor-heading-font: '{{ cms.get('editor_theme', {}).get('heading_font', 'Cormorant Garamond') }}', serif;
+      }
+      .custom-editor-section { padding: var(--editor-section-spacing) var(--page-padding); }
+      .custom-editor-section h2 { font-family: var(--editor-heading-font); }
+    </style>
+
+</head>
+
+
+<body>
+
+    <!-- 3D WebGL Background Canvas Container -->
+    <div id="three-canvas-container"></div>
+
+
+    <!-- =========================================
+         ANNOUNCEMENT BAR & NAVBAR
+    ========================================== -->
+    {% if cms.get('announcement_enabled', 'true') == 'true' and cms.get('announcement_text') %}
+    <div class="site-announcement-bar" id="announcementBar">
+        <a href="{{ cms.get('announcement_link', '#collections') }}">{{ cms.get('announcement_text') }}</a>
+    </div>
+    {% endif %}
+
+    <header class="navbar" id="top">
+
+        <a href="{{ url_for('home') }}" class="logo">
+            TULSA — BY ANJALI
+        </a>
+
+
+        <nav class="nav-links" id="navLinks">
+
+            <a href="#new-arrivals">
+                New
+            </a>
+
+            <a href="{{ url_for('shop') }}">
+                Shop
+            </a>
+
+            <a href="#collections">
+                Collections
+            </a>
+
+            <a href="#about">
+                About
+            </a>
+
+            <a href="#process">
+                Process
+            </a>
+
+            <a href="#ai-studio">
+                AI Studio
+            </a>
+
+        </nav>
+
+
+        <div class="nav-right">
+
+            <a href="#ai-studio" class="ai-link">
+                ✦ AI Studio
+            </a>
+
+            <a href="{{ url_for('bag') }}" class="bag-link">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
+            {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}" class="ai-link">My account</a>{% endif %}
+
+            <button
+                id="menuButton"
+                class="menu-button"
+                type="button"
+                aria-label="Open navigation"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+
+        </div>
+
+    </header>
+
+
+
+    <main>
+
+
+        <!-- =========================================
+             HERO — 3D Cinematic Fashion Opening
+        ========================================== -->
+
+        <section class="hero section-wave wave-dark-to-ivory" id="hero-section">
+
+            <div class="hero-background" data-editor-image="hero_image_file" style="background-image: url('{{ product_image_url(cms.get('hero_image'), 'editorial-hero.jpg') }}?v={{ cache_id }}');"></div>
+
+            <div class="hero-overlay"></div>
+
+            <div class="hero-content">
+
+                <p class="eyebrow hero-eyebrow" data-editor-field="hero_badge">
+                    {{ cms.get('hero_badge', '✦ ' ~ brand_name|upper ~ ' — ATELIER COUTURE ✦') }}
+                </p>
+
+                <h1>
+                    <span data-editor-field="hero_title_line1">{{ cms.get('hero_title_line1', 'The Art of') }}</span><br>
+                    <span class="italic" data-editor-field="hero_title_line2">{{ cms.get('hero_title_line2', 'Handmade') }}</span>
+                </h1>
+
+                <p class="hero-sub" data-editor-field="hero_subtitle">
+                    {{ cms.get('hero_subtitle', 'Handcrafted silhouettes shaped slowly by fabric, memory and modern craft. Artisanal Indian couture for discerning souls.') }}
+                </p>
+
+                <div class="hero-actions">
+                    <a href="{{ cms.get('hero_cta1_link', '#curved-carousel') }}" class="btn-luxury-gold" data-editor-field="hero_cta1_text">
+                        {{ cms.get('hero_cta1_text', 'Explore Collection →') }}
+                    </a>
+                    <a href="{{ cms.get('hero_cta2_link', '#ai-studio') }}" class="btn-luxury-outline">
+                        {{ cms.get('hero_cta2_text', '✦ AI Style Studio') }}
+                    </a>
+                </div>
+
+            </div>
+
+            <div class="scroll-indicator">
+                <span>SCROLL</span>
+                <span>↓</span>
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             SCENE 02 — ARCHED MOOD PORTALS ("SIX MOODS")
+        ========================================== -->
+
+        <section class="arched-portals-section" id="mood-portals">
+
+            <div class="section-head-editorial reveal">
+                <p class="eyebrow">{{ cms.get('mood_eyebrow', 'CURATED EDITORIAL PORTALS') }}</p>
+                <h2>{{ cms.get('mood_title', 'Six Moods. <em>Infinite Craft.</em>')|safe }}</h2>
+            </div>
+
+            <div class="arched-grid">
+
+                <a href="{{ url_for('shop', category='Plazo / Kurta') }}" class="arched-card reveal reveal-delay-1">
+                    <div class="arched-media">
+                        <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'editorial-category-1.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat1_title', 'Plazo & Kurta') }}" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                        <div class="arched-overlay"></div>
+                    </div>
+                    <div class="arched-info">
+                        <span class="arched-number">01 / MOOD</span>
+                        <h3 class="arched-title">{{ cms.get('mood_cat1_title', 'Plazo & Kurta') }}</h3>
+                        <span class="arched-link">{{ cms.get('mood_cat1_sub', 'Explore Pieces →') }}</span>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('shop', category='Salwar Kameez') }}" class="arched-card reveal reveal-delay-2">
+                    <div class="arched-media">
+                        <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'editorial-category-2.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                        <div class="arched-overlay"></div>
+                    </div>
+                    <div class="arched-info">
+                        <span class="arched-number">02 / MOOD</span>
+                        <h3 class="arched-title">{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}</h3>
+                        <span class="arched-link">{{ cms.get('mood_cat2_sub', 'Explore Pieces →') }}</span>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('shop', category='Party Wear') }}" class="arched-card reveal reveal-delay-3">
+                    <div class="arched-media">
+                        <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-category-3.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat3_title', 'Party Wear') }}" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                        <div class="arched-overlay"></div>
+                    </div>
+                    <div class="arched-info">
+                        <span class="arched-number">03 / MOOD</span>
+                        <h3 class="arched-title">{{ cms.get('mood_cat3_title', 'Party Wear') }}</h3>
+                        <span class="arched-link">{{ cms.get('mood_cat3_sub', 'Explore Pieces →') }}</span>
+                    </div>
+                </a>
+
+                <a href="{{ url_for('shop', category='Wedding Wear') }}" class="arched-card reveal reveal-delay-4">
+                    <div class="arched-media">
+                        <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'editorial-category-4.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat4_title', 'Wedding Regalia') }}" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                        <div class="arched-overlay"></div>
+                    </div>
+                    <div class="arched-info">
+                        <span class="arched-number">04 / MOOD</span>
+                        <h3 class="arched-title">{{ cms.get('mood_cat4_title', 'Wedding Regalia') }}</h3>
+                        <span class="arched-link">{{ cms.get('mood_cat4_sub', 'Explore Pieces →') }}</span>
+                    </div>
+                </a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             SCENE 03 — 3D CYLINDRICAL CURVED CAROUSEL
+             ("Woven to Be Remembered")
+        ========================================== -->
+
+        <section class="curved-carousel-section" id="curved-carousel">
+
+            <div class="section-head-editorial reveal">
+                <p class="eyebrow">{{ cms.get('signatures_eyebrow', 'THE ATELIER SIGNATURES') }}</p>
+                <h2>{{ cms.get('signatures_title', 'Woven to Be <em>Remembered</em>')|safe }}</h2>
+            </div>
+
+            <!-- Curated Filmstrip Preview Ribbon -->
+            <div class="filmstrip-row">
+                {% for p in products[:8] %}
+                    {% if p.image %}
+                    <div class="filmstrip-thumb">
+                        <img src="{{ product_image_url(p.image) }}?v={{ cache_id }}"
+                             alt="{{ p.name }}" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- 3D Perspective Curved Viewport -->
+            <div class="curved-viewport" id="curvedViewport">
+                <div class="curved-track" id="curvedTrack">
+                    {% for product in products %}
+                    <div class="curved-item" data-id="{{ product.id }}">
+                        <div class="curved-card-media">
+                            <span class="curved-badge">Handmade</span>
+                            <img src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
+                                 alt="{{ product.name }}" 
+                                 decoding="async"
+                                 loading="eager"
+                                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                        </div>
+                        <div class="curved-meta">
+                            <p class="curved-category">{{ product.category }}</p>
+                            <h3 class="curved-title">{{ product.name }}</h3>
+                            <div class="curved-price-row">
+                                <span class="curved-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="curved-btn">View Piece →</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Carousel Controls -->
+            <div class="carousel-controls">
+                <button class="carousel-arrow" id="carouselPrev" aria-label="Previous garment">←</button>
+                <button class="carousel-arrow" id="carouselNext" aria-label="Next garment">→</button>
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             SCENE 04 — INTERACTIVE STUDIO LOOK BUILDER
+             ("Change Look")
+        ========================================== -->
+
+        <section class="look-builder-section" id="look-builder">
+
+            <div class="section-head-editorial reveal">
+                <p class="eyebrow">{{ cms.get('look_eyebrow', 'INTERACTIVE ATELIER STUDIO') }}</p>
+                <h2>{{ cms.get('look_title', 'Change Look. <em>Personalize Your Silhouette.</em>')|safe }}</h2>
+            </div>
+
+            <div class="look-builder-wrapper">
+
+                <!-- Left Thumbnail Look Switcher -->
+                <div class="look-rail">
+                    {% for p in products[:4] %}
+                    <div class="look-thumb {% if loop.first %}active{% endif %}"
+                         data-id="{{ p.id }}"
+                         data-title="{{ p.name }}"
+                         data-price="{{ p.price }}"
+                         data-desc="{{ p.description or 'Handcrafted from fine natural fibers with artisanal precision.' }}"
+                         data-tag="{{ p.category }}"
+                         data-img="{{ product_image_url(p.image, 'garment-01.jpg') }}?v={{ cache_id }}">
+                        <img src="{{ product_image_url(p.image, 'garment-01.jpg') }}?v={{ cache_id }}" alt="{{ p.name }}">
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Center Stage with Mannequin Preview -->
+                <div class="look-stage">
+                    {% set initial_p = products[0] if products else None %}
+                    <img id="lookStageImg"
+                         class="look-mannequin-img"
+                         src="{{ product_image_url(initial_p.image if initial_p else None) }}?v={{ cache_id }}"
+                         alt="Selected Couture Look">
+                </div>
+
+                <!-- Right Configuration Details -->
+                <div class="look-details">
+                    <span class="look-tag" id="lookTag">{{ initial_p.category if initial_p else 'Plazo / Kurta' }}</span>
+                    <h3 class="look-name" id="lookName">{{ initial_p.name if initial_p else 'Hand Embroidered Kurta' }}</h3>
+                    <p class="look-price" id="lookPrice">₹{{ "{:,.0f}".format(initial_p.price if initial_p else 2800) }}</p>
+                    <p class="look-desc" id="lookDesc">{{ initial_p.description if initial_p and initial_p.description else 'Featherlight organic cotton spun with intricate handwork and subtle zari edges.' }}</p>
+
+                    <div class="look-selectors">
+                        <span class="selector-label">Select Color Palette</span>
+                        <div class="swatch-group">
+                            <span class="swatch active" style="background: #F5F0E8;" title="Ivory"></span>
+                            <span class="swatch" style="background: #D7C5B1;" title="Sand"></span>
+                            <span class="swatch" style="background: #681F2E;" title="Burgundy"></span>
+                            <span class="swatch" style="background: #181615;" title="Charcoal"></span>
+                        </div>
+
+                        <span class="selector-label">Select Tailored Size</span>
+                        <div class="size-group">
+                            <button class="size-pill" type="button">XS</button>
+                            <button class="size-pill active" type="button">S</button>
+                            <button class="size-pill" type="button">M</button>
+                            <button class="size-pill" type="button">L</button>
+                            <button class="size-pill" type="button">XL</button>
+                        </div>
+                    </div>
+
+                    <button class="btn-add-pill" id="lookAddBtn" data-product-id="{{ initial_p.id if initial_p else 1 }}" type="button">
+                        <span>ADD TO BAG</span>
+                        <span>→</span>
+                    </button>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             BEST SELLERS — Dark Section
+        ========================================== -->
+
+        <section
+            class="bestseller-section dark-section section-wave wave-dark-to-cream"
+            id="best-sellers"
+        >
+
+            <div class="section-heading reveal">
+
+                <p class="eyebrow">
+                    {{ cms.get('bestseller_eyebrow', '02 / BEST SELLERS') }}
+                </p>
+
+                <h2>
+                    {{ cms.get('bestseller_title', 'Most loved<br>by you.')|safe }}
+                </h2>
+
+                <p class="section-intro">
+                    {{ cms.get('bestseller_intro', 'The pieces our clients return to, season after season.') }}
+                </p>
+
+            </div>
+
+            <div class="product-rail">
+
+                {% for product in best_sellers %}
+
+                <a
+                    href="{{ url_for('product_detail', product_id=product.id) }}"
+                    class="product-card reveal reveal-delay-{{ loop.index0 % 4 + 1 }}"
+                >
+
+                    <div class="product-image">
+                        <span class="product-badge">Best Seller</span>
+
+                        {% if product.image %}
+                        <img
+                            src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
+                            alt="{{ product.name }}"
+                            loading="lazy"
+                        >
+                        {% endif %}
+
+                    </div>
+
+                    <div class="product-info">
+
+                        <small class="product-category">
+                            {{ product.category }}
+                        </small>
+
+                        <h3>
+                            {{ product.name }}
+                        </h3>
+
+                        <p class="product-price">
+                            ₹{{ "{:,.0f}".format(product.price) }}
+                        </p>
+
+                    </div>
+
+                </a>
+
+                {% endfor %}
+
+            </div>
+
+            <div class="center-link reveal">
+                <a href="{{ url_for('shop', sort='best_seller') }}" class="text-link" style="color: var(--text-inverse);">
+                    Explore best sellers →
+                </a>
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             FEATURED COLLECTION — Split Editorial
+        ========================================== -->
+
+        <section class="featured-section section-wave wave-cream-to-dark" id="collections">
+
+            <div class="featured-split">
+
+                <div class="featured-image reveal-scale">
+                    <img
+                        src="{{ product_image_url(cms.get('collection_image'), 'editorial-collection.jpg') }}?v={{ cache_id }}"
+                        alt="Featured collection"
+                        loading="lazy"
+                    >
+                </div>
+
+                <div class="featured-text reveal">
+
+                    <p class="eyebrow">
+                        {{ cms.get('collection_eyebrow', 'COLLECTION 01') }}
+                    </p>
+
+                    <h2>
+                        {{ cms.get('collection_title', 'Threads<br>of Memory')|safe }}
+                    </h2>
+
+                    <p>
+                        {{ cms.get('collection_desc', 'A collection shaped by heritage craft and contemporary silhouette. Each piece carries the patience and precision of handmade artistry.') }}
+                    </p>
+
+                    <a
+                        href="{{ cms.get('collection_cta_link', url_for('shop')) }}"
+                        class="text-link"
+                    >
+                        {{ cms.get('collection_cta_text', 'Explore Collection →') }}
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             BRIDAL / PREMIUM — Cinematic Dark
+        ========================================== -->
+
+        <!-- =========================================
+             SCENE 06 — DARK BRIDAL & CELEBRATION 3D STAGE
+        ========================================== -->
+
+        <section class="bridal-dark-stage" id="bridal">
+
+            <div class="bridal-split-grid">
+
+                <!-- Left Dramatic Editorial Portrait -->
+                <div class="bridal-hero-card reveal">
+                    <div class="bridal-hero-media">
+                        <img src="{{ product_image_url(cms.get('bridal_image'), 'editorial-bridal.jpg') }}?v={{ cache_id }}"
+                             alt="The Bridal Edit" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                        <div class="bridal-hero-overlay"></div>
+                    </div>
+                    <div class="bridal-hero-info">
+                        <p class="eyebrow">{{ cms.get('bridal_eyebrow', 'THE BRIDAL EDIT') }}</p>
+                        <h2>{{ cms.get('bridal_title', 'Made for moments that stay with you.') }}</h2>
+                        <p>{{ cms.get('bridal_desc', 'Opulent ensembles woven from heritage silks and embellished with handwork. Crafted to capture the light in sacred celebrations.') }}</p>
+                        <a href="{{ cms.get('bridal_cta_link', url_for('shop', category='Wedding Wear')) }}" class="btn-luxury-gold">
+                            {{ cms.get('bridal_cta_text', 'View The Bridal Edit →') }}
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Floating Dark Pedestals -->
+                <div class="bridal-pedestals-column reveal reveal-delay-2">
+                    {% for p in products if p.category == 'Wedding Wear' or 'Wedding' in p.name %}
+                    <div class="bridal-pedestal-card">
+                        <div class="bridal-card-media">
+                            <img src="{{ product_image_url(p.image, 'editorial-bridal.jpg') }}?v={{ cache_id }}"
+                                 alt="{{ p.name }}" 
+                                 decoding="async"
+                                 onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                        </div>
+                        <h4 class="bridal-card-title">{{ p.name }}</h4>
+                        <span class="bridal-card-price">₹{{ "{:,.0f}".format(p.price) }}</span>
+                        <a href="{{ url_for('product_detail', product_id=p.id) }}" class="bridal-card-cta">
+                            Acquire Piece →
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             SEASONAL EDITORIAL — Magazine Layout
+        ========================================== -->
+
+        <section class="seasonal-section section-wave wave-ivory-to-cream" id="seasonal">
+
+            <div class="section-heading reveal">
+
+                <p class="eyebrow">
+                    {{ cms.get('seasonal_eyebrow', 'AUTUMN — WINTER 2026') }}
+                </p>
+
+                <h2>
+                    {{ cms.get('seasonal_title', 'The season,<br>in fabric.')|safe }}
+                </h2>
+
+            </div>
+
+            <div class="seasonal-grid">
+
+                <div class="seasonal-image reveal-scale">
+                    <img
+                        src="{{ product_image_url(cms.get('seasonal_img1'), 'editorial-seasonal-1.jpg') }}?v={{ cache_id }}"
+                        alt="Autumn winter editorial"
+                        loading="lazy"
+                    >
+                    <div class="seasonal-caption">
+                        <small>{{ cms.get('seasonal_cap1_tag', 'Editorial') }}</small>
+                        <span>{{ cms.get('seasonal_cap1_text', 'Warmth in every stitch') }}</span>
+                    </div>
+                </div>
+
+                <div class="seasonal-image reveal-scale reveal-delay-1">
+                    <img
+                        src="{{ product_image_url(cms.get('seasonal_img2'), 'editorial-seasonal-2.jpg') }}?v={{ cache_id }}"
+                        alt="Handmade fashion detail"
+                        loading="lazy"
+                    >
+                    <div class="seasonal-caption">
+                        <small>{{ cms.get('seasonal_cap2_tag', 'Craft') }}</small>
+                        <span>{{ cms.get('seasonal_cap2_text', 'Hand-finished details') }}</span>
+                    </div>
+                </div>
+
+                <div class="seasonal-image reveal-scale reveal-delay-2">
+                    <img
+                        src="{{ product_image_url(cms.get('seasonal_img3'), 'editorial-seasonal-3.jpg') }}?v={{ cache_id }}"
+                        alt="Fabric texture detail"
+                        loading="lazy"
+                    >
+                    <div class="seasonal-caption">
+                        <small>{{ cms.get('seasonal_cap3_tag', 'Texture') }}</small>
+                        <span>{{ cms.get('seasonal_cap3_text', 'Natural fibres, living colour') }}</span>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             LATEST TRENDS — Asymmetric Editorial
+        ========================================== -->
+
+        <!-- =========================================
+             ACCORDION CAMPAIGN GALLERY
+             ("Worth Your Attention")
+        ========================================== -->
+
+        <section class="accordion-gallery-section" id="campaign-gallery">
+
+            <div class="section-head-editorial reveal">
+                <p class="eyebrow">EDITORIAL CAMPAIGN ARCHIVE</p>
+                <h2>Worth Your <em>Attention</em></h2>
+            </div>
+
+            <div class="slat-container">
+
+                <div class="slat-item active">
+                    <div class="slat-vertical-label">THE HERITAGE EDIT</div>
+                    <div class="slat-media">
+                        <img src="{{ url_for('static', filename='images/editorial-bridal.jpg') }}?v={{ cache_id }}" alt="Heritage Bridal Couture" loading="lazy">
+                        <div class="slat-overlay"></div>
+                    </div>
+                    <div class="slat-content">
+                        <h3 class="slat-title">Midnight Heritage</h3>
+                        <p class="slat-sub">Hand-spun Zari on Raw Crimson Silk</p>
+                    </div>
+                </div>
+
+                <div class="slat-item">
+                    <div class="slat-vertical-label">THE ATELIER DRAPE</div>
+                    <div class="slat-media">
+                        <img src="{{ url_for('static', filename='images/editorial-collection.jpg') }}?v={{ cache_id }}" alt="The Atelier Drape" loading="lazy">
+                        <div class="slat-overlay"></div>
+                    </div>
+                    <div class="slat-content">
+                        <h3 class="slat-title">Threads of Memory</h3>
+                        <p class="slat-sub">Botanical Pigments & Pure Chanderi</p>
+                    </div>
+                </div>
+
+                <div class="slat-item">
+                    <div class="slat-vertical-label">ROYAL ENSEMBLE</div>
+                    <div class="slat-media">
+                        <img src="{{ url_for('static', filename='images/editorial-trends.jpg') }}?v={{ cache_id }}" alt="Royal Ensembles" loading="lazy">
+                        <div class="slat-overlay"></div>
+                    </div>
+                    <div class="slat-content">
+                        <h3 class="slat-title">Sculpted Festive</h3>
+                        <p class="slat-sub">Modern Silhouette with Ancient Roots</p>
+                    </div>
+                </div>
+
+                <div class="slat-item">
+                    <div class="slat-vertical-label">BESPOKE ATELIER</div>
+                    <div class="slat-media">
+                        <img src="{{ url_for('static', filename='images/editorial-custom.jpg') }}?v={{ cache_id }}" alt="Bespoke Couture" loading="lazy">
+                        <div class="slat-overlay"></div>
+                    </div>
+                    <div class="slat-content">
+                        <h3 class="slat-title">One of One</h3>
+                        <p class="slat-sub">Tailored Exclusively to Your Form</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             LATEST TRENDS — 3D High-Fashion Typography & Staggered Frames
+        ========================================== -->
+
+        <section class="trends-display-section" id="trends">
+
+            <div class="trends-layout">
+
+                <div class="trends-hero-text reveal">
+                    <p class="eyebrow" style="letter-spacing: 0.3em; color: var(--accent-burgundy); margin-bottom: 12px; font-weight: 500;">
+                        {{ cms.get('trends_eyebrow', 'THE SEASONAL FORECAST') }}
+                    </p>
+                    <h2>
+                        {{ cms.get('trends_title', 'LATEST<br><span>TRENDS</span>')|safe }}
+                    </h2>
+                    <p class="trends-story-desc">
+                        {{ cms.get('trends_desc', 'Explore the most celebrated silhouettes, sculptural pleating, and living natural dyes of the season. Garments designed to outlive ephemeral trends and become family heirlooms.') }}
+                    </p>
+                    <a href="{{ cms.get('trends_cta_link', url_for('shop')) }}" class="btn-luxury-gold">
+                        {{ cms.get('trends_cta_text', 'Discover The Edit →') }}
+                    </a>
+                </div>
+
+                <div class="trends-frame-stack reveal-scale">
+                    <div class="stack-frame stack-frame-main">
+                        <img src="{{ product_image_url(cms.get('trends_image'), 'editorial-trends.jpg') }}?v={{ cache_id }}"
+                             alt="Latest Fashion Trends Main" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                    </div>
+                    <div class="stack-frame stack-frame-secondary">
+                        <img src="{{ product_image_url(cms.get('seasonal_img1'), 'editorial-seasonal-1.jpg') }}?v={{ cache_id }}"
+                             alt="Latest Fashion Trends Accent" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             SHOP BY PRICE
+        ========================================== -->
+
+        <section
+            class="price-section"
+            id="shop-price"
+        >
+
+            <div class="section-heading centered reveal">
+
+                <p class="eyebrow">
+                    SHOP BY PRICE
+                </p>
+
+                <h2>
+                    Find something<br>
+                    within your range.
+                </h2>
+
+            </div>
+
+
+            <div class="price-grid">
+
+                <a
+                    href="{{ url_for('shop', max_price=1000) }}"
+                    class="price-card reveal reveal-delay-1"
+                >
+                    <span>UNDER</span>
+                    <strong>₹1,000</strong>
+                    <small>Explore pieces →</small>
+                </a>
+
+                <a
+                    href="{{ url_for('shop', min_price=1000, max_price=2000) }}"
+                    class="price-card reveal reveal-delay-2"
+                >
+                    <span>₹1,000 —</span>
+                    <strong>₹2,000</strong>
+                    <small>Explore pieces →</small>
+                </a>
+
+                <a
+                    href="{{ url_for('shop', min_price=2000, max_price=3000) }}"
+                    class="price-card reveal reveal-delay-3"
+                >
+                    <span>₹2,000 —</span>
+                    <strong>₹3,000</strong>
+                    <small>Explore pieces →</small>
+                </a>
+
+                <a
+                    href="{{ url_for('shop', min_price=3000, max_price=4000) }}"
+                    class="price-card reveal reveal-delay-4"
+                >
+                    <span>₹3,000 —</span>
+                    <strong>₹4,000</strong>
+                    <small>Explore pieces →</small>
+                </a>
+
+                <a
+                    href="{{ url_for('shop', min_price=4000) }}"
+                    class="price-card reveal"
+                >
+                    <span>ABOVE</span>
+                    <strong>₹4,000+</strong>
+                    <small>Explore pieces →</small>
+                </a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             SHOP BY CATEGORY
+        ========================================== -->
+
+        <section class="category-section" id="categories">
+
+            <div class="section-heading centered reveal">
+
+                <p class="eyebrow">
+                    SHOP BY CATEGORY
+                </p>
+
+                <h2>
+                    Choose your style.
+                </h2>
+
+            </div>
+
+
+            <div class="category-grid">
+
+                <a
+                    href="{{ url_for('shop', category='Plazo / Kurta') }}"
+                    class="category-card reveal reveal-delay-1"
+                    style="background-image: url('{{ url_for('static', filename='images/editorial-category-1.jpg') }}');"
+                >
+                    <div class="category-card-content">
+                        <span class="category-number">A</span>
+                        <h3>Plazo / Kurta</h3>
+                        <p>Everyday handcrafted elegance.</p>
+                        <span class="category-link">Explore collection →</span>
+                    </div>
+                </a>
+
+                <a
+                    href="{{ url_for('shop', category='Salwar Kameez') }}"
+                    class="category-card reveal reveal-delay-2"
+                    style="background-image: url('{{ url_for('static', filename='images/editorial-category-2.jpg') }}');"
+                >
+                    <div class="category-card-content">
+                        <span class="category-number">B</span>
+                        <h3>Salwar Kameez</h3>
+                        <p>Traditional pieces with modern detail.</p>
+                        <span class="category-link">Explore collection →</span>
+                    </div>
+                </a>
+
+                <a
+                    href="{{ url_for('shop', category='Party Wear') }}"
+                    class="category-card reveal reveal-delay-3"
+                    style="background-image: url('{{ url_for('static', filename='images/editorial-category-3.jpg') }}');"
+                >
+                    <div class="category-card-content">
+                        <span class="category-number">C</span>
+                        <h3>Party Wear</h3>
+                        <p>Statement pieces for special occasions.</p>
+                        <span class="category-link">Explore collection →</span>
+                    </div>
+                </a>
+
+                <a
+                    href="{{ url_for('shop', category='Wedding Wear') }}"
+                    class="category-card reveal reveal-delay-4"
+                    style="background-image: url('{{ url_for('static', filename='images/editorial-category-4.jpg') }}');"
+                >
+                    <div class="category-card-content">
+                        <span class="category-number">D</span>
+                        <h3>Wedding Wear</h3>
+                        <p>Detailed handcrafted festive pieces.</p>
+                        <span class="category-link">Explore collection →</span>
+                    </div>
+                </a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             HANDMADE PROCESS — Cinematic Steps
+        ========================================== -->
+
+        <section
+            class="process-section section-wave wave-dark-to-ivory"
+            id="process"
+        >
+
+            <div class="section-heading reveal">
+
+                <p class="eyebrow">
+                    {{ cms.get('process_eyebrow', 'THE CRAFT') }}
+                </p>
+
+                <h2>
+                    {{ cms.get('process_title', 'Made by Hand.') }}
+                </h2>
+
+                <p class="section-intro">
+                    {{ cms.get('process_intro', 'Every piece passes through a careful journey from idea to finished garment.') }}
+                </p>
+
+            </div>
+
+
+            <div class="process-grid">
+
+                <article class="process-card reveal reveal-delay-1">
+                    <div class="process-number">01</div>
+                    <h3>{{ cms.get('process_step1_title', 'The Idea') }}</h3>
+                    <p>
+                        {{ cms.get('process_step1_desc', 'A sketch, a texture, a colour or an inspiration becomes the beginning.') }}
+                    </p>
+                </article>
+
+                <article class="process-card reveal reveal-delay-2">
+                    <div class="process-number">02</div>
+                    <h3>{{ cms.get('process_step2_title', 'The Fabric') }}</h3>
+                    <p>
+                        {{ cms.get('process_step2_desc', 'Fabrics and materials are selected for their character, drape and feel.') }}
+                    </p>
+                </article>
+
+                <article class="process-card reveal reveal-delay-3">
+                    <div class="process-number">03</div>
+                    <h3>{{ cms.get('process_step3_title', 'The Handwork') }}</h3>
+                    <p>
+                        {{ cms.get('process_step3_desc', 'Stitching, embroidery and finishing are completed carefully by hand.') }}
+                    </p>
+                </article>
+
+                <article class="process-card reveal reveal-delay-4">
+                    <div class="process-number">04</div>
+                    <h3>{{ cms.get('process_step4_title', 'The Final Piece') }}</h3>
+                    <p>
+                        {{ cms.get('process_step4_desc', 'Each garment receives a final quality check before it reaches its new home.') }}
+                    </p>
+                </article>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             DESIGNER STORY — Editorial Portrait
+        ========================================== -->
+
+        <section
+            class="designer-section"
+            id="about"
+        >
+
+            <div class="designer-image reveal-scale">
+
+                <img
+                    src="{{ product_image_url(cms.get('designer_image'), 'editorial-designer.jpg') }}?v={{ cache_id }}"
+                    alt="Fashion designer in the studio"
+                    loading="lazy"
+                >
+
+            </div>
+
+
+            <div class="designer-content reveal">
+
+                <p class="eyebrow">
+                    {{ cms.get('designer_eyebrow', 'THE DESIGNER') }}
+                </p>
+
+                <h2>
+                    {{ cms.get('designer_title', 'The person<br>behind the pieces.')|safe }}
+                </h2>
+
+                <p>
+                    {{ cms.get('designer_desc', 'Every garment carries a part of the person who imagined and made it. Discover the story behind the studio, the craft and the collection.') }}
+                </p>
+
+                <blockquote class="designer-quote">
+                    "{{ cms.get('designer_quote', 'Craft is not decoration. It is memory made visible.') }}"
+                </blockquote>
+
+                <a
+                    href="{{ cms.get('designer_cta_link', '#contact-us') }}"
+                    class="text-link"
+                >
+                    {{ cms.get('designer_cta_text', 'Meet the designer →') }}
+                </a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             CUSTOM ORDER — Emotional Dark
+        ========================================== -->
+
+        <section
+            class="custom-section"
+            id="contact"
+        >
+
+            <p class="eyebrow reveal">
+                {{ cms.get('custom_eyebrow', 'MADE TO ORDER') }}
+            </p>
+
+            <h2 class="reveal">
+                {{ cms.get('custom_title', 'Your piece.<br>Your story.')|safe }}
+            </h2>
+
+            <p class="reveal">
+                {{ cms.get('custom_desc', 'Custom clothing made around your occasion, preferences and vision. Begin a conversation with the studio.') }}
+            </p>
+
+            <button
+                type="button"
+                id="openCustomModalBtn"
+                class="dark-button reveal"
+                onclick="document.getElementById('customModal').style.display='flex'; document.body.style.overflow='hidden';"
+            >
+                {{ cms.get('custom_cta_text', 'Request a Custom Piece →') }}
+            </button>
+
+            <!-- BESPOKE CUSTOM ORDER MODAL -->
+            <div id="customModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; background: rgba(23, 21, 19, 0.78); z-index: 999999; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box; overflow-y: auto;">
+                <div style="background: #fff; max-width: 600px; width: 100%; padding: 40px; border: 1px solid var(--border-light); position: relative; max-height: 90vh; overflow-y: auto; text-align: left; box-sizing: border-box;">
+                    <button type="button" id="closeCustomModalBtn" onclick="document.getElementById('customModal').style.display='none'; document.body.style.overflow='';" style="position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 26px; cursor: pointer; color: var(--text-muted); line-height: 1;">&times;</button>
+
+                    <p class="eyebrow" style="margin-bottom: 6px;">BESPOKE ATELIER COMMISSION</p>
+                    <h2 style="font-size: 30px; margin-bottom: 8px;">Request a Custom Outfit</h2>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5;">
+                        Tell our artisans about your vision. We will curate the fabrics, sketch the embroidery, and tailor it to your exact specifications.
+                    </p>
+
+                    <form id="customOrderForm" action="{{ url_for('api_custom_order') }}" method="POST" enctype="multipart/form-data">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Full Name *</label>
+                                <input type="text" id="coName" name="name" required placeholder="Your full name" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Phone Number *</label>
+                                <input type="tel" id="coPhone" name="phone" required placeholder="Phone number" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; box-sizing: border-box;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Email Address (Optional)</label>
+                            <input type="email" id="coEmail" name="email" placeholder="Email for design sketches (optional)" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; box-sizing: border-box;">
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Reference Outfit Photograph (Optional)</label>
+                            <input type="file" id="coReferenceImage" name="reference_image" accept="image/*" style="width: 100%; font-size: 12px; padding: 6px 0;">
+                            <input type="hidden" id="coPreloadedImage" name="reference_image_preloaded" value="">
+                            <div id="coImagePreviewBox" style="display: none; margin-top: 10px; align-items: center; gap: 10px; background: #faf8f5; padding: 10px; border: 1px solid var(--border-light);">
+                                <img id="coImagePreviewThumb" src="" alt="Attached Reference Look" style="height: 60px; width: 60px; object-fit: cover;">
+                                <span id="coImagePreviewLabel" style="font-size: 11px; color: var(--text-muted);">Attached design look</span>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Outfit Type *</label>
+                                <select id="coOutfitType" name="outfit_type" required style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; background: #fff; box-sizing: border-box;">
+                                    <option value="Plazo / Kurta Set">Plazo / Kurta Set</option>
+                                    <option value="Salwar Kameez">Salwar Kameez</option>
+                                    <option value="Embroidered Party Outfit">Embroidered Party Outfit</option>
+                                    <option value="Wedding Ensemble">Wedding Ensemble</option>
+                                    <option value="Custom Bespoke Design">Other Bespoke Design</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Occasion / Event</label>
+                                <input type="text" id="coOccasion" name="occasion" placeholder="e.g. Sister's Wedding, Festive" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; box-sizing: border-box;">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Fabric Preference</label>
+                                <input type="text" id="coFabric" name="fabric_preference" placeholder="e.g. Mulmul Cotton, Pure Silk" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; box-sizing: border-box;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Color / Shade</label>
+                                <input type="text" id="coColor" name="color_preference" placeholder="e.g. Ivory, Antique Gold, Sage" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; box-sizing: border-box;">
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 16px;">
+                            <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Garment Measurements (Bust, Waist, Length)</label>
+                            <input type="text" id="coMeasurements" name="measurements" placeholder="e.g. Bust 36, Waist 30, Length 44" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; box-sizing: border-box;">
+                        </div>
+
+                        <div style="margin-bottom: 24px;">
+                            <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px;">Special Embroidery / Design Notes</label>
+                            <textarea id="coNotes" name="notes" rows="3" placeholder="Tell us any specific neckline, embroidery style, or silhouette requirements..." style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; box-sizing: border-box;"></textarea>
+                        </div>
+
+                        <button type="submit" id="coSubmitBtn" class="btn-add-bag" style="width: 100%;">
+                            Submit Bespoke Inquiry →
+                        </button>
+                        <p id="coResponse" style="font-size: 13px; margin-top: 14px; text-align: center; color: #2e7d32; font-style: italic; min-height: 20px;"></p>
+                    </form>
+                </div>
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             SCENE 15 — AI STYLE STUDIO (3D Glowing Glass Portal)
+        ========================================== -->
+
+        <section
+            class="ai-section"
+            id="ai-studio"
+        >
+
+            <div class="ai-portal-wrapper" style="max-width: 1040px; margin: 0 auto; text-align: center;">
+
+                <div class="ai-portal-glow"></div>
+
+                <div class="ai-content">
+
+                    <p class="eyebrow reveal">
+                        ✦ ATELIER NEURAL STYLING PORTAL ✦
+                    </p>
+
+                    <h2 class="reveal">
+                        Find the piece<br>
+                        <em>that feels like you.</em>
+                    </h2>
+
+                    <p class="reveal" style="max-width: 620px; margin: 14px auto 32px; color: var(--text-muted); font-size: 15px; line-height: 1.6;">
+                        Describe your desired silhouette, festive occasion, or aesthetic mood. Our AI couture concierge analyzes our genuine artisan catalog to curate a look tailored to you.
+                    </p>
+
+                <!-- Quick Prompt Chips -->
+                <div class="ai-prompts reveal" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
+                    <button type="button" class="ai-chip">
+                        Wedding celebration under ₹5,000
+                    </button>
+                    <button type="button" class="ai-chip">
+                        Handmade cotton pieces for daytime
+                    </button>
+                    <button type="button" class="ai-chip">
+                        Party wear with fine embroidery
+                    </button>
+                    <button type="button" class="ai-chip">
+                        Pieces in Pure Silk
+                    </button>
+                </div>
+
+                <!-- Input Box -->
+                <form id="aiStylistForm" class="reveal" style="display: flex; gap: 12px; max-width: 680px; margin: 0 auto; flex-wrap: wrap;">
+                    <input
+                        type="text"
+                        id="aiStylistInput"
+                        placeholder="e.g., I need a breathable cotton suit for an outdoor daytime event..."
+                        style="flex: 1; min-width: 240px; padding: 16px 20px; border: 1px solid var(--border-light); background: #fff; font-size: 14px; outline: none; font-family: inherit;"
+                        required
+                    >
+                    <button
+                        type="submit"
+                        id="aiSubmitBtn"
+                        class="btn-add-bag"
+                        style="padding: 16px 28px;"
+                    >
+                        Consult Stylist →
+                    </button>
+                </form>
+
+                <!-- Visual Outfit Photo Scan -->
+                <div class="reveal" style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
+                    <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Have a dress photo?</span>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px dashed var(--border-light); padding: 9px 18px; border-radius: 24px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;">
+                        <span>📸 Upload Dress Photo</span>
+                        <input type="file" id="aiPhotoInput" accept="image/*" style="display: none;">
+                    </label>
+                </div>
+
+                <!-- Visual Scan Result Card -->
+                <div id="aiVisualScanBox" style="display: none; margin-top: 24px; background: #faf8f5; border: 1px solid var(--border-light); padding: 24px; text-align: center;">
+                    <div style="display: flex; gap: 20px; align-items: center; justify-content: center; flex-wrap: wrap;">
+                        <img id="aiVisualScanPreview" src="" alt="Scanned Look" style="max-height: 180px; border: 1px solid var(--border-light); object-fit: cover;">
+                        <div style="text-align: left; max-width: 420px;">
+                            <p class="eyebrow" style="margin-bottom: 4px;">✦ AI VISUAL LOOK ANALYSIS</p>
+                            <h3 style="font-size: 20px; margin-bottom: 8px;">Design Analyzed</h3>
+                            <p id="aiVisualMessage" style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px;">
+                                We've scanned your outfit design. Explore matching pieces below, or commission a bespoke version.
+                            </p>
+                            <button type="button" id="btnBespokeFromScan" class="btn-add-bag" style="padding: 12px 20px;">
+                                ✨ Request Bespoke Piece →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Loading -->
+                <div id="aiLoading" style="display: none; margin-top: 28px; font-size: 13px; color: var(--text-muted); letter-spacing: 0.08em;">
+                    ✦ Consulting the atelier stylist...
+                </div>
+
+                <!-- Result Box -->
+                <div id="aiResultContainer" style="display: none; margin-top: 40px; text-align: left; background: #fff; border: 1px solid var(--border-light); padding: 36px 32px;">
+                    <p class="eyebrow" style="margin-bottom: 8px;">✦ STYLIST RECOMMENDATION</p>
+                    <p id="aiResponseMessage" style="font-size: 16px; line-height: 1.7; margin-bottom: 28px; font-style: italic; color: var(--text-primary);"></p>
+                    <div id="aiProductsGrid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;"></div>
+                </div>
+
+                </div><!-- /.ai-content -->
+            </div><!-- /.ai-portal-wrapper -->
+
+        </section>
+
+
+
+        <!-- =========================================
+             CUSTOMER FEEDBACK
+        ========================================== -->
+
+        <section
+            class="feedback-section"
+            id="feedback"
+        >
+
+            <div class="section-heading centered reveal">
+
+                <p class="eyebrow">
+                    CUSTOMER STORIES
+                </p>
+
+                <h2>
+                    What they said.
+                </h2>
+
+            </div>
+
+            <!-- Testimonial Rail -->
+            <div class="feedback-display">
+                {% if approved_feedback and approved_feedback|length > 0 %}
+                    {% for item in approved_feedback %}
+                    <article class="feedback-card reveal reveal-delay-{{ loop.index0 % 4 + 1 }}">
+                        <span class="feedback-stars" style="color: var(--accent-gold);">
+                            {% for _ in range(item.rating) %}★{% endfor %}{% for _ in range(5 - item.rating) %}☆{% endfor %}
+                        </span>
+                        <p>
+                            "{{ item.message }}"
+                        </p>
+                        <small>
+                            — {{ item.customer_name }}
+                        </small>
+                    </article>
+                    {% endfor %}
+                {% else %}
+                    <article class="feedback-card">
+                        <span class="feedback-stars" style="color: var(--accent-gold);">★★★★★</span>
+                        <p>"The attention to detail and handmade finishing were beautiful. The organic cotton drape feels extraordinary."</p>
+                        <small>— Ananya S., Mumbai</small>
+                    </article>
+                    <article class="feedback-card">
+                        <span class="feedback-stars" style="color: var(--accent-gold);">★★★★★</span>
+                        <p>"The experience felt personal from beginning to end. It is rare to find such authentic hand-needle embroidery."</p>
+                        <small>— Meera K., New Delhi</small>
+                    </article>
+                    <article class="feedback-card">
+                        <span class="feedback-stars" style="color: var(--accent-gold);">★★★★★</span>
+                        <p>"Beautiful craftsmanship and thoughtful design. An investment piece that lasts a lifetime."</p>
+                        <small>— Radhika V., Bangalore</small>
+                    </article>
+                {% endif %}
+            </div>
+
+
+            <!-- Feedback Form -->
+            <div class="section-heading centered reveal" style="margin-top: var(--space-3xl);">
+                <p class="eyebrow">SHARE YOUR EXPERIENCE</p>
+                <h2 style="font-size: clamp(28px, 4vw, 48px);">Tell us your story.</h2>
+            </div>
+
+            <form
+                class="feedback-form reveal"
+                id="feedbackForm"
+            >
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="feedbackName">Your Name</label>
+                        <input type="text" id="feedbackName" name="name" placeholder="Enter your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="feedbackEmail">Email</label>
+                        <input type="email" id="feedbackEmail" name="email" placeholder="Enter your email">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Your Rating</label>
+                    <div class="rating">
+                        <button type="button" data-rating="1">★</button>
+                        <button type="button" data-rating="2">★</button>
+                        <button type="button" data-rating="3">★</button>
+                        <button type="button" data-rating="4">★</button>
+                        <button type="button" data-rating="5">★</button>
+                    </div>
+                    <input type="hidden" id="ratingValue" name="rating" value="0">
+                </div>
+
+                <div class="form-group">
+                    <label for="feedbackMessage">Your Feedback</label>
+                    <textarea id="feedbackMessage" name="message" rows="6" placeholder="Tell us about your experience..." required></textarea>
+                </div>
+
+                <button type="submit" class="feedback-submit">
+                    Submit Feedback →
+                </button>
+
+                <p class="feedback-success" id="feedbackSuccess"></p>
+            </form>
+
+        </section>
+
+
+
+        <!-- =========================================
+             FAQ
+        ========================================== -->
+
+        <section class="faq-section" id="faq-section">
+
+            <div class="section-heading reveal">
+
+                <p class="eyebrow">
+                    QUESTIONS
+                </p>
+
+                <h2>
+                    Questions,<br>
+                    answered.
+                </h2>
+
+            </div>
+
+
+            <div class="faq-list reveal">
+
+                <button class="faq-item">
+                    <span>How long does a handmade piece take?</span>
+                    <strong>+</strong>
+                </button>
+                <div class="faq-answer">
+                    <p>Production time depends on the garment, handwork and availability. The estimated time will be shown on the product page.</p>
+                </div>
+
+                <button class="faq-item">
+                    <span>Do you accept custom orders?</span>
+                    <strong>+</strong>
+                </button>
+                <div class="faq-answer">
+                    <p>Yes. Custom-order details and requirements can be discussed directly with the studio through our made-to-order service.</p>
+                </div>
+
+                <button class="faq-item">
+                    <span>How do I choose my size?</span>
+                    <strong>+</strong>
+                </button>
+                <div class="faq-answer">
+                    <p>Every product has its own measurement information. We also offer custom sizing for all our handmade garments.</p>
+                </div>
+
+                <button class="faq-item">
+                    <span>What fabrics do you use?</span>
+                    <strong>+</strong>
+                </button>
+                <div class="faq-answer">
+                    <p>Fabric information is listed on each product page. We primarily work with natural fibres — organic cotton, mulmul, chanderi, linen, and silk.</p>
+                </div>
+
+                <button class="faq-item">
+                    <span>What is your return policy?</span>
+                    <strong>+</strong>
+                </button>
+                <div class="faq-answer">
+                    <p>Please visit our <a href="{{ url_for('return_policy') }}" style="text-decoration: underline;">Returns & Refunds</a> page for detailed information about our return and exchange policy.</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             CONTACT US
+        ========================================== -->
+
+        <section class="contact-section" id="contact-us" style="border-top: 1px solid var(--border-light);">
+
+            <div class="section-heading centered reveal" style="max-width: 780px; margin: 0 auto var(--space-xl);">
+
+                <p class="eyebrow">
+                    CONTACT — CLIENT SERVICES
+                </p>
+
+                <h2 style="font-size: clamp(32px, 4.5vw, 52px);">
+                    Get in Touch
+                </h2>
+
+                <p class="section-intro centered-text" style="max-width: 640px;">
+                    Have questions about styling, measurements, existing orders, or bespoke pieces? Connect directly with our studio.
+                </p>
+
+            </div>
+
+
+            <!-- Contact Channels -->
+            <div class="reveal" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto var(--space-xl);">
+
+                <!-- WhatsApp -->
+                <div style="background: var(--bg-ivory); border: 1px solid var(--border-light); padding: 30px 26px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <span style="display: inline-block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; font-weight: 600; margin-bottom: 14px;">● Active</span>
+                        <h3 style="font-size: 19px; font-weight: 500; margin-bottom: 6px;">WhatsApp</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">Chat with us for sizing advice, fabric photos, and order updates.</p>
+                    </div>
+                    <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20would%20like%20to%20inquire%20about..." target="_blank" rel="noopener noreferrer" class="btn-add-bag" style="text-align: center; display: block;">Chat on WhatsApp →</a>
+                </div>
+
+                <!-- Phone -->
+                <div style="background: var(--bg-ivory); border: 1px solid var(--border-light); padding: 30px 26px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <span style="display: inline-block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--border-light); color: var(--text-muted); margin-bottom: 14px;">{{ studio_hours }}</span>
+                        <h3 style="font-size: 19px; font-weight: 500; margin-bottom: 6px;">Studio Hotline</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">Speak directly with our team for custom consultation and craft inquiries.</p>
+                    </div>
+                    <a href="tel:{{ studio_phone }}" style="display: block; text-align: center; border: 1px solid var(--text-primary); padding: 14px 18px; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em;">Call {{ studio_phone }}</a>
+                </div>
+
+                <!-- Email -->
+                <div style="background: var(--bg-ivory); border: 1px solid var(--border-light); padding: 30px 26px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <span style="display: inline-block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--border-light); color: var(--text-muted); margin-bottom: 14px;">Replies in 24h</span>
+                        <h3 style="font-size: 19px; font-weight: 500; margin-bottom: 6px;">Email</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">Email us design sketches, bridal references, or collaboration inquiries.</p>
+                    </div>
+                    <a href="mailto:{{ studio_email }}?subject=Inquiry%20from%20{{ brand_name }}" style="display: block; text-align: center; border: 1px solid var(--text-primary); padding: 14px 18px; font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">{{ studio_email }}</a>
+                </div>
+
+                <!-- Instagram -->
+                <div style="background: var(--bg-ivory); border: 1px solid var(--border-light); padding: 30px 26px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <span style="display: inline-block; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border: 1px solid var(--border-light); color: var(--text-muted); margin-bottom: 14px;">Slow Fashion</span>
+                        <h3 style="font-size: 19px; font-weight: 500; margin-bottom: 6px;">Instagram</h3>
+                        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 20px;">Follow our craft in real time and DM our styling team.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer" style="flex: 1; text-align: center; border: 1px solid var(--border-light); padding: 12px 4px; font-size: 10px; font-weight: 600;">@{{ instagram_handle_1 }}</a>
+                        <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer" style="flex: 1; text-align: center; border: 1px solid var(--border-light); padding: 12px 4px; font-size: 10px; font-weight: 600;">@{{ instagram_handle_2 }}</a>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- Quick Contact Form + Studio Info -->
+            <div style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 36px; align-items: start;">
+
+                <!-- Form -->
+                <div class="reveal" style="background: var(--bg-ivory); border: 1px solid var(--border-light); padding: 40px; box-sizing: border-box;">
+                    <p class="eyebrow" style="margin-bottom: 6px;">SEND A DIRECT MESSAGE</p>
+                    <h3 style="font-size: 24px; font-weight: 400; margin-bottom: 6px;">Have a Question?</h3>
+                    <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5;">Fill in your details and message. We will reply via WhatsApp or phone promptly.</p>
+
+                    <form id="indexContactForm">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Your Name *</label>
+                                <input type="text" id="idxContactName" required placeholder="Full Name" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; background: #fff; box-sizing: border-box; font-family: inherit;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Phone / WhatsApp *</label>
+                                <input type="tel" id="idxContactPhone" required placeholder="+91 Phone Number" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; background: #fff; box-sizing: border-box; font-family: inherit;">
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Email (Optional)</label>
+                                <input type="email" id="idxContactEmail" placeholder="your@email.com" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; background: #fff; box-sizing: border-box; font-family: inherit;">
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Subject *</label>
+                                <select id="idxContactSubject" required style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; background: #fff; box-sizing: border-box; font-family: inherit;">
+                                    <option value="General Inquiry">General Question</option>
+                                    <option value="Order Status & Delivery">Order Status & Delivery</option>
+                                    <option value="Custom Sizing & Fit Consultation">Custom Sizing & Fit</option>
+                                    <option value="Bespoke Outfit / Bridal Commission">Bespoke / Bridal</option>
+                                    <option value="Fabric & Handloom Details">Fabric & Handloom</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px;">
+                            <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Your Message *</label>
+                            <textarea id="idxContactMessage" rows="4" required placeholder="How can we assist you?" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 13px; background: #fff; box-sizing: border-box; font-family: inherit;"></textarea>
+                        </div>
+
+                        <button type="submit" id="idxContactSubmitBtn" class="btn-add-bag" style="width: 100%;">
+                            Send Message →
+                        </button>
+
+                        <div id="idxContactResp" style="display: none; margin-top: 14px; padding: 14px; font-size: 13px;"></div>
+                    </form>
+                </div>
+
+                <!-- Studio Info -->
+                <div class="reveal" style="background: #fff; border: 1px solid var(--border-light); padding: 40px; box-sizing: border-box;">
+                    <p class="eyebrow" style="margin-bottom: 6px;">SLOW FASHION ATELIER</p>
+                    <h3 style="font-size: 24px; font-weight: 400; margin-bottom: 18px; padding-bottom: 12px; border-bottom: 1px solid var(--border-light);">
+                        {{ brand_name }} Workshop
+                    </h3>
+
+                    <div style="margin-bottom: 20px;">
+                        <span style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Atelier Address</span>
+                        <p style="font-size: 14px; color: var(--text-primary); line-height: 1.5; margin: 0;">{{ studio_address }}</p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <span style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Hours</span>
+                        <p style="font-size: 14px; color: var(--text-primary); line-height: 1.5; margin: 0;">{{ studio_hours }}<br><small style="color: var(--text-muted);">Sunday: Studio Closed</small></p>
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <span style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 4px; font-weight: 600;">Order Tracking</span>
+                        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.5; margin-bottom: 10px;">Track your garment dispatch and courier journey.</p>
+                        <a href="{{ url_for('track_order') }}" class="text-link">Open Order Tracking →</a>
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-light); padding-top: 16px; margin-top: 24px; display: flex; gap: 12px;">
+                        <a href="{{ url_for('contact') }}" style="flex: 1; display: block; text-align: center; padding: 12px; border: 1px solid var(--border-light); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; background: var(--bg-ivory);">Contact Page ↗</a>
+                        <a href="{{ url_for('return_policy') }}" style="flex: 1; display: block; text-align: center; padding: 12px; border: 1px solid var(--border-light); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 600; background: var(--bg-ivory);">Returns & Refunds ↗</a>
+                    </div>
+                </div>
+
+            </div>
+
+        </section>
+
+        <script>
+            // Contact Form Submission
+            document.getElementById('indexContactForm')?.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const btn = document.getElementById('idxContactSubmitBtn');
+                const resp = document.getElementById('idxContactResp');
+                btn.disabled = true;
+                btn.innerText = "Sending...";
+                resp.style.display = "none";
+
+                const payload = {
+                    name: document.getElementById('idxContactName').value.trim(),
+                    phone: document.getElementById('idxContactPhone').value.trim(),
+                    email: document.getElementById('idxContactEmail').value.trim(),
+                    subject: document.getElementById('idxContactSubject').value,
+                    message: document.getElementById('idxContactMessage').value.trim()
+                };
+
+                try {
+                    const res = await fetch('/api/contact', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        resp.style.display = "block";
+                        resp.style.background = "#e8f5e9";
+                        resp.style.color = "#2e7d32";
+                        resp.style.border = "1px solid #c8e6c9";
+                        resp.innerHTML = `<strong>✓ ${data.message}</strong><div style="margin-top: 10px;"><a href="${data.whatsapp_link}" target="_blank" style="display: inline-block; background: #2e7d32; color: #fff; padding: 8px 14px; font-size: 11px; text-decoration: none; font-weight: 600;">💬 Also Chat on WhatsApp →</a></div>`;
+                        document.getElementById('indexContactForm').reset();
+                    } else {
+                        resp.style.display = "block";
+                        resp.style.background = "#ffebee";
+                        resp.style.color = "#c62828";
+                        resp.style.border = "1px solid #ffcdd2";
+                        resp.innerText = data.message || "Failed to submit.";
+                    }
+                } catch (err) {
+                    resp.style.display = "block";
+                    resp.style.background = "#ffebee";
+                    resp.style.color = "#c62828";
+                    resp.style.border = "1px solid #ffcdd2";
+                    resp.innerText = "Error. Please try WhatsApp instead.";
+                } finally {
+                    btn.disabled = false;
+                    btn.innerText = "Send Message →";
+                }
+            });
+        </script>
+
+
+
+        <!-- =========================================
+             INSTAGRAM
+        ========================================== -->
+
+        <section class="instagram-section">
+
+            <div class="section-heading centered reveal">
+
+                <p class="eyebrow">
+                    ON INSTAGRAM
+                </p>
+
+                <h2>
+                    Follow the journey.
+                </h2>
+
+                <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-top: 12px;">
+                    <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer" class="text-link">@{{ instagram_handle_1 }}</a>
+                    <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer" class="text-link">@{{ instagram_handle_2 }}</a>
+                </div>
+
+            </div>
+
+
+            <div class="instagram-grid reveal-scale">
+
+                <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" class="social-image social-one"></a>
+
+                <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" class="social-image social-two"></a>
+
+                <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" class="social-image social-three"></a>
+
+                <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" class="social-image social-four"></a>
+
+                <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" class="social-image social-five"></a>
+
+            </div>
+
+        </section>
+
+
+
+        <!-- =========================================
+             NEWSLETTER
+        ========================================== -->
+
+        <section class="newsletter-section">
+
+            <p class="eyebrow reveal">
+                LETTERS FROM THE STUDIO
+            </p>
+
+            <h2 class="reveal">
+                New pieces,<br>
+                studio stories<br>
+                and craft.
+            </h2>
+
+
+            <form class="newsletter-form reveal">
+
+                <input
+                    type="email"
+                    placeholder="Your email address"
+                    required
+                >
+
+                <button type="submit">
+                    Subscribe →
+                </button>
+
+            </form>
+
+        </section>
+
+
+        {% for custom_section in cms.get('custom_sections', []) %}
+        <section id="{{ custom_section.id }}" class="custom-editor-section {% if custom_section.background == 'dark' %}dark-section{% endif %}" style="background: {% if custom_section.background == 'dark' %}#1e1b18{% elif custom_section.background == 'cream' %}#f1ece2{% else %}var(--editor-page-background){% endif %};">
+            <div style="max-width:900px;margin:auto">
+                <h2>{{ custom_section.title }}</h2>
+                <p style="line-height:1.8;white-space:pre-line">{{ custom_section.body }}</p>
+            </div>
+        </section>
+        {% endfor %}
+    </main>
+
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer class="footer">
+
+        <div class="footer-brand">
+
+            <h3>
+                {{ brand_name|upper }}
+            </h3>
+
+            <p>
+                Handmade clothing created
+                slowly, thoughtfully and by hand.
+                {{ brand_tagline }}.
+            </p>
+
+        </div>
+
+
+        <div class="footer-column">
+
+            <h4>Shop</h4>
+
+            <a href="#new-arrivals">New Arrivals</a>
+            <a href="{{ url_for('shop') }}">All Pieces</a>
+            <a href="{{ url_for('shop', sort='best_seller') }}">Best Sellers</a>
+            <a href="#categories">Categories</a>
+            <a href="{{ url_for('track_order') }}">Track Order</a>
+            <a href="{{ url_for('return_policy') }}">Returns & Refunds</a>
+
+        </div>
+
+
+        <div class="footer-column">
+
+            <h4>Studio</h4>
+
+            <a href="#about">About</a>
+            <a href="#process">Process</a>
+            <a href="#ai-studio">AI Studio</a>
+            <a href="#contact">Custom Order</a>
+            <a href="{{ url_for('contact') }}">Contact Us</a>
+
+        </div>
+
+
+        <div class="footer-column">
+
+            <h4>Connect</h4>
+
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20have%20an%20inquiry." target="_blank">
+                💬 WhatsApp: {{ studio_phone }}
+            </a>
+
+            <a href="tel:{{ studio_phone }}">
+                📞 Call: {{ studio_phone }}
+            </a>
+
+            <a href="https://instagram.com/{{ instagram_handle_1 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_1 }}
+            </a>
+
+            <a href="https://instagram.com/{{ instagram_handle_2 }}" target="_blank" rel="noopener noreferrer">
+                @{{ instagram_handle_2 }}
+            </a>
+
+        </div>
+
+
+        <div class="footer-bottom">
+
+            <span>
+                © 2025 {{ brand_name|upper }}
+            </span>
+
+            <span>
+                Handmade / India
+            </span>
+
+        </div>
+
+    </footer>
+
+    <!-- Floating WhatsApp -->
+    <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20{{ brand_name }}!%20I%20would%20like%20to%20connect."
+       target="_blank"
+       rel="noopener noreferrer"
+       id="floatingWhatsAppBtn"
+       style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #25d366; color: #fff; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 18px rgba(37,211,102,0.45); text-decoration: none; transition: transform 0.2s;"
+       onmouseover="this.style.transform='scale(1.1)'"
+       onmouseout="this.style.transform='scale(1)'"
+       title="Chat on WhatsApp">
+        💬
+    </a>
+
+    <!-- =========================================
+         JAVASCRIPT & 3D ENGINE
+    ========================================== -->
+
+    <!-- Three.js & GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <!-- 3D Fashion Scripts -->
+    <script src="{{ url_for('static', filename='js/three-world.js') }}?v={{ cache_id }}"></script>
+    <script src="{{ url_for('static', filename='js/curved-carousel.js') }}?v={{ cache_id }}"></script>
+    <script src="{{ url_for('static', filename='js/look-builder.js') }}?v={{ cache_id }}"></script>
+
+    <script
+        src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"
+    ></script>
+
+    <script>
+      (() => {
+        const main = document.querySelector('main');
+        const layout = {{ cms.get('editor_sections', [])|tojson }};
+        layout.forEach(item => {
+          const section = document.getElementById(item.id);
+          if (!section || !section.matches('section')) return;
+          section.hidden = item.visible === false;
+          section.style.setProperty('--editor-section-width', (item.width || 100) + '%');
+          section.style.setProperty('--editor-section-min-height', item.min_height ? item.min_height + 'px' : '0px');
+          section.style.maxWidth = `var(--editor-section-width, 100%)`;
+          section.style.minHeight = item.min_height ? `${item.min_height}px` : '';
+          section.style.marginInline = 'auto';
+          main.appendChild(section);
+        });
+        if (window.matchMedia('(max-width: 600px)').matches) {
+          layout.forEach(item => { const section=document.getElementById(item.id); if(section) section.style.maxWidth='100%'; });
+        }
+        const previewAllowed = {{ editor_preview|tojson }};
+        if (previewAllowed) {
+          main.querySelectorAll('section[id]').forEach(section => section.addEventListener('click', event => {
+            if (event.target.closest('[data-editor-field]')) return;
+            event.stopPropagation();
+            parent.postMessage({type:'tulsa-editor-section',id:section.id}, '*');
+          }));
+          window.addEventListener('message', event => {
+            if (event.source !== parent || event.data?.type !== 'tulsa-editor-layout' || !Array.isArray(event.data.layout)) return;
+            event.data.layout.forEach(item => {
+              const section=document.getElementById(item.id);
+              if(!section || !section.matches('section')) return;
+              section.hidden=item.visible===false;
+              section.style.maxWidth=window.matchMedia('(max-width: 600px)').matches?'100%':`${item.width||100}%`;
+              section.style.minHeight=item.min_height?`${item.min_height}px`:'';
+            });
+            event.data.layout.forEach(item=>{const section=document.getElementById(item.id);if(section)section.parentNode.appendChild(section);});
+          });
+        }
+      })();
+    </script>
+
+    {% if editor_preview %}
+    <script>
+      document.querySelectorAll('[data-editor-field]').forEach((element) => {
+        element.contentEditable = 'true';
+        element.setAttribute('aria-label', 'Click to edit ' + element.dataset.editorField.replaceAll('_', ' '));
+        element.style.outline = '1px dashed #c5a059';
+        element.addEventListener('input', () => parent.postMessage({
+          type: 'tulsa-editor-field', key: element.dataset.editorField,
+          value: element.innerText.trim()
+        }, '*'));
+      });
+      document.querySelectorAll('[data-editor-image]').forEach((element) => {
+        element.addEventListener('click', () => parent.postMessage({
+          type: 'tulsa-editor-image', field: element.dataset.editorImage
+        }, '*'));
+      });
+    </script>
+    {% endif %}
+
+
+</body>
+
+</html>

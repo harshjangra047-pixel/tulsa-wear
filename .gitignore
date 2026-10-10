@@ -1,0 +1,69 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+.envs
+.envs.*
+
+# Python virtual environment
+venv/
+env/
+ENV/
+
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# macOS system files
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Database (keep local development database out of git)
+database/*.db
+database/*.sqlite3
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary files and logs
+*.log
+session_secret
+.session_secret
+.session_secret*
+.vercel
+.env*
+.env
+session_secret
+venv/
+
+# Private configuration and secrets
+.env
+.env.*
+.envs
+.session_secret
+
+# Local deployment configuration
+.vercel/
+
+# Cloudflared binaries and archives
+cloudflared
+cloudflared.new
+cloudflared.tgz
+
+# Python virtual environments and cache
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local databases and logs
+*.db
+*.sqlite
+*.sqlite3
+*.log

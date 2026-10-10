@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Reviews & Feedback — Atelier Admin</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <style>
+        .admin-section {
+            padding: 100px 48px 80px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .admin-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .admin-heading h1 {
+            font-size: clamp(32px, 3.5vw, 48px);
+            font-weight: 400;
+        }
+
+        .admin-table-wrapper {
+            background: #fff;
+            border: 1px solid var(--border);
+            overflow-x: auto;
+        }
+
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .admin-table th {
+            text-align: left;
+            padding: 14px 16px;
+            background: #efebe4;
+            border-bottom: 1px solid var(--border);
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--muted);
+        }
+
+        .admin-table td {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: middle;
+        }
+
+        .admin-table tr:hover {
+            background: #faf8f5;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 2px;
+            font-weight: 500;
+        }
+
+        .status-approved {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-unapproved {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: 1px solid var(--border);
+            padding: 6px 12px;
+            font-size: 10px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            cursor: pointer;
+            border-radius: 2px;
+            font-family: inherit;
+        }
+
+        .toggle-btn:hover {
+            background: #171614;
+            color: #fff;
+        }
+
+        .logout-btn {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: #c0392b;
+            padding: 6px 14px;
+            border: 1px solid #f5c6cb;
+            text-decoration: none;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar">
+        <a href="{{ url_for('home') }}" class="logo">{{ brand_name|upper }} ADMIN</a>
+
+        <nav class="nav-links">
+            <a href="{{ url_for('admin_dashboard') }}">📊 Dashboard</a>
+            <a href="{{ url_for('admin_customizer') }}" style="color: #c5a059; font-weight: 600;">🎨 Website Designer</a>
+            <a href="{{ url_for('admin_orders') }}">Orders</a>
+            <a href="{{ url_for('admin_products') }}">Products & Photos</a>
+            <a href="{{ url_for('admin_custom_orders') }}">Custom Requests</a>
+            <a href="{{ url_for('admin_coupons') }}">Coupons</a>
+            <a href="{{ url_for('admin_inquiries') }}">Inquiries</a>
+            <a href="{{ url_for('admin_trends') }}">AI Trends & Scans</a>
+            <a href="{{ url_for('admin_feedback') }}" style="border-bottom: 1px solid var(--text); padding-bottom: 4px;">Reviews</a>
+            <a href="{{ url_for('admin_settings') }}">Settings</a>
+            <a href="{{ url_for('home') }}">View Website</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+                Sign Out
+            </a>
+        </div>
+    </header>
+
+    <main>
+        <section class="admin-section">
+            <div class="admin-heading">
+                <div>
+                    <p class="eyebrow">REVIEW MODERATION</p>
+                    <h1>Customer Feedback</h1>
+                    <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">
+                        Approve reviews to display them publicly on your homepage.
+                    </p>
+                </div>
+            </div>
+
+            {% if reviews and reviews|length > 0 %}
+            <div class="admin-table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Customer</th>
+                            <th>Rating</th>
+                            <th>Review Message</th>
+                            <th>Status</th>
+                            <th>Moderation</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in reviews %}
+                        <tr>
+                            <td>#{{ r.id }}</td>
+                            <td>
+                                <strong>{{ r.customer_name }}</strong>
+                                {% if r.email %}<div style="font-size: 11px; color: var(--muted);">{{ r.email }}</div>{% endif %}
+                            </td>
+                            <td style="color: #f39c12; font-size: 14px;">
+                                {% for star in range(r.rating) %}★{% endfor %}
+                            </td>
+                            <td style="max-width: 400px; line-height: 1.5;">
+                                "{{ r.message }}"
+                            </td>
+                            <td>
+                                {% if r.is_approved %}
+                                <span class="status-badge status-approved">Approved (Live)</span>
+                                {% else %}
+                                <span class="status-badge status-unapproved">Pending Review</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="{{ url_for('admin_toggle_feedback', feedback_id=r.id) }}" method="POST">
+                                    <button type="submit" class="toggle-btn">
+                                        {% if r.is_approved %}Unpublish{% else %}Approve & Publish{% endif %}
+                                    </button>
+                                </form>
+                            </td>
+                            <td style="font-size: 11px; color: var(--muted); white-space: nowrap;">
+                                {{ r.created_at.strftime('%d %b %Y') if r.created_at else '' }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="background: #fff; border: 1px solid var(--border); text-align: center; padding: 60px 20px;">
+                <h3 style="font-size: 26px; margin-bottom: 8px;">No Feedback Submitted Yet</h3>
+                <p style="color: var(--muted); font-size: 13px;">Customer reviews submitted from your homepage will appear here for your moderation.</p>
+            </div>
+            {% endif %}
+        </section>
+    </main>
+
+</body>
+
+</html>

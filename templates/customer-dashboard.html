@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Atelier Account — {{ brand_name }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+  <style>
+    .account-wrap{max-width:1100px;margin:0 auto;padding:calc(var(--nav-height) + 36px) var(--page-padding) 72px}
+    .account-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,330px),1fr));gap:20px}
+    .account-card{background:#fff;border:1px solid var(--border-light);padding:24px;border-radius:4px}
+    .account-card h2{font:500 25px 'Cormorant Garamond',serif;margin:0 0 16px}
+    .account-card input,.account-card textarea{width:100%;padding:12px;border:1px solid var(--border-light);margin:5px 0 12px;font:inherit}
+    .account-card button{padding:11px 16px;background:#251b19;color:#fff;border:0;cursor:pointer}
+    .account-order{border-top:1px solid var(--border-light);padding:14px 0;display:grid;grid-template-columns:1fr auto;gap:5px}
+    @media(max-width:600px){.account-card{padding:18px}.account-wrap{padding-top:90px}}
+  </style>
+</head>
+<body>
+  <header class="navbar navbar-solid"><a href="{{ url_for('home') }}" class="logo">TULSA — BY ANJALI</a><div class="nav-right"><a href="{{ url_for('shop') }}">Shop</a><a href="{{ url_for('customer_logout') }}">Sign out</a></div></header>
+  <main class="account-wrap">
+    <p class="eyebrow">CUSTOMER ACCOUNT</p>
+    <h1 style="font:500 clamp(36px,5vw,56px) 'Cormorant Garamond',serif">Namaste, {{ customer.name }}</h1>
+    {% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<p role="status">{{ message }}</p>{% endfor %}{% endwith %}
+    <div class="account-grid">
+      <section class="account-card"><h2>Your profile</h2>
+        <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="profile"><label>Name<input name="name" value="{{ customer.name }}" required autocomplete="name"></label><label>Email<input type="email" name="email" value="{{ customer.email or '' }}" autocomplete="email"></label><button>Save profile</button></form>
+      </section>
+      <section class="account-card"><h2>Saved delivery addresses</h2>
+        {% for address in addresses %}<div class="account-order"><div><strong>{{ address.label }}</strong> · {{ address.recipient_name }}<br>{{ address.address }}, {{ address.city }} {{ address.pincode }}<br>{{ address.phone }}</div><form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="delete-address"><input type="hidden" name="address_id" value="{{ address.id }}"><button aria-label="Remove {{ address.label }} address">Remove</button></form></div>{% else %}<p>No saved addresses yet.</p>{% endfor %}
+        <form method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token }}"><input type="hidden" name="action" value="address"><label>Label<input name="label" placeholder="Home, work…"></label><label>Recipient<input name="recipient_name" required></label><label>Mobile<input name="phone" type="tel" required autocomplete="tel"></label><label>Address<textarea name="address" required></textarea></label><label>City<input name="city" required></label><label>PIN code<input name="pincode" inputmode="numeric" maxlength="6" required></label><button>Save address</button></form>
+      </section>
+      <section class="account-card"><h2>Order history</h2>
+        {% for order in orders %}<div class="account-order"><div><strong>Order #{{ order.id }}</strong> · {{ order.product_name }}<br><small>{{ order.created_at.strftime('%d %b %Y') if order.created_at else '' }} · {{ order.status }}</small></div><strong>₹{{ '%.2f'|format(order.price) }}</strong></div>{% else %}<p>Your orders will appear here.</p>{% endfor %}
+      </section>
+    </div>
+  </main>
+</body>
+</html>
