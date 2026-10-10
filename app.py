@@ -77,6 +77,14 @@ PRODUCTION_RUNTIME = os.getenv("FLASK_ENV") == "production" or os.getenv("VERCEL
 
 app = Flask(__name__)
 
+@app.before_request
+def block_embedded_admin_routes_on_vercel():
+    if os.getenv("VERCEL") == "1":
+        path = request.path.rstrip("/") or "/"
+        if path == "/admin" or path.startswith("/admin/"):
+            return "Not Found", 404
+
+
 
 @app.template_global()
 def product_image_url(image, fallback="editorial-hero.jpg"):
