@@ -684,7 +684,7 @@
         function switchDashTab(tabName, btn) {
             document.querySelectorAll('.dashboard-tab-content').forEach(el => el.style.display = 'none');
             document.querySelectorAll('.dash-tab-btn').forEach(el => el.classList.remove('active'));
-
+            
             const target = document.getElementById('tab-' + tabName);
             if (target) target.style.display = 'block';
             if (btn) btn.classList.add('active');

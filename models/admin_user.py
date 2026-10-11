@@ -21,6 +21,19 @@ class AdminUser(db.Model):
     studio_email = db.Column(db.String(100), default="contact@tulsawear.com")
     studio_address = db.Column(db.String(255), default="Tulsa Wears Atelier, Hansi, Haryana, India - 125033")
     studio_hours = db.Column(db.String(100), default="Mon – Sat: 10:00 AM – 7:00 PM IST")
+
+    # Warehouse & Shipping Logistics
+    warehouse_pincode = db.Column(db.String(20), default="125033")
+    warehouse_city = db.Column(db.String(100), default="Hansi")
+    warehouse_state = db.Column(db.String(100), default="Haryana")
+    warehouse_address = db.Column(db.String(255), default="Tulsa Wears Atelier, Hansi")
+    shiprocket_email = db.Column(db.String(150), default="")
+    shiprocket_password = db.Column(db.String(255), default="")
+    shiprocket_token = db.Column(db.Text, default="")
+    shiprocket_token_expiry = db.Column(db.DateTime, nullable=True)
+    shipping_fallback_enabled = db.Column(db.Boolean, default=True)
+    shipping_flat_fallback = db.Column(db.Float, default=0.0)
+
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 

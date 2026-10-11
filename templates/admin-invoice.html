@@ -367,7 +367,7 @@
         <table class="total-summary-table">
             <tr>
                 <td style="color: #666;">Subtotal:</td>
-                <td style="text-align: right;">₹{{ "{:,.0f}".format(order.price + (order.discount_amount or 0)) }}</td>
+                <td style="text-align: right;">₹{{ "{:,.0f}".format(order.price - (order.shipping_fee or 0) + (order.discount_amount or 0)) }}</td>
             </tr>
             {% if order.coupon_code %}
             <tr style="color: #2e7d32;">
@@ -377,7 +377,13 @@
             {% endif %}
             <tr>
                 <td style="color: #666;">Delivery & Insured Shipping:</td>
-                <td style="text-align: right; color: #2e7d32; font-weight: 600;">Complimentary (₹0)</td>
+                <td style="text-align: right; {% if order.shipping_fee and order.shipping_fee > 0 %}color: #111;{% else %}color: #2e7d32; font-weight: 600;{% endif %}">
+                    {% if order.shipping_fee and order.shipping_fee > 0 %}
+                        ₹{{ "{:,.0f}".format(order.shipping_fee) }} {% if order.shipping_service %}<span style="font-size: 11px; color: #666;">({{ order.shipping_service }})</span>{% endif %}
+                    {% else %}
+                        Complimentary (₹0)
+                    {% endif %}
+                </td>
             </tr>
             <tr class="final-row">
                 <td>Net Total:</td>

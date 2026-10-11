@@ -256,6 +256,7 @@ p {
     width: 100%;
     height: 80px;
     z-index: 5;
+    pointer-events: none;
 }
 
 .wave-ivory-to-dark::after {
@@ -1100,10 +1101,13 @@ p {
 ===================================================== */
 
 .ai-section {
-    background: var(--bg-cream);
+    background: radial-gradient(circle at 50% 30%, #1e1b18 0%, #12100e 100%);
+    color: var(--text-inverse);
     padding: var(--space-3xl) var(--page-padding);
     position: relative;
     overflow: hidden;
+    border-top: 1px solid rgba(201, 169, 110, 0.2);
+    border-bottom: 1px solid rgba(201, 169, 110, 0.2);
 }
 
 .ai-section::before {
@@ -1113,9 +1117,18 @@ p {
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 400px;
-    color: var(--bg-parchment);
-    opacity: 0.4;
+    color: rgba(201, 169, 110, 0.05);
+    opacity: 0.8;
     pointer-events: none;
+}
+
+.ai-section h2 {
+    color: var(--text-inverse);
+}
+
+.ai-section .eyebrow {
+    color: var(--accent-gold);
+    letter-spacing: 0.25em;
 }
 
 .ai-content {
@@ -1127,18 +1140,19 @@ p {
     font-family: "Inter", sans-serif;
     font-size: 11px;
     padding: 10px 18px;
-    border: 1px solid var(--border-light);
-    background: white;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.05);
     cursor: pointer;
     border-radius: 24px;
     transition: all var(--duration-fast) ease;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(8px);
 }
 
 .ai-chip:hover {
-    background: var(--text-primary);
-    color: white;
-    border-color: var(--text-primary);
+    background: var(--accent-gold);
+    color: #12100e;
+    border-color: var(--accent-gold);
 }
 
 

@@ -104,7 +104,7 @@
                 <div>
                     <form action="{% if is_cart_checkout %}{{ url_for('checkout') }}{% else %}{{ url_for('buy_now', product_id=product.id) }}{% endif %}" method="POST" id="mainCheckoutForm">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-
+                        
                         <!-- Step 1: Customer Account & Contact -->
                         <div class="checkout-card">
                             <div class="checkout-card-header">
@@ -318,9 +318,21 @@
                             <span id="coSubtotal">₹{{ "{:,.0f}".format(subtotal if subtotal else (total if is_cart_checkout else product.price)) }}</span>
                         </div>
 
-                        <div class="bag-calc-line">
-                            <span>Insured Pan-India Courier</span>
-                            <span style="color: #2e7d32; font-weight: 500;">Complimentary</span>
+                        <div class="bag-calc-line" id="coShippingRow">
+                            <span id="coShippingLabel">
+                                {% if shipping_quote and shipping_quote.serviceable %}
+                                {{ shipping_quote.provider }} ({{ shipping_quote.estimated_days }} days)
+                                {% else %}
+                                Insured Express Delivery
+                                {% endif %}
+                            </span>
+                            <span id="coShippingValue" style="{% if shipping_quote and shipping_quote.shipping_fee == 0 %}color: #2e7d32; font-weight: 500;{% else %}font-weight: 600;{% endif %}">
+                                {% if shipping_quote and shipping_quote.serviceable %}
+                                    {% if shipping_quote.shipping_fee == 0 %}Complimentary{% else %}₹{{ "{:,.0f}".format(shipping_quote.shipping_fee) }}{% endif %}
+                                {% else %}
+                                    Calculated at PIN code
+                                {% endif %}
+                            </span>
                         </div>
 
                         <div class="bag-calc-line" id="coDiscountRow" style="display: {% if discount_amount and discount_amount > 0 %}flex{% else %}none{% endif %}; color: var(--accent-burgundy); font-weight: 600;">
@@ -374,7 +386,7 @@
     <div id="customerLoginModal" class="size-chart-modal" role="dialog" aria-modal="true" style="display:none;">
         <div style="background: #fff; max-width: 480px; width: 100%; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 32px 28px; position: relative;">
             <button type="button" onclick="closeCustomerLoginModal()" style="position: absolute; top: 16px; right: 18px; background: none; border: none; font-size: 26px; cursor: pointer; line-height: 1;">&times;</button>
-
+            
             <div style="text-align: center; margin-bottom: 20px;">
                 <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" style="width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #c9a96e; margin-bottom: 8px;">
                 <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; margin: 0;">Tulsa by Anjali</h3>
@@ -558,7 +570,7 @@
                     document.getElementById('coAppliedWrapper').style.display = 'flex';
                     document.getElementById('coAppliedCode').innerText = data.coupon_code;
                     document.getElementById('coAppliedDiscount').innerText = '(-₹' + Math.round(data.discount_amount).toLocaleString() + ')';
-
+                    
                     document.getElementById('coDiscountRow').style.display = 'flex';
                     document.getElementById('coDiscountDisplay').innerText = '-₹' + Math.round(data.discount_amount).toLocaleString();
                     document.getElementById('coTotalDisplay').innerText = '₹' + Math.round(data.final_total).toLocaleString();
@@ -587,6 +599,71 @@
                 window.location.reload();
             } catch (err) {
                 window.location.reload();
+            }
+        }
+
+        // Live Shipping Quote Recalculation on PIN code
+        let shippingDebounce = null;
+        async function fetchLiveShippingQuote(pincode) {
+            const cleanPin = pincode.replace(/\D/g, '');
+            if (cleanPin.length !== 6) return;
+
+            const labelEl = document.getElementById('coShippingLabel');
+            const valEl = document.getElementById('coShippingValue');
+            const totalEl = document.getElementById('coTotalDisplay');
+
+            if (labelEl) labelEl.innerText = "Calculating courier rate...";
+            if (valEl) valEl.innerText = "Checking...";
+
+            try {
+                const res = await fetch('/api/shipping/quote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pincode: cleanPin,
+                        {% if not is_cart_checkout and product %}
+                        product_id: {{ product.id }}
+                        {% endif %}
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.serviceable) {
+                    if (labelEl) labelEl.innerText = (data.provider || 'Express Courier') + (data.estimated_days ? ` (${data.estimated_days} days)` : '');
+                    if (valEl) {
+                        if (data.shipping_fee === 0) {
+                            valEl.innerText = "Complimentary";
+                            valEl.style.color = "#2e7d32";
+                        } else {
+                            valEl.innerText = '₹' + Math.round(data.shipping_fee).toLocaleString();
+                            valEl.style.color = "inherit";
+                        }
+                    }
+                    if (totalEl && data.final_total !== undefined) {
+                        totalEl.innerText = '₹' + Math.round(data.final_total).toLocaleString();
+                    }
+                } else {
+                    if (labelEl) labelEl.innerText = "Delivery Unavailable";
+                    if (valEl) {
+                        valEl.innerText = data.message || "Not serviceable";
+                        valEl.style.color = "#c0392b";
+                    }
+                }
+            } catch (err) {
+                if (labelEl) labelEl.innerText = "Insured Delivery";
+                if (valEl) valEl.innerText = "Calculated at order";
+            }
+        }
+
+        const pincodeInput = document.getElementById('pincode');
+        if (pincodeInput) {
+            pincodeInput.addEventListener('input', (e) => {
+                clearTimeout(shippingDebounce);
+                shippingDebounce = setTimeout(() => {
+                    fetchLiveShippingQuote(e.target.value);
+                }, 400);
+            });
+            if (pincodeInput.value && pincodeInput.value.trim().length === 6) {
+                fetchLiveShippingQuote(pincodeInput.value.trim());
             }
         }
 

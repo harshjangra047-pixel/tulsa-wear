@@ -404,7 +404,7 @@
                     <p style="font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: #555; margin-bottom: 10px;">
                         Tap Your Preferred UPI App to Pay Directly:
                     </p>
-
+                    
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
                         <!-- Google Pay -->
                         <a href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa" onclick="trackPaymentLaunch('Google Pay')" class="app-pay-btn" style="background: #ffffff; color: #1f1f1f; border: 1.5px solid #4285F4; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.2s;">
@@ -454,9 +454,15 @@
                     <span>OR SCAN QR WITH ANY CAMERA / UPI APP</span>
                     <span style="height: 1px; width: 40px; background: var(--border);"></span>
                 </div>
-                <!-- Dynamic QR Code Image -->
-                <div class="qr-image-wrapper">
-                    <img id="upiQrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi%3A%2F%2Fpay%3Fpa%3D{{ upi_id }}%26pn%3D{{ upi_payee_name|urlencode }}%26am%3D{{ order.price }}%26cu%3DINR%26tn%3DOrder_{{ order.id }}" alt="Scan UPI QR Code">
+                <!-- Dynamic QR Code Image with multi-service & canvas fallback -->
+                <div class="qr-image-wrapper" id="qrWrapper">
+                    <img id="upiQrImage"
+                         src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=upi%3A%2F%2Fpay%3Fpa%3D{{ upi_id }}%26pn%3D{{ upi_payee_name|urlencode }}%26am%3D{{ order.price }}%26cu%3DINR%26tn%3DOrder_{{ order.id }}"
+                         onerror="handleQrFallback(this)"
+                         alt="Scan UPI QR Code"
+                         width="220"
+                         height="220">
+                    <div id="qrFallbackCanvas" style="display: none;"></div>
                 </div>
 
                 <div style="font-size: 12px; color: #333; margin-top: 4px;">
@@ -588,7 +594,37 @@ function switchPaymentMethod(method) {
 
         const qrImg = document.getElementById('upiQrImage');
         if (qrImg) {
-            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiUrl);
+            qrImg.dataset.attempt = "0";
+            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(upiUrl);
+        }
+    }
+}
+
+function handleQrFallback(imgEl) {
+    const attempt = parseInt(imgEl.dataset.attempt || "0", 10);
+    const note = encodeURIComponent('Order #' + orderId);
+    const upiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + basePrice + '&cu=INR&tn=' + note;
+
+    if (attempt === 0) {
+        imgEl.dataset.attempt = "1";
+        // Fallback 1: QuickChart QR API
+        imgEl.src = 'https://quickchart.io/qr?size=220&text=' + encodeURIComponent(upiUrl);
+    } else if (attempt === 1) {
+        imgEl.dataset.attempt = "2";
+        // Fallback 2: Google Chart QR API
+        imgEl.src = 'https://chart.googleapis.com/chart?chs=220x220&cht=qr&chl=' + encodeURIComponent(upiUrl);
+    } else {
+        // Fallback 3: Text notification with direct links
+        imgEl.style.display = 'none';
+        const fallbackBox = document.getElementById('qrFallbackCanvas');
+        if (fallbackBox) {
+            fallbackBox.style.display = 'block';
+            fallbackBox.innerHTML = `
+                <div style="padding: 16px; background: #fff8e1; border: 1px dashed #f57f17; border-radius: 4px; font-size: 12px; color: #555;">
+                    <p style="margin: 0 0 8px; font-weight: 600; color: #e65100;">📲 Use Direct UPI App Links Above</p>
+                    <p style="margin: 0;">Tap <strong>Google Pay</strong>, <strong>PhonePe</strong>, or <strong>Paytm</strong> above to open your payment app directly, or copy the UPI ID below.</p>
+                </div>
+            `;
         }
     }
 }
