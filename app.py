@@ -453,7 +453,7 @@ def ensure_schema_migrations():
             "permanent_phone": "VARCHAR(50) DEFAULT '9350439667'",
             "additional_emails": "TEXT DEFAULT ''",
             "reset_otp": "VARCHAR(10)",
-            "reset_otp_expiry": "DATETIME",
+            "reset_otp_expiry": "TIMESTAMP",
             "studio_email": "VARCHAR(100) DEFAULT 'contact@tulsawear.com'",
             "studio_address": "VARCHAR(255) DEFAULT 'Tulsa Wears Atelier, Hansi, Haryana, India - 125033'",
             "studio_hours": "VARCHAR(100) DEFAULT 'Mon – Sat: 10:00 AM – 7:00 PM IST'",
@@ -464,7 +464,7 @@ def ensure_schema_migrations():
             "shiprocket_email": "VARCHAR(150) DEFAULT ''",
             "shiprocket_password": "VARCHAR(255) DEFAULT ''",
             "shiprocket_token": "TEXT DEFAULT ''",
-            "shiprocket_token_expiry": "DATETIME",
+            "shiprocket_token_expiry": "TIMESTAMP",
             "shipping_fallback_enabled": "BOOLEAN DEFAULT 1",
             "shipping_flat_fallback": "FLOAT DEFAULT 0.0"
         }
