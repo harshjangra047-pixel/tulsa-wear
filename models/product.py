@@ -51,6 +51,27 @@ class Product(db.Model):
         default=False
     )
 
+    # Shipping attributes
+    weight_kg = db.Column(
+        db.Float,
+        default=0.5
+    )
+
+    length_cm = db.Column(
+        db.Float,
+        default=30.0
+    )
+
+    width_cm = db.Column(
+        db.Float,
+        default=25.0
+    )
+
+    height_cm = db.Column(
+        db.Float,
+        default=5.0
+    )
+
     created_at = db.Column(
         db.DateTime,
         server_default=db.func.now()

@@ -9,10 +9,12 @@
 
     <meta charset="UTF-8">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121316">
+    <link rel="icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}">
 
     <meta
         name="description"
@@ -87,8 +89,9 @@
 
     <header class="navbar" id="top">
 
-        <a href="{{ url_for('home') }}" class="logo">
-            TULSA — BY ANJALI
+        <a href="{{ url_for('home') }}" class="logo" style="display:inline-flex;align-items:center;gap:10px;">
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="logo-img" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;box-shadow:0 2px 10px rgba(0,0,0,0.15);background:#fff;">
+            <span>TULSA <span style="font-size:0.75em;opacity:0.85;font-weight:400;letter-spacing:0.12em;">BY ANJALI</span></span>
         </a>
 
 
@@ -438,48 +441,51 @@
 
             </div>
 
-            <div class="product-rail">
-
-                {% for product in best_sellers %}
-
-                <a
-                    href="{{ url_for('product_detail', product_id=product.id) }}"
-                    class="product-card reveal reveal-delay-{{ loop.index0 % 4 + 1 }}"
-                >
-
-                    <div class="product-image">
-                        <span class="product-badge">Best Seller</span>
-
-                        {% if product.image %}
-                        <img
-                            src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
-                            alt="{{ product.name }}"
-                            loading="lazy"
+            <div class="product-rail-wrapper" style="position: relative;">
+                <div class="product-rail" id="bestsellerRail">
+                    {% if best_sellers %}
+                        {% for product in best_sellers %}
+                        <a
+                            href="{{ url_for('product_detail', product_id=product.id) }}"
+                            class="product-card reveal reveal-delay-{{ loop.index0 % 4 + 1 }}"
                         >
-                        {% endif %}
+                            <div class="product-image">
+                                <span class="product-badge">Best Seller</span>
+                                {% if product.image %}
+                                <img
+                                    src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
+                                    alt="{{ product.name }}"
+                                    loading="lazy"
+                                >
+                                {% endif %}
+                            </div>
+                            <div class="product-info">
+                                <small class="product-category">
+                                    {{ product.category }}
+                                </small>
+                                <h3>
+                                    {{ product.name }}
+                                </h3>
+                                <p class="product-price">
+                                    ₹{{ "{:,.0f}".format(product.price) }}
+                                </p>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    {% else %}
+                        <div style="padding: 40px; text-align: center; color: var(--text-light); width: 100%;">
+                            <p style="font-size: 14px; margin-bottom: 12px;">Curating newest best sellers archive...</p>
+                            <a href="{{ url_for('shop') }}" class="btn-luxury-outline" style="color: #fff; border-color: rgba(255,255,255,0.4);">Explore Entire Shop →</a>
+                        </div>
+                    {% endif %}
+                </div>
 
-                    </div>
-
-                    <div class="product-info">
-
-                        <small class="product-category">
-                            {{ product.category }}
-                        </small>
-
-                        <h3>
-                            {{ product.name }}
-                        </h3>
-
-                        <p class="product-price">
-                            ₹{{ "{:,.0f}".format(product.price) }}
-                        </p>
-
-                    </div>
-
-                </a>
-
-                {% endfor %}
-
+                {% if best_sellers and best_sellers|length > 3 %}
+                <div class="rail-controls" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
+                    <button type="button" onclick="document.getElementById('bestsellerRail').scrollBy({left: -340, behavior: 'smooth'})" aria-label="Previous best sellers" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;">←</button>
+                    <button type="button" onclick="document.getElementById('bestsellerRail').scrollBy({left: 340, behavior: 'smooth'})" aria-label="Next best sellers" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;">→</button>
+                </div>
+                {% endif %}
             </div>
 
             <div class="center-link reveal">
@@ -1211,14 +1217,14 @@
                         type="text"
                         id="aiStylistInput"
                         placeholder="e.g., I need a breathable cotton suit for an outdoor daytime event..."
-                        style="flex: 1; min-width: 240px; padding: 16px 20px; border: 1px solid var(--border-light); background: #fff; font-size: 14px; outline: none; font-family: inherit;"
+                        style="flex: 1; min-width: 240px; padding: 16px 20px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08); color: #fff; font-size: 14px; outline: none; font-family: inherit; border-radius: 2px;"
                         required
                     >
                     <button
                         type="submit"
                         id="aiSubmitBtn"
-                        class="btn-add-bag"
-                        style="padding: 16px 28px;"
+                        class="btn-luxury-gold"
+                        style="padding: 16px 28px; border: none; cursor: pointer;"
                     >
                         Consult Stylist →
                     </button>
@@ -1226,8 +1232,8 @@
 
                 <!-- Visual Outfit Photo Scan -->
                 <div class="reveal" style="margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;">
-                    <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Have a dress photo?</span>
-                    <label style="display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px dashed var(--border-light); padding: 9px 18px; border-radius: 24px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;">
+                    <span style="font-size: 11px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.1em;">Have a dress photo?</span>
+                    <label style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); border: 1px dashed rgba(201,169,110,0.6); color: #fff; padding: 9px 18px; border-radius: 24px; cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.2s;">
                         <span>📸 Upload Dress Photo</span>
                         <input type="file" id="aiPhotoInput" accept="image/*" style="display: none;">
                     </label>

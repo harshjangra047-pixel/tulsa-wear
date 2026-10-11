@@ -1031,6 +1031,16 @@
                                     🏷️ {{ order.coupon_code }} (-₹{{ "{:,.0f}".format(order.discount_amount) }})
                                 </div>
                                 {% endif %}
+                                {% if order.shipping_fee is not none and order.shipping_fee > 0 %}
+                                <div style="margin-top: 4px; font-size: 11px; color: #444; background: #f5f5f5; padding: 2px 6px; border-radius: 2px; display: inline-block;">
+                                    🚚 Shipping: ₹{{ "{:,.0f}".format(order.shipping_fee) }}
+                                    {% if order.shipping_service %}<span style="font-size: 9px; color: #777;">({{ order.shipping_service }})</span>{% endif %}
+                                </div>
+                                {% elif order.shipping_provider %}
+                                <div style="margin-top: 4px; font-size: 10px; color: #2e7d32;">
+                                    🚚 Free Shipping ({{ order.shipping_service or order.shipping_provider }})
+                                </div>
+                                {% endif %}
                             </td>
 
                             <!-- Payment & Proof (UTR / Screenshot) -->

@@ -30,7 +30,8 @@ DEFAULT_SITE_CONTENT = {
 
     # Brand Identity
     "brand_name": "TULSA — BY ANJALI",
-    "brand_tagline": "Handcrafted Slow Fashion • Est. 2025",
+    "brand_tagline": "Handcrafted Slow Fashion • By Anjali",
+    "brand_logo": "tulsa-brand-logo.png",
     "footer_bio": "Tulsa Wears is an artisanal fashion studio dedicated to the slow, thoughtful creation of handmade Indian garments.",
 
     # Hero Section
@@ -241,6 +242,7 @@ def _legacy_site_content() -> dict:
 def get_site_content(preview_draft: bool = False) -> dict:
     """Read the shared database document, importing the old JSON once."""
     try:
+        db.session.expire_all()
         document = SiteContent.query.get(2 if preview_draft else 1)
         if not document:
             content = _legacy_site_content()

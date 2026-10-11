@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 cd "$DIR"
 
 # Stop existing if running
-pkill -f "app.py" 2>/dev/null || true
+pkill -f "tulsa-wear.handmade/app.py" 2>/dev/null || true
 pkill -f "cloudflared" 2>/dev/null || true
 lsof -ti :5050 | xargs kill -9 2>/dev/null || true
 sleep 1

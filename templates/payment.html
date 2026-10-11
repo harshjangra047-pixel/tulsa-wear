@@ -3,7 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121316">
+    <link rel="icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}">
     <title>Complete Payment — {{ brand_name }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -288,9 +293,10 @@
 <body>
 
 <header class="navbar navbar-solid" id="top">
-    <a href="{{ url_for('home') }}" class="logo">
-        {{ brand_name|upper }}
-    </a>
+    <a href="{{ url_for('home') }}" class="logo" style="display:inline-flex;align-items:center;gap:10px;">
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="logo-img" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;box-shadow:0 2px 10px rgba(0,0,0,0.15);background:#fff;">
+            <span>TULSA <span style="font-size:0.75em;opacity:0.85;font-weight:400;letter-spacing:0.12em;">BY ANJALI</span></span>
+        </a>
     <nav class="nav-links">
         <a href="{{ url_for('home') }}">Home</a>
         <a href="{{ url_for('shop') }}">Shop</a>
@@ -393,25 +399,70 @@
                 </div>
 
                 {% if upi_id %}
-                <!-- 1-Tap Mobile UPI App Link -->
-                <div style="margin-top: 12px; margin-bottom: 12px;">
-                    <a id="upiMobileLink" href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tn=Order%20%23{{ order.id }}" class="upi-app-btn">
-                        <span>⚡ Pay with Google Pay / PhonePe / Paytm</span>
-                    </a>
-                    <small style="display: block; color: var(--muted); font-size: 11px; margin-top: 6px;">
-                        On mobile, tap the green button to open GPay, PhonePe, or Paytm automatically.
-                    </small>
+                <!-- Direct 1-Tap Multi-App Payment Options -->
+                <div style="margin-top: 14px; margin-bottom: 16px;">
+                    <p style="font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: #555; margin-bottom: 10px;">
+                        Tap Your Preferred UPI App to Pay Directly:
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+                        <!-- Google Pay -->
+                        <a href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa" onclick="trackPaymentLaunch('Google Pay')" class="app-pay-btn" style="background: #ffffff; color: #1f1f1f; border: 1.5px solid #4285F4; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.2s;">
+                            <span style="font-size: 20px;">🟢</span>
+                            <span>Google Pay</span>
+                            <span style="font-size: 10px; color: #4285F4; font-weight: 500;">Direct App Pay</span>
+                        </a>
+
+                        <!-- PhonePe -->
+                        <a href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa" onclick="trackPaymentLaunch('PhonePe')" class="app-pay-btn" style="background: #5f259f; color: #ffffff; border: 1.5px solid #5f259f; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(95,37,159,0.25); transition: all 0.2s;">
+                            <span style="font-size: 20px;">🟣</span>
+                            <span>PhonePe</span>
+                            <span style="font-size: 10px; color: #e9d5ff; font-weight: 500;">Direct App Pay</span>
+                        </a>
+
+                        <!-- Paytm -->
+                        <a href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa" onclick="trackPaymentLaunch('Paytm')" class="app-pay-btn" style="background: #002e6e; color: #ffffff; border: 1.5px solid #00b9f5; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(0,46,110,0.25); transition: all 0.2s;">
+                            <span style="font-size: 20px;">🔵</span>
+                            <span>Paytm UPI</span>
+                            <span style="font-size: 10px; color: #00b9f5; font-weight: 500;">Direct App Pay</span>
+                        </a>
+
+                        <!-- BHIM / Any UPI -->
+                        <a href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa" onclick="trackPaymentLaunch('BHIM / Other UPI')" class="app-pay-btn" style="background: #f37021; color: #ffffff; border: 1.5px solid #f37021; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(243,112,33,0.25); transition: all 0.2s;">
+                            <span style="font-size: 20px;">🟠</span>
+                            <span>BHIM / Other</span>
+                            <span style="font-size: 10px; color: #fff; font-weight: 500;">All UPI Apps</span>
+                        </a>
+                    </div>
+
+                    <!-- Payment Launch Status Banner -->
+                    <div id="paymentLaunchNotice" style="display: none; background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 6px; padding: 14px 18px; margin-top: 14px; text-align: left;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 20px;">⏳</span>
+                            <div>
+                                <strong style="color: #065f46; font-size: 13.5px;">Payment Initiated in UPI App!</strong>
+                                <p style="margin: 2px 0 0; font-size: 12px; color: #047857;">
+                                    Complete the payment of <strong>₹{{ "{:,.0f}".format(order.price) }}</strong> in your app, then copy your 12-digit UPI UTR number and paste it below to confirm your order.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <div style="margin: 12px 0; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); font-size: 11px; letter-spacing: 0.08em;">
+                <div style="margin: 16px 0; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); font-size: 11px; letter-spacing: 0.08em;">
                     <span style="height: 1px; width: 40px; background: var(--border);"></span>
-                    <span>OR SCAN QR WITH ANY UPI APP</span>
+                    <span>OR SCAN QR WITH ANY CAMERA / UPI APP</span>
                     <span style="height: 1px; width: 40px; background: var(--border);"></span>
                 </div>
-
-                <!-- Dynamic QR Code Image -->
-                <div class="qr-image-wrapper">
-                    <img id="upiQrImage" src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=upi%3A%2F%2Fpay%3Fpa%3D{{ upi_id }}%26pn%3D{{ upi_payee_name|urlencode }}%26am%3D{{ order.price }}%26cu%3DINR%26tn%3DOrder_{{ order.id }}" alt="Scan UPI QR Code">
+                <!-- Dynamic QR Code Image with multi-service & canvas fallback -->
+                <div class="qr-image-wrapper" id="qrWrapper">
+                    <img id="upiQrImage"
+                         src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=upi%3A%2F%2Fpay%3Fpa%3D{{ upi_id }}%26pn%3D{{ upi_payee_name|urlencode }}%26am%3D{{ order.price }}%26cu%3DINR%26tn%3DOrder_{{ order.id }}"
+                         onerror="handleQrFallback(this)"
+                         alt="Scan UPI QR Code"
+                         width="220"
+                         height="220">
+                    <div id="qrFallbackCanvas" style="display: none;"></div>
                 </div>
 
                 <div style="font-size: 12px; color: #333; margin-top: 4px;">
@@ -434,7 +485,7 @@
             <!-- 3. PAYMENT SCREENSHOT UPLOAD SECTION (USER REQUIRED) -->
             <div class="upload-section" id="uploadDropzone">
                 <div class="upload-section-title">
-                    <span>📸</span> 2. Upload Payment Screenshot <span style="color: #c0392b;">*</span>
+                    <span>📸</span> 2. Upload Payment Screenshot <span style="color: #888; font-weight: 400;">(Optional)</span>
                 </div>
                 <div class="upload-section-desc">
                     Take a screenshot of the successful transfer in Google Pay, PhonePe, or Paytm and attach it below.
@@ -543,12 +594,56 @@ function switchPaymentMethod(method) {
 
         const qrImg = document.getElementById('upiQrImage');
         if (qrImg) {
-            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(upiUrl);
+            qrImg.dataset.attempt = "0";
+            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(upiUrl);
         }
     }
 }
 
-function copyUpiId() {
+function handleQrFallback(imgEl) {
+    const attempt = parseInt(imgEl.dataset.attempt || "0", 10);
+    const note = encodeURIComponent('Order #' + orderId);
+    const upiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + basePrice + '&cu=INR&tn=' + note;
+
+    if (attempt === 0) {
+        imgEl.dataset.attempt = "1";
+        // Fallback 1: QuickChart QR API
+        imgEl.src = 'https://quickchart.io/qr?size=220&text=' + encodeURIComponent(upiUrl);
+    } else if (attempt === 1) {
+        imgEl.dataset.attempt = "2";
+        // Fallback 2: Google Chart QR API
+        imgEl.src = 'https://chart.googleapis.com/chart?chs=220x220&cht=qr&chl=' + encodeURIComponent(upiUrl);
+    } else {
+        // Fallback 3: Text notification with direct links
+        imgEl.style.display = 'none';
+        const fallbackBox = document.getElementById('qrFallbackCanvas');
+        if (fallbackBox) {
+            fallbackBox.style.display = 'block';
+            fallbackBox.innerHTML = `
+                <div style="padding: 16px; background: #fff8e1; border: 1px dashed #f57f17; border-radius: 4px; font-size: 12px; color: #555;">
+                    <p style="margin: 0 0 8px; font-weight: 600; color: #e65100;">📲 Use Direct UPI App Links Above</p>
+                    <p style="margin: 0;">Tap <strong>Google Pay</strong>, <strong>PhonePe</strong>, or <strong>Paytm</strong> above to open your payment app directly, or copy the UPI ID below.</p>
+                </div>
+            `;
+        }
+    }
+}
+
+
+        function trackPaymentLaunch(appName) {
+            const notice = document.getElementById('paymentLaunchNotice');
+            if (notice) notice.style.display = 'block';
+            const utrSection = document.querySelector('.utr-section');
+            if (utrSection) {
+                utrSection.scrollIntoView({ behavior: 'smooth' });
+                setTimeout(() => {
+                    const utrInput = document.getElementById('upiUtrInput');
+                    if (utrInput) utrInput.focus();
+                }, 800);
+            }
+        }
+
+        function copyUpiId() {
     if (upiId) {
         navigator.clipboard.writeText(upiId).then(() => {
             alert('✓ Copied UPI ID: ' + upiId);

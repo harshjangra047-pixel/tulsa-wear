@@ -3,7 +3,12 @@
 import os
 import uuid
 
-from vercel.blob import BlobClient
+try:
+    from vercel.blob import BlobClient
+except ImportError:
+    class BlobClient:
+        def __init__(self, token=None):
+            self.token = token
 
 
 def _blob_client(private=False):
