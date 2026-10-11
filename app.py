@@ -465,7 +465,7 @@ def ensure_schema_migrations():
             "shiprocket_password": "VARCHAR(255) DEFAULT ''",
             "shiprocket_token": "TEXT DEFAULT ''",
             "shiprocket_token_expiry": "TIMESTAMP",
-            "shipping_fallback_enabled": "BOOLEAN DEFAULT 1",
+            "shipping_fallback_enabled": "BOOLEAN DEFAULT TRUE",
             "shipping_flat_fallback": "FLOAT DEFAULT 0.0"
         }
         with db.engine.begin() as connection:
