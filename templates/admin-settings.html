@@ -463,6 +463,81 @@
                     </form>
                 </div>
 
+                <!-- 5. Warehouse & Shipping Logistics Configuration -->
+                <div class="card" style="grid-column: 1 / -1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 6px;">
+                        <h2 style="margin: 0;">📦 Warehouse Origin & Shipping Logistics</h2>
+                        <span style="font-size: 11px; background: #e3f2fd; color: #0d47a1; padding: 4px 10px; border-radius: 2px; font-weight: 600;">
+                            Live Distance & Zone Carrier Quotes
+                        </span>
+                    </div>
+                    <p class="card-desc">
+                        Configure the physical dispatch atelier warehouse for Tulsa Wears, postal zone routing, and Shiprocket API credentials for automatic checkout shipping calculations.
+                    </p>
+
+                    <form action="{{ url_for('admin_settings') }}" method="POST">
+                        <input type="hidden" name="action" value="update_shipping_settings">
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                            <!-- Warehouse PIN -->
+                            <div class="form-group">
+                                <label for="warehouse_pincode">Warehouse Pickup PIN Code *</label>
+                                <input type="text" id="warehouse_pincode" name="warehouse_pincode" class="form-control" value="{{ admin_user.warehouse_pincode or '125033' }}" pattern="\d{6}" maxlength="6" required>
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">Origin postal code used for carrier rate calculation.</small>
+                            </div>
+
+                            <!-- Warehouse City -->
+                            <div class="form-group">
+                                <label for="warehouse_city">Warehouse City / District *</label>
+                                <input type="text" id="warehouse_city" name="warehouse_city" class="form-control" value="{{ admin_user.warehouse_city or 'Hansi' }}" required>
+                            </div>
+
+                            <!-- Warehouse State -->
+                            <div class="form-group">
+                                <label for="warehouse_state">Warehouse State *</label>
+                                <input type="text" id="warehouse_state" name="warehouse_state" class="form-control" value="{{ admin_user.warehouse_state or 'Haryana' }}" required>
+                            </div>
+
+                            <!-- Warehouse Address -->
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="warehouse_address">Full Warehouse / Atelier Dispatch Address *</label>
+                                <input type="text" id="warehouse_address" name="warehouse_address" class="form-control" value="{{ admin_user.warehouse_address or 'Tulsa Wears Atelier, Hansi' }}" required>
+                            </div>
+
+                            <!-- Shiprocket Email -->
+                            <div class="form-group">
+                                <label for="shiprocket_email">Shiprocket Account Email (Optional)</label>
+                                <input type="email" id="shiprocket_email" name="shiprocket_email" class="form-control" value="{{ admin_user.shiprocket_email or '' }}" placeholder="courier@tulsawear.com">
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">Connected Shiprocket merchant login for live API quotations.</small>
+                            </div>
+
+                            <!-- Shiprocket Password -->
+                            <div class="form-group">
+                                <label for="shiprocket_password">Shiprocket Account Password</label>
+                                <input type="password" id="shiprocket_password" name="shiprocket_password" class="form-control" placeholder="••••••••" autocomplete="new-password">
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">Leave blank to preserve current credentials.</small>
+                            </div>
+
+                            <!-- Fallback Rate Config -->
+                            <div class="form-group">
+                                <label for="shipping_flat_fallback">Manual Flat Shipping Fallback (₹)</label>
+                                <input type="number" id="shipping_flat_fallback" name="shipping_flat_fallback" class="form-control" value="{{ admin_user.shipping_flat_fallback or 0.0 }}" min="0" step="1">
+                                <small style="color: var(--muted); font-size: 11px; display: block; margin-top: 6px;">Fallback rate if an unmapped remote postal code requires delivery.</small>
+                            </div>
+
+                            <!-- Enable Fallback Checkbox -->
+                            <div class="form-group" style="display: flex; align-items: center; gap: 10px; margin-top: 24px;">
+                                <input type="checkbox" id="shipping_fallback_enabled" name="shipping_fallback_enabled" value="1" {% if admin_user.shipping_fallback_enabled %}checked{% endif %} style="width: 18px; height: 18px;">
+                                <label for="shipping_fallback_enabled" style="margin: 0; font-size: 13px; font-weight: 500;">Enable Manual Fallback for Remote Pin Codes</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-primary" style="margin-top: 10px;">
+                            Save Warehouse & Shipping Logistics →
+                        </button>
+                    </form>
+                </div>
+
                 <!-- 3. Direct Access Portal Links (Full Width) -->
                 <div class="card" style="grid-column: 1 / -1;">
                     <h2>Direct Portal Links & Launch Status</h2>

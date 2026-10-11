@@ -150,6 +150,22 @@ class Order(db.Model):
         default=0.0
     )
 
+    # Shipping attributes
+    shipping_fee = db.Column(
+        db.Float,
+        default=0.0
+    )
+
+    shipping_provider = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    shipping_service = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
     payment_screenshot = db.Column(
         db.String(255),
         nullable=True

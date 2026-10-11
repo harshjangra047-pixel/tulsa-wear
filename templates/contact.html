@@ -3,7 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121316">
+    <link rel="icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}">
     <title>Contact Us — Client Services & Atelier | {{ brand_name }}</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -330,8 +335,9 @@
 
     <!-- NAVBAR -->
     <header class="navbar navbar-solid" id="top">
-        <a href="{{ url_for('home') }}" class="logo">
-            {{ brand_name|upper }}
+        <a href="{{ url_for('home') }}" class="logo" style="display:inline-flex;align-items:center;gap:10px;">
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="logo-img" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;box-shadow:0 2px 10px rgba(0,0,0,0.15);background:#fff;">
+            <span>TULSA <span style="font-size:0.75em;opacity:0.85;font-weight:400;letter-spacing:0.12em;">BY ANJALI</span></span>
         </a>
 
         <nav class="nav-links" id="navLinks">

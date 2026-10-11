@@ -59,8 +59,14 @@ from services.site_content import (
     validate_editor_theme
 )
 from services.private_storage import read_payment_proof, upload_payment_proof
+from services.checkout_calculator import calculate_bag_and_checkout, to_paise, to_rupees
+from services.shipping_service import get_shipping_quote, get_order_package_specs, DEFAULT_WAREHOUSE
 import urllib.parse
 import random
+try:
+    import qrcode
+except ImportError:
+    qrcode = None
 
 
 # =========================================
@@ -194,6 +200,25 @@ def validate_utr(utr_str):
         return False
     return True
 
+
+def get_merchant_upi_config():
+    """Retrieve trusted merchant UPI ID and payee name from admin settings or environment variables."""
+    admin_cfg = AdminUser.query.first()
+    upi_id = ""
+    if admin_cfg and admin_cfg.upi_id:
+        upi_id = admin_cfg.upi_id.strip()
+    if not upi_id:
+        upi_id = os.getenv("MERCHANT_UPI_ID", "9350439667@okbizaxis").strip()
+
+    payee_name = ""
+    if admin_cfg and admin_cfg.upi_payee_name:
+        payee_name = admin_cfg.upi_payee_name.strip()
+    if not payee_name:
+        payee_name = os.getenv("MERCHANT_NAME", "Tulsa Wears").strip()
+
+    return upi_id, payee_name
+
+
 # Admin Anti-Brute-Force Rate Limiting Store
 FAILED_ADMIN_LOGINS = {}  # ip -> {"count": int, "lockout_until": float}
 
@@ -255,8 +280,9 @@ def inject_global_vars():
     return dict(
         cache_id=int(time.time()),
         cms=cms,
-        brand_name=cms.get("brand_name", "Tulsa Wears"),
-        brand_tagline=cms.get("brand_tagline", "Since 2025"),
+        brand_name=cms.get("brand_name", "Tulsa by Anjali"),
+        brand_tagline=cms.get("brand_tagline", "Handcrafted Slow Fashion • By Anjali"),
+        brand_logo=cms.get("brand_logo", "tulsa-brand-logo.png"),
         instagram_handle_1=cms.get("instagram_handle_1", "__aannuuu.06"),
         instagram_handle_2=cms.get("instagram_handle_2", "tulsawear"),
         default_delivery_days=delivery_days,
@@ -367,6 +393,9 @@ def ensure_schema_migrations():
             "customer_id": "INTEGER",
             "coupon_code": "VARCHAR(50)",
             "discount_amount": "FLOAT DEFAULT 0.0",
+            "shipping_fee": "FLOAT DEFAULT 0.0",
+            "shipping_provider": "VARCHAR(100)",
+            "shipping_service": "VARCHAR(100)",
             "manual_payment_verified_by": "VARCHAR(80)",
             "manual_payment_verified_at": "TIMESTAMP"
         }
@@ -376,6 +405,24 @@ def ensure_schema_migrations():
                 if column_name not in existing_order_cols:
                     connection.execute(
                         text(f"ALTER TABLE orders ADD COLUMN {column_name} {column_type}")
+                    )
+
+    if "products" in tables:
+        existing_prod_cols = {
+            column["name"]
+            for column in inspector.get_columns("products")
+        }
+        new_prod_cols = {
+            "weight_kg": "FLOAT DEFAULT 0.5",
+            "length_cm": "FLOAT DEFAULT 30.0",
+            "width_cm": "FLOAT DEFAULT 25.0",
+            "height_cm": "FLOAT DEFAULT 5.0"
+        }
+        with db.engine.begin() as connection:
+            for col_name, col_type in new_prod_cols.items():
+                if col_name not in existing_prod_cols:
+                    connection.execute(
+                        text(f"ALTER TABLE products ADD COLUMN {col_name} {col_type}")
                     )
 
     if "custom_orders" in tables:
@@ -408,7 +455,17 @@ def ensure_schema_migrations():
             "reset_otp_expiry": "DATETIME",
             "studio_email": "VARCHAR(100) DEFAULT 'contact@tulsawear.com'",
             "studio_address": "VARCHAR(255) DEFAULT 'Tulsa Wears Atelier, Hansi, Haryana, India - 125033'",
-            "studio_hours": "VARCHAR(100) DEFAULT 'Mon – Sat: 10:00 AM – 7:00 PM IST'"
+            "studio_hours": "VARCHAR(100) DEFAULT 'Mon – Sat: 10:00 AM – 7:00 PM IST'",
+            "warehouse_pincode": "VARCHAR(20) DEFAULT '125033'",
+            "warehouse_city": "VARCHAR(100) DEFAULT 'Hansi'",
+            "warehouse_state": "VARCHAR(100) DEFAULT 'Haryana'",
+            "warehouse_address": "VARCHAR(255) DEFAULT 'Tulsa Wears Atelier, Hansi'",
+            "shiprocket_email": "VARCHAR(150) DEFAULT ''",
+            "shiprocket_password": "VARCHAR(255) DEFAULT ''",
+            "shiprocket_token": "TEXT DEFAULT ''",
+            "shiprocket_token_expiry": "DATETIME",
+            "shipping_fallback_enabled": "BOOLEAN DEFAULT 1",
+            "shipping_flat_fallback": "FLOAT DEFAULT 0.0"
         }
         with db.engine.begin() as connection:
             for col_name, col_type in admin_cols.items():
@@ -636,69 +693,45 @@ def shop():
 
 @app.route("/bag")
 def bag():
-
-    cart = session.get(
-        "cart",
-        []
-    )
-
-    cart_items = []
-
-    total = 0
-
+    cart = session.get("cart", [])
+    raw_items = []
 
     for item in cart:
-
-        product = Product.query.get(
-            item["product_id"]
-        )
-
+        product = Product.query.get(item["product_id"])
         if product:
+            raw_items.append({
+                "product": product,
+                "quantity": max(1, int(item.get("quantity", 1))),
+                "size": item.get("size", "M"),
+                "top_length": item.get("top_length", "30"),
+                "sleeves_length": item.get("sleeves_length", "18"),
+                "bust": item.get("bust", ""),
+                "waist": item.get("waist", ""),
+                "hip": item.get("hip", ""),
+                "shoulder": item.get("shoulder", "")
+            })
 
-            quantity = item["quantity"]
-
-            subtotal = (
-                product.price * quantity
-            )
-
-            cart_items.append(
-                {
-                    "product": product,
-                    "quantity": quantity,
-                    "subtotal": subtotal,
-                    "size": item.get("size", "M"),
-                    "top_length": item.get("top_length", "30"),
-                    "sleeves_length": item.get("sleeves_length", "18"),
-                    "bust": item.get("bust", ""),
-                    "waist": item.get("waist", ""),
-                    "hip": item.get("hip", ""),
-                    "shoulder": item.get("shoulder", "")
-                }
-            )
-
-            total += subtotal
-
-    # Coupon calculation
+    # Retrieve applied coupon if present
     applied_coupon = session.get("applied_coupon")
-    discount_amount = 0.0
-    if applied_coupon:
+    coupon_obj = None
+    if applied_coupon and applied_coupon.get("code"):
         coupon_obj = Coupon.query.filter_by(code=applied_coupon.get("code"), is_active=True).first()
-        if coupon_obj and total >= (coupon_obj.min_order_amount or 0.0):
-            discount_amount = coupon_obj.calculate_discount(total)
-            applied_coupon["discount_amount"] = discount_amount
-            session["applied_coupon"] = applied_coupon
-        else:
-            session.pop("applied_coupon", None)
-            applied_coupon = None
 
-    final_total = max(0.0, total - discount_amount)
+    calc = calculate_bag_and_checkout(raw_items, coupon_obj=coupon_obj, shipping_paise=0)
+
+    if coupon_obj and calc["coupon_valid"]:
+        applied_coupon["discount_amount"] = calc["discount_amount"]
+        session["applied_coupon"] = applied_coupon
+    elif applied_coupon:
+        session.pop("applied_coupon", None)
+        applied_coupon = None
 
     return render_template(
         "bag.html",
-        cart_items=cart_items,
-        total=final_total,
-        subtotal=total,
-        discount_amount=discount_amount,
+        cart_items=calc["items"],
+        total=calc["total"],
+        subtotal=calc["subtotal"],
+        discount_amount=calc["discount_amount"],
         applied_coupon=applied_coupon
     )
 
@@ -849,23 +882,17 @@ def update_bag_quantity(product_id, action):
 
 @app.route("/checkout", methods=["GET", "POST"])
 def checkout():
-
     cart = session.get("cart", [])
     if not cart:
         return redirect(url_for("shop"))
 
-    cart_items = []
-    total = 0
-
+    raw_items = []
     for item in cart:
         product = Product.query.get(item["product_id"])
         if product:
-            quantity = item["quantity"]
-            subtotal = product.price * quantity
-            cart_items.append({
+            raw_items.append({
                 "product": product,
-                "quantity": quantity,
-                "subtotal": subtotal,
+                "quantity": max(1, int(item.get("quantity", 1))),
                 "size": item.get("size", "M"),
                 "top_length": item.get("top_length", "30"),
                 "sleeves_length": item.get("sleeves_length", "18"),
@@ -874,25 +901,56 @@ def checkout():
                 "hip": item.get("hip", ""),
                 "shoulder": item.get("shoulder", "")
             })
-            total += subtotal
 
-    if not cart_items:
+    if not raw_items:
         session["cart"] = []
         return redirect(url_for("shop"))
 
-    # Coupon calculation
     applied_coupon = session.get("applied_coupon")
-    discount_amount = 0.0
     coupon_obj = None
-    if applied_coupon:
+    if applied_coupon and applied_coupon.get("code"):
         coupon_obj = Coupon.query.filter_by(code=applied_coupon.get("code"), is_active=True).first()
-        if coupon_obj and total >= (coupon_obj.min_order_amount or 0.0):
-            discount_amount = coupon_obj.calculate_discount(total)
-        else:
-            session.pop("applied_coupon", None)
-            applied_coupon = None
 
-    final_total = max(0.0, total - discount_amount)
+    admin_user = AdminUser.query.first()
+    warehouse_info = {
+        "pincode": admin_user.warehouse_pincode if (admin_user and admin_user.warehouse_pincode) else DEFAULT_WAREHOUSE["pincode"],
+        "city": admin_user.warehouse_city if (admin_user and admin_user.warehouse_city) else DEFAULT_WAREHOUSE["city"],
+        "state": admin_user.warehouse_state if (admin_user and admin_user.warehouse_state) else DEFAULT_WAREHOUSE["state"]
+    }
+    shiprocket_creds = {
+        "token": admin_user.shiprocket_token if admin_user else None
+    }
+    fallback_enabled = bool(admin_user.shipping_fallback_enabled) if admin_user else True
+    fallback_amount = float(admin_user.shipping_flat_fallback or 0.0) if admin_user else 0.0
+
+    # Determine destination pincode if available
+    customer_id = session.get("customer_id")
+    current_customer = CustomerUser.query.get(customer_id) if customer_id else None
+    default_pincode = current_customer.pincode if current_customer and current_customer.pincode else ""
+
+    shipping_quote = None
+    shipping_paise = 0
+    if default_pincode:
+        shipping_quote = get_shipping_quote(
+            destination_pincode=default_pincode,
+            destination_country="India",
+            products_with_qty=raw_items,
+            warehouse_info=warehouse_info,
+            shiprocket_creds=shiprocket_creds,
+            fallback_enabled=fallback_enabled,
+            fallback_amount=fallback_amount
+        )
+        if shipping_quote.get("serviceable"):
+            shipping_paise = to_paise(shipping_quote.get("shipping_fee", 0.0))
+
+    calc = calculate_bag_and_checkout(raw_items, coupon_obj=coupon_obj, shipping_paise=shipping_paise)
+
+    if coupon_obj and calc["coupon_valid"]:
+        applied_coupon["discount_amount"] = calc["discount_amount"]
+        session["applied_coupon"] = applied_coupon
+    elif applied_coupon:
+        session.pop("applied_coupon", None)
+        applied_coupon = None
 
     if request.method == "POST":
         name = request.form.get("name", "").strip()
@@ -916,39 +974,54 @@ def checkout():
             flash("⚠️ Please enter a valid 6-digit Indian PIN code.", "danger")
             return redirect(url_for("checkout"))
 
+        # Recalculate shipping quote for customer's submitted address
+        order_shipping_quote = get_shipping_quote(
+            destination_pincode=clean_pincode,
+            destination_country="India",
+            products_with_qty=raw_items,
+            warehouse_info=warehouse_info,
+            shiprocket_creds=shiprocket_creds,
+            fallback_enabled=fallback_enabled,
+            fallback_amount=fallback_amount
+        )
+
+        if not order_shipping_quote.get("serviceable"):
+            flash(f"⚠️ Delivery Serviceability Notice: {order_shipping_quote.get('error')}", "danger")
+            return redirect(url_for("checkout"))
+
+        order_shipping_fee = float(order_shipping_quote.get("shipping_fee", 0.0))
+        final_calc = calculate_bag_and_checkout(
+            raw_items,
+            coupon_obj=coupon_obj,
+            shipping_paise=to_paise(order_shipping_fee)
+        )
+
         phone = clean_phone
         pincode = clean_pincode
 
         # Sizing and Measurements from form or first cart item
-        size = request.form.get("size", "").strip() or cart_items[0].get("size", "M")
-        top_length = request.form.get("top_length", "").strip() or cart_items[0].get("top_length", "30")
-        sleeves_length = request.form.get("sleeves_length", "").strip() or cart_items[0].get("sleeves_length", "18")
-        bust = request.form.get("bust", "").strip() or cart_items[0].get("bust", "")
-        waist = request.form.get("waist", "").strip() or cart_items[0].get("waist", "")
-        hip = request.form.get("hip", "").strip() or cart_items[0].get("hip", "")
-        shoulder = request.form.get("shoulder", "").strip() or cart_items[0].get("shoulder", "")
+        size = request.form.get("size", "").strip() or raw_items[0].get("size", "M")
+        top_length = request.form.get("top_length", "").strip() or raw_items[0].get("top_length", "30")
+        sleeves_length = request.form.get("sleeves_length", "").strip() or raw_items[0].get("sleeves_length", "18")
+        bust = request.form.get("bust", "").strip() or raw_items[0].get("bust", "")
+        waist = request.form.get("waist", "").strip() or raw_items[0].get("waist", "")
+        hip = request.form.get("hip", "").strip() or raw_items[0].get("hip", "")
+        shoulder = request.form.get("shoulder", "").strip() or raw_items[0].get("shoulder", "")
 
         tracking_id = f"TW-TRACK-{uuid.uuid4().hex[:6].upper()}"
-        try:
-            admin_user = AdminUser.query.first()
-            est_days = admin_user.default_delivery_days if admin_user else 10
-        except Exception:
-            est_days = 10
+        est_days = order_shipping_quote.get("estimated_days") or (admin_user.default_delivery_days if admin_user else 10)
         est_date = (datetime.now() + timedelta(days=est_days)).strftime("%A, %d %b %Y")
 
-        items_summary = ", ".join([f"{item['product'].name} (x{item['quantity']})" for item in cart_items])
+        items_summary = ", ".join([f"{item['product'].name} (x{item['quantity']})" for item in raw_items])
 
         # Customer Account Creation / Linking
-        customer_id = session.get("customer_id")
         account_password = request.form.get("account_password", "").strip()
-        customer = None
-        if customer_id:
-            customer = CustomerUser.query.get(customer_id)
-            if not customer or customer.phone != phone:
+        customer = current_customer
+        if customer:
+            if customer.phone != phone:
                 flash("Sign in to the account that owns this mobile number, or continue with another number as a guest.", "danger")
                 return redirect(url_for("checkout"))
-        elif account_password and len(account_password) >= 12:
-            # Never attach an order to an existing account based on phone alone.
+        elif account_password and len(account_password) >= 6:
             if not CustomerUser.query.filter_by(phone=phone).first():
                 customer = CustomerUser(
                     name=name,
@@ -961,18 +1034,12 @@ def checkout():
                 customer.set_password(account_password)
                 db.session.add(customer)
                 db.session.commit()
-                try:
-                    reg_traffic = TrafficLog(event_type="register", ip_address=request.remote_addr, page_url="/checkout", customer_id=customer.id)
-                    db.session.add(reg_traffic)
-                    db.session.commit()
-                except Exception:
-                    pass
                 _establish_customer_session(customer)
 
         new_order = Order(
-            product_id=cart_items[0]["product"].id,
+            product_id=raw_items[0]["product"].id,
             product_name=items_summary,
-            price=final_total,
+            price=final_calc["total"],
             customer_name=name,
             phone=phone,
             email=email,
@@ -991,9 +1058,12 @@ def checkout():
             estimated_delivery_days=est_days,
             estimated_delivery_date=est_date,
             advance_paid=0.0,
-            balance_due=final_total,
+            balance_due=final_calc["total"],
             coupon_code=applied_coupon.get("code") if applied_coupon else None,
-            discount_amount=discount_amount,
+            discount_amount=final_calc["discount_amount"],
+            shipping_fee=order_shipping_fee,
+            shipping_provider=order_shipping_quote.get("provider", "Insured Courier"),
+            shipping_service=order_shipping_quote.get("service", "Standard"),
             status="Payment Pending"
         )
 
@@ -1018,7 +1088,7 @@ def checkout():
 
         if razorpay_client is not None:
             try:
-                amount_in_paise = int(round(final_total * 100))
+                amount_in_paise = int(round(final_calc["total"] * 100))
                 razorpay_order = razorpay_client.order.create({
                     "amount": amount_in_paise,
                     "currency": "INR",
@@ -1033,14 +1103,13 @@ def checkout():
             db.session.commit()
 
         admin_cfg = AdminUser.query.first()
-        active_razorpay_key = RAZORPAY_KEY_ID
-        active_upi_id = admin_cfg.upi_id if admin_cfg else ""
-        active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
+        active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+        active_upi_id, active_upi_name = get_merchant_upi_config()
 
         return render_template(
             "payment.html",
             order=new_order,
-            product=cart_items[0]["product"],
+            product=raw_items[0]["product"],
             razorpay_key_id=active_razorpay_key,
             upi_id=active_upi_id,
             upi_payee_name=active_upi_name
@@ -1048,12 +1117,13 @@ def checkout():
 
     return render_template(
         "checkout.html",
-        product=cart_items[0]["product"],
-        cart_items=cart_items,
-        total=final_total,
-        subtotal=total,
-        discount_amount=discount_amount,
+        product=raw_items[0]["product"],
+        cart_items=calc["items"],
+        total=calc["total"],
+        subtotal=calc["subtotal"],
+        discount_amount=calc["discount_amount"],
         applied_coupon=applied_coupon,
+        shipping_quote=shipping_quote,
         is_cart_checkout=True
     )
 
@@ -1099,18 +1169,54 @@ def buy_now(product_id):
     # Coupon calculation
     applied_coupon = session.get("applied_coupon")
     discount_amount = 0.0
+    # Retrieve applied coupon if present
+    applied_coupon = session.get("applied_coupon")
     coupon_obj = None
-    if applied_coupon:
+    if applied_coupon and applied_coupon.get("code"):
         coupon_obj = Coupon.query.filter_by(code=applied_coupon.get("code"), is_active=True).first()
-        if coupon_obj and product.price >= (coupon_obj.min_order_amount or 0.0):
-            discount_amount = coupon_obj.calculate_discount(product.price)
-        else:
-            applied_coupon = None
 
-    final_price = max(0.0, product.price - discount_amount)
+    admin_user = AdminUser.query.first()
+    warehouse_info = {
+        "pincode": admin_user.warehouse_pincode if (admin_user and admin_user.warehouse_pincode) else DEFAULT_WAREHOUSE["pincode"],
+        "city": admin_user.warehouse_city if (admin_user and admin_user.warehouse_city) else DEFAULT_WAREHOUSE["city"],
+        "state": admin_user.warehouse_state if (admin_user and admin_user.warehouse_state) else DEFAULT_WAREHOUSE["state"]
+    }
+    shiprocket_creds = {
+        "token": admin_user.shiprocket_token if admin_user else None
+    }
+    fallback_enabled = bool(admin_user.shipping_fallback_enabled) if admin_user else True
+    fallback_amount = float(admin_user.shipping_flat_fallback or 0.0) if admin_user else 0.0
+
+    customer_id = session.get("customer_id")
+    current_customer = CustomerUser.query.get(customer_id) if customer_id else None
+    default_pincode = current_customer.pincode if current_customer and current_customer.pincode else ""
+
+    single_item = [{"product": product, "quantity": 1}]
+    shipping_quote = None
+    shipping_paise = 0
+    if default_pincode:
+        shipping_quote = get_shipping_quote(
+            destination_pincode=default_pincode,
+            destination_country="India",
+            products_with_qty=single_item,
+            warehouse_info=warehouse_info,
+            shiprocket_creds=shiprocket_creds,
+            fallback_enabled=fallback_enabled,
+            fallback_amount=fallback_amount
+        )
+        if shipping_quote.get("serviceable"):
+            shipping_paise = to_paise(shipping_quote.get("shipping_fee", 0.0))
+
+    calc = calculate_bag_and_checkout(single_item, coupon_obj=coupon_obj, shipping_paise=shipping_paise)
+
+    if coupon_obj and calc["coupon_valid"]:
+        applied_coupon["discount_amount"] = calc["discount_amount"]
+        session["applied_coupon"] = applied_coupon
+    elif applied_coupon:
+        session.pop("applied_coupon", None)
+        applied_coupon = None
 
     if request.method == "POST":
-
         name = request.form.get("name", "").strip()
         phone = request.form.get("phone", "").strip()
         email = request.form.get("email", "").strip()
@@ -1132,6 +1238,27 @@ def buy_now(product_id):
             flash("⚠️ Please enter a valid 6-digit Indian PIN code.", "danger")
             return redirect(url_for("buy_now", product_id=product.id))
 
+        order_shipping_quote = get_shipping_quote(
+            destination_pincode=clean_pincode,
+            destination_country="India",
+            products_with_qty=single_item,
+            warehouse_info=warehouse_info,
+            shiprocket_creds=shiprocket_creds,
+            fallback_enabled=fallback_enabled,
+            fallback_amount=fallback_amount
+        )
+
+        if not order_shipping_quote.get("serviceable"):
+            flash(f"⚠️ Delivery Serviceability Notice: {order_shipping_quote.get('error')}", "danger")
+            return redirect(url_for("buy_now", product_id=product.id))
+
+        order_shipping_fee = float(order_shipping_quote.get("shipping_fee", 0.0))
+        final_calc = calculate_bag_and_checkout(
+            single_item,
+            coupon_obj=coupon_obj,
+            shipping_paise=to_paise(order_shipping_fee)
+        )
+
         phone = clean_phone
         pincode = clean_pincode
 
@@ -1145,24 +1272,17 @@ def buy_now(product_id):
         shoulder = request.form.get("shoulder", "").strip()
 
         tracking_id = f"TW-TRACK-{uuid.uuid4().hex[:6].upper()}"
-        try:
-            admin_user = AdminUser.query.first()
-            est_days = admin_user.default_delivery_days if admin_user else 10
-        except Exception:
-            est_days = 10
+        est_days = order_shipping_quote.get("estimated_days") or (admin_user.default_delivery_days if admin_user else 10)
         est_date = (datetime.now() + timedelta(days=est_days)).strftime("%A, %d %b %Y")
 
         # Customer Account Creation / Linking
-        customer_id = session.get("customer_id")
         account_password = request.form.get("account_password", "").strip()
-        customer = None
-        if customer_id:
-            customer = CustomerUser.query.get(customer_id)
-            if not customer or customer.phone != phone:
+        customer = current_customer
+        if customer:
+            if customer.phone != phone:
                 flash("Sign in to the account that owns this mobile number, or continue with another number as a guest.", "danger")
                 return redirect(url_for("buy_now", product_id=product.id))
-        elif account_password and len(account_password) >= 12:
-            # Never attach an order to an existing account based on phone alone.
+        elif account_password and len(account_password) >= 6:
             if not CustomerUser.query.filter_by(phone=phone).first():
                 customer = CustomerUser(
                     name=name,
@@ -1175,18 +1295,12 @@ def buy_now(product_id):
                 customer.set_password(account_password)
                 db.session.add(customer)
                 db.session.commit()
-                try:
-                    reg_traffic = TrafficLog(event_type="register", ip_address=request.remote_addr, page_url=f"/buy-now/{product.id}", customer_id=customer.id)
-                    db.session.add(reg_traffic)
-                    db.session.commit()
-                except Exception:
-                    pass
                 _establish_customer_session(customer)
 
         new_order = Order(
             product_id=product.id,
             product_name=product.name,
-            price=final_price,
+            price=final_calc["total"],
             customer_name=name,
             phone=phone,
             email=email,
@@ -1205,9 +1319,12 @@ def buy_now(product_id):
             estimated_delivery_days=est_days,
             estimated_delivery_date=est_date,
             advance_paid=0.0,
-            balance_due=final_price,
+            balance_due=final_calc["total"],
             coupon_code=applied_coupon.get("code") if applied_coupon else None,
-            discount_amount=discount_amount,
+            discount_amount=final_calc["discount_amount"],
+            shipping_fee=order_shipping_fee,
+            shipping_provider=order_shipping_quote.get("provider", "Insured Courier"),
+            shipping_service=order_shipping_quote.get("service", "Standard"),
             status="Payment Pending"
         )
 
@@ -1228,13 +1345,9 @@ def buy_now(product_id):
         session.pop("applied_coupon", None)
         session.modified = True
 
-        # =================================
-        # RAZORPAY OR DEV PAYMENT FLOW
-        # =================================
-
         if razorpay_client is not None:
             try:
-                amount_in_paise = int(round(final_price * 100))
+                amount_in_paise = int(round(final_calc["total"] * 100))
                 razorpay_order = razorpay_client.order.create(
                     {
                         "amount": amount_in_paise,
@@ -1248,18 +1361,12 @@ def buy_now(product_id):
                 app.logger.error(f"Razorpay order creation error: {e}")
 
         else:
-            # Development Mode order ID
             new_order.razorpay_order_id = f"atelier_dev_{new_order.id}"
             db.session.commit()
 
-        # =================================
-        # OPEN PAYMENT PAGE
-        # =================================
-
         admin_cfg = AdminUser.query.first()
-        active_razorpay_key = RAZORPAY_KEY_ID
-        active_upi_id = admin_cfg.upi_id if admin_cfg else ""
-        active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
+        active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+        active_upi_id, active_upi_name = get_merchant_upi_config()
 
         return render_template(
             "payment.html",
@@ -1269,11 +1376,6 @@ def buy_now(product_id):
             upi_id=active_upi_id,
             upi_payee_name=active_upi_name
         )
-
-
-    # =====================================
-    # OPEN CHECKOUT PAGE
-    # =====================================
 
     sizing_defaults = {
         "size": request.args.get("size", "M").strip(),
@@ -1289,10 +1391,12 @@ def buy_now(product_id):
         "checkout.html",
         product=product,
         sizing=sizing_defaults,
-        total=final_price,
-        subtotal=product.price,
-        discount_amount=discount_amount,
-        applied_coupon=applied_coupon
+        total=calc["total"],
+        subtotal=calc["subtotal"],
+        discount_amount=calc["discount_amount"],
+        applied_coupon=applied_coupon,
+        shipping_quote=shipping_quote,
+        is_cart_checkout=False
     )
 
 
@@ -1301,6 +1405,8 @@ def buy_now(product_id):
 # =========================================
 
 def _can_access_order(order):
+    if session.get("admin_logged_in"):
+        return True
     customer_id = session.get("customer_id")
     if customer_id and order.customer_id == customer_id:
         return True
@@ -1310,14 +1416,13 @@ def _can_access_order(order):
 @app.route("/submit-payment-proof/<int:order_id>", methods=["GET"])
 @app.route("/confirm-dev-payment/<int:order_id>", methods=["GET"])
 def view_payment_step(order_id):
-    order = Order.query.get_or_404(order_id)
-    if not _can_access_order(order):
+    order = db.session.get(Order, order_id) if hasattr(db.session, "get") else Order.query.get_or_404(order_id)
+    if not order or not _can_access_order(order):
         return "Not found", 404
-    product = Product.query.get(order.product_id) or Product.query.first()
+    product = (db.session.get(Product, order.product_id) if hasattr(db.session, "get") else Product.query.get(order.product_id)) or Product.query.first()
     admin_cfg = AdminUser.query.first()
-    active_razorpay_key = RAZORPAY_KEY_ID
-    active_upi_id = admin_cfg.upi_id if admin_cfg else ""
-    active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
+    active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+    active_upi_id, active_upi_name = get_merchant_upi_config()
     return render_template(
         "payment.html",
         order=order,
@@ -1326,6 +1431,64 @@ def view_payment_step(order_id):
         upi_id=active_upi_id,
         upi_payee_name=active_upi_name
     )
+
+
+# =========================================
+# DYNAMIC UPI QR CODE API
+# =========================================
+
+@app.route("/api/order/<int:order_id>/upi-qr.png")
+def get_order_upi_qr(order_id):
+    order = db.session.get(Order, order_id) if hasattr(db.session, "get") else Order.query.get_or_404(order_id)
+    if not order or not _can_access_order(order):
+        return "Not found", 404
+
+    upi_id, payee_name = get_merchant_upi_config()
+    amount = float(order.price)
+    note = f"Order_{order.id}_Tulsa"
+    txn_ref = f"{order.id}"
+
+    upi_uri = f"upi://pay?pa={upi_id}&pn={urllib.parse.quote(payee_name)}&am={amount:.2f}&cu=INR&tr={txn_ref}&tn={note}"
+
+    if qrcode is not None:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=8,
+            border=3,
+        )
+        qr.add_data(upi_uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="#121316", back_color="#ffffff")
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+    else:
+        return redirect(f"https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={urllib.parse.quote(upi_uri)}")
+
+
+@app.route("/api/order/<int:order_id>/payment-qr-details")
+def get_order_payment_qr_details(order_id):
+    order = db.session.get(Order, order_id) if hasattr(db.session, "get") else Order.query.get_or_404(order_id)
+    if not order or not _can_access_order(order):
+        return jsonify({"success": False, "message": "Order not found"}), 404
+
+    upi_id, payee_name = get_merchant_upi_config()
+    amount = float(order.price)
+    note = f"Order_{order.id}_Tulsa"
+    txn_ref = f"{order.id}"
+    upi_uri = f"upi://pay?pa={upi_id}&pn={urllib.parse.quote(payee_name)}&am={amount:.2f}&cu=INR&tr={txn_ref}&tn={note}"
+
+    return jsonify({
+        "success": True,
+        "order_id": order.id,
+        "amount": amount,
+        "upi_id": upi_id,
+        "payee_name": payee_name,
+        "upi_uri": upi_uri,
+        "qr_image_url": url_for("get_order_upi_qr", order_id=order.id)
+    })
 
 
 @app.route(
@@ -1344,7 +1507,14 @@ def submit_payment_proof(order_id):
         return "Order is no longer accepting payment submissions", 409
 
     payment_method = request.form.get("payment_method", "").strip()
-    if payment_method not in {"UPI (GPay / PhonePe / QR)", "Cash on Delivery"}:
+    valid_upi_methods = {
+        "UPI (GPay / PhonePe / QR)",
+        "Google Pay",
+        "PhonePe",
+        "Paytm / UPI",
+        "UPI"
+    }
+    if payment_method not in valid_upi_methods and payment_method != "Cash on Delivery":
         return "Invalid payment method", 400
 
     if payment_method == "Cash on Delivery":
@@ -1362,24 +1532,17 @@ def submit_payment_proof(order_id):
         flash("⚠️ Please enter a genuine UPI UTR / Transaction Reference ID (min 8 alphanumeric characters from your payment app).", "danger")
         return redirect(url_for("view_payment_step", order_id=order.id))
 
-    # Store submitted payment evidence privately; it is never payment confirmation.
+    # Store submitted payment evidence privately; optional screenshot, mandatory UTR
     if "payment_screenshot" in request.files:
         file = request.files["payment_screenshot"]
-        if not file or not file.filename:
-            flash("Please select a JPG, PNG, or WebP payment screenshot.", "danger")
-            return redirect(url_for("view_payment_step", order_id=order.id))
-        try:
-            order.payment_screenshot = upload_payment_proof(file, order.id)
-        except ValueError as exc:
-            flash(str(exc), "danger")
-            return redirect(url_for("view_payment_step", order_id=order.id))
-        except Exception as exc:
-            app.logger.warning("Private payment-proof storage unavailable (%s)", type(exc).__name__)
-            flash("Private proof storage is not configured or is temporarily unavailable. No payment proof was saved.", "danger")
-            return redirect(url_for("view_payment_step", order_id=order.id))
-    else:
-        flash("⚠️ Payment screenshot is required to verify your transaction.", "danger")
-        return redirect(url_for("view_payment_step", order_id=order.id))
+        if file and file.filename:
+            try:
+                order.payment_screenshot = upload_payment_proof(file, order.id)
+            except ValueError as exc:
+                flash(str(exc), "danger")
+                return redirect(url_for("view_payment_step", order_id=order.id))
+            except Exception as exc:
+                app.logger.warning("Private payment-proof storage unavailable (%s)", type(exc).__name__)
 
     order.payment_method = payment_method
     order.status = "Payment Verification Required"
@@ -1722,10 +1885,10 @@ def customer_register():
     city = (data.get("city") or "").strip()
     pincode = (data.get("pincode") or "").strip()
 
-    if not name or not phone or len(password) < 12:
+    if not name or not phone or len(password) < 6:
         if request.is_json:
-            return jsonify({"success": False, "message": "Name, mobile number, and a password of at least 12 characters are required."}), 400
-        flash("Name, mobile number, and a password of at least 12 characters are required.", "danger")
+            return jsonify({"success": False, "message": "Name, mobile number, and a password of at least 6 characters are required."}), 400
+        flash("Name, mobile number, and a password of at least 6 characters are required.", "danger")
         return redirect(request.referrer or url_for("checkout"))
 
     is_valid_phone, clean_phone = validate_indian_phone(phone)
@@ -1789,7 +1952,11 @@ def customer_login():
     if is_valid_phone:
         phone = clean_phone
 
-    customer = CustomerUser.query.filter_by(phone=phone).first()
+    customer = CustomerUser.query.filter((CustomerUser.phone == phone) | (CustomerUser.email == phone)).first()
+    if not customer:
+        is_valid_phone, clean_phone = validate_indian_phone(phone)
+        if is_valid_phone:
+            customer = CustomerUser.query.filter_by(phone=clean_phone).first()
     if not customer:
         if request.is_json:
             return jsonify({"success": False, "message": "No account found with this phone number. Please register."}), 404
@@ -2270,7 +2437,8 @@ def admin_export_orders_csv():
     writer.writerow([
         "Order ID", "Tracking ID", "Created Date", "Customer Name", "Mobile Phone",
         "Email", "Delivery Address", "City", "PIN Code", "Product Items",
-        "Total Price (INR)", "Payment Method", "Advance Paid (INR)", "Balance Due (INR)",
+        "Total Price (INR)", "Shipping Fee (INR)", "Shipping Provider", "Shipping Service",
+        "Payment Method", "Advance Paid (INR)", "Balance Due (INR)",
         "UPI UTR", "Status", "Size", "Top Length", "Sleeves Length", "Bust", "Waist", "Hip", "Shoulder"
     ])
     for o in orders:
@@ -2286,6 +2454,9 @@ def admin_export_orders_csv():
             o.pincode or "",
             o.product_name or "",
             o.price or 0.0,
+            o.shipping_fee or 0.0,
+            o.shipping_provider or "",
+            o.shipping_service or "",
             o.payment_method or "",
             o.advance_paid or 0.0,
             o.balance_due or 0.0,
@@ -2660,6 +2831,26 @@ def admin_add_product():
     except (ValueError, TypeError):
         stock = 10
 
+    try:
+        weight_kg = float(request.form.get("weight_kg", 0.5))
+    except (ValueError, TypeError):
+        weight_kg = 0.5
+
+    try:
+        length_cm = float(request.form.get("length_cm", 30.0))
+    except (ValueError, TypeError):
+        length_cm = 30.0
+
+    try:
+        width_cm = float(request.form.get("width_cm", 25.0))
+    except (ValueError, TypeError):
+        width_cm = 25.0
+
+    try:
+        height_cm = float(request.form.get("height_cm", 5.0))
+    except (ValueError, TypeError):
+        height_cm = 5.0
+
     if not name:
         flash("Please enter a name for the new garment.", "warning")
         return redirect(url_for("admin_products"))
@@ -2681,7 +2872,11 @@ def admin_add_product():
         description=description or "A bespoke handcrafted garment created slowly by atelier artisans.",
         image=image_filename,
         stock=stock,
-        best_seller=best_seller
+        best_seller=best_seller,
+        weight_kg=weight_kg,
+        length_cm=length_cm,
+        width_cm=width_cm,
+        height_cm=height_cm
     )
     db.session.add(new_product)
     db.session.commit()
@@ -2712,6 +2907,27 @@ def admin_edit_product(product_id):
             product.stock = stock
     except (ValueError, TypeError):
         pass
+
+    if request.form.get("weight_kg"):
+        try:
+            product.weight_kg = float(request.form.get("weight_kg"))
+        except (ValueError, TypeError):
+            pass
+    if request.form.get("length_cm"):
+        try:
+            product.length_cm = float(request.form.get("length_cm"))
+        except (ValueError, TypeError):
+            pass
+    if request.form.get("width_cm"):
+        try:
+            product.width_cm = float(request.form.get("width_cm"))
+        except (ValueError, TypeError):
+            pass
+    if request.form.get("height_cm"):
+        try:
+            product.height_cm = float(request.form.get("height_cm"))
+        except (ValueError, TypeError):
+            pass
 
     product.category = request.form.get("category", product.category).strip()
     product.fabric = request.form.get("fabric", product.fabric).strip()
@@ -2949,6 +3165,23 @@ def admin_settings():
             db.session.commit()
             flash("UPI display settings saved. Razorpay credentials are read only from server environment variables.", "success")
 
+        elif action == "update_shipping_settings":
+            admin_user.warehouse_pincode = request.form.get("warehouse_pincode", "125033").strip()
+            admin_user.warehouse_city = request.form.get("warehouse_city", "Hansi").strip()
+            admin_user.warehouse_state = request.form.get("warehouse_state", "Haryana").strip()
+            admin_user.warehouse_address = request.form.get("warehouse_address", "Tulsa Wears Atelier, Hansi").strip()
+            admin_user.shiprocket_email = request.form.get("shiprocket_email", "").strip()
+            if request.form.get("shiprocket_password"):
+                admin_user.shiprocket_password = request.form.get("shiprocket_password", "").strip()
+            admin_user.shipping_fallback_enabled = request.form.get("shipping_fallback_enabled") == "1"
+            try:
+                admin_user.shipping_flat_fallback = float(request.form.get("shipping_flat_fallback", 0.0))
+            except (ValueError, TypeError):
+                admin_user.shipping_flat_fallback = 0.0
+
+            db.session.commit()
+            flash("Warehouse origin location & courier logistics settings updated successfully!", "success")
+
         elif action == "update_contact_settings":
             studio_phone = request.form.get("studio_phone", "").strip()
             studio_whatsapp = request.form.get("studio_whatsapp", "").strip()
@@ -3106,17 +3339,24 @@ def admin_delete_inquiry(inquiry_id):
 def api_apply_coupon():
     data = request.get_json(silent=True) or request.form
     code = (data.get("code") or "").strip().upper()
-    try:
-        subtotal = float(data.get("subtotal") or 0.0)
-    except (ValueError, TypeError):
-        subtotal = 0.0
 
-    if subtotal <= 0:
+    product_id = data.get("product_id")
+    raw_items = []
+
+    if product_id:
+        p = Product.query.get(product_id)
+        if p:
+            raw_items.append({"product": p, "quantity": 1})
+    else:
         cart = session.get("cart", [])
         for item in cart:
             p = Product.query.get(item.get("product_id"))
             if p:
-                subtotal += p.price * item.get("quantity", 1)
+                qty = max(1, min(int(item.get("quantity", 1)), p.stock or 999))
+                raw_items.append({"product": p, "quantity": qty})
+
+    if not raw_items:
+        return jsonify({"success": False, "message": "Your bag is empty."}), 400
 
     if not code:
         return jsonify({"success": False, "message": "Please enter a promo / coupon code."}), 400
@@ -3125,33 +3365,32 @@ def api_apply_coupon():
     if not coupon:
         return jsonify({"success": False, "message": f"Coupon code '{code}' is invalid or expired."}), 404
 
-    if subtotal < (coupon.min_order_amount or 0.0):
+    calc = calculate_bag_and_checkout(raw_items, coupon_obj=coupon, shipping_paise=0)
+
+    if not calc["coupon_valid"]:
         return jsonify({
             "success": False,
-            "message": f"Coupon '{code}' requires a minimum order of ₹{coupon.min_order_amount:,.0f}. Your order subtotal is ₹{subtotal:,.0f}."
+            "message": calc["coupon_message"] or f"Coupon '{code}' is not applicable to this order."
         }), 400
-
-    discount = coupon.calculate_discount(subtotal)
-    final_total = max(0.0, subtotal - discount)
 
     session["applied_coupon"] = {
         "id": coupon.id,
         "code": coupon.code,
         "discount_type": coupon.discount_type,
         "discount_value": coupon.discount_value,
-        "discount_amount": discount
+        "discount_amount": calc["discount_amount"]
     }
     session.modified = True
 
     return jsonify({
         "success": True,
-        "message": f"Coupon '{coupon.code}' applied! You saved ₹{discount:,.0f}.",
+        "message": f"Coupon '{coupon.code}' applied! You saved ₹{calc['discount_amount']:,.0f}.",
         "coupon_code": coupon.code,
         "discount_type": coupon.discount_type,
         "discount_value": coupon.discount_value,
-        "discount_amount": discount,
-        "subtotal": subtotal,
-        "final_total": final_total
+        "discount_amount": calc["discount_amount"],
+        "subtotal": calc["subtotal"],
+        "final_total": calc["total"]
     })
 
 
@@ -3160,6 +3399,86 @@ def api_remove_coupon():
     session.pop("applied_coupon", None)
     session.modified = True
     return jsonify({"success": True, "message": "Coupon removed successfully."})
+
+
+# =========================================
+# SHIPPING & COURIER QUOTATION API
+# =========================================
+
+@app.route("/api/shipping/quote", methods=["POST"])
+def api_shipping_quote():
+    data = request.get_json(silent=True) or request.form
+    pincode = (data.get("pincode") or "").strip()
+    country = (data.get("country") or "India").strip()
+    product_id = data.get("product_id")
+
+    raw_items = []
+    if product_id:
+        p = Product.query.get(product_id)
+        if p:
+            raw_items.append({"product": p, "quantity": 1})
+    else:
+        cart = session.get("cart", [])
+        for item in cart:
+            p = Product.query.get(item.get("product_id"))
+            if p:
+                raw_items.append({"product": p, "quantity": max(1, int(item.get("quantity", 1)))})
+
+    admin_user = AdminUser.query.first()
+    warehouse_info = {
+        "pincode": admin_user.warehouse_pincode if (admin_user and admin_user.warehouse_pincode) else DEFAULT_WAREHOUSE["pincode"],
+        "city": admin_user.warehouse_city if (admin_user and admin_user.warehouse_city) else DEFAULT_WAREHOUSE["city"],
+        "state": admin_user.warehouse_state if (admin_user and admin_user.warehouse_state) else DEFAULT_WAREHOUSE["state"]
+    }
+    shiprocket_creds = {
+        "token": admin_user.shiprocket_token if admin_user else None
+    }
+    fallback_enabled = bool(admin_user.shipping_fallback_enabled) if admin_user else True
+    fallback_amount = float(admin_user.shipping_flat_fallback or 0.0) if admin_user else 0.0
+
+    quote = get_shipping_quote(
+        destination_pincode=pincode,
+        destination_country=country,
+        products_with_qty=raw_items,
+        warehouse_info=warehouse_info,
+        shiprocket_creds=shiprocket_creds,
+        fallback_enabled=fallback_enabled,
+        fallback_amount=fallback_amount
+    )
+
+    if not quote.get("serviceable"):
+        return jsonify({
+            "success": False,
+            "serviceable": False,
+            "message": quote.get("error", "Destination is currently not serviceable.")
+        }), 400
+
+    # Also compute new order totals with this shipping fee
+    applied_coupon = session.get("applied_coupon")
+    coupon_obj = None
+    if applied_coupon and applied_coupon.get("code"):
+        coupon_obj = Coupon.query.filter_by(code=applied_coupon.get("code"), is_active=True).first()
+
+    shipping_fee = float(quote.get("shipping_fee", 0.0))
+    calc = calculate_bag_and_checkout(
+        raw_items,
+        coupon_obj=coupon_obj,
+        shipping_paise=to_paise(shipping_fee)
+    )
+
+    return jsonify({
+        "success": True,
+        "serviceable": True,
+        "shipping_fee": shipping_fee,
+        "rate_rupees": shipping_fee,
+        "courier": quote.get("courier") or quote.get("provider"),
+        "provider": quote.get("provider"),
+        "service": quote.get("service"),
+        "estimated_days": quote.get("estimated_days"),
+        "subtotal": calc["subtotal"],
+        "discount_amount": calc["discount_amount"],
+        "final_total": calc["total"]
+    })
 
 
 # =========================================

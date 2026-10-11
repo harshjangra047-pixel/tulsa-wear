@@ -3,7 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#121316">
+    <link rel="icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}">
     <meta name="csrf-token" content="{{ csrf_token }}">
     <meta name="description" content="Secure bespoke checkout at {{ brand_name }}. Hand-tailored Indian ethnic fashion delivered to your doorstep.">
     <title>Checkout — {{ brand_name }}</title>
@@ -23,8 +28,9 @@
          NAVBAR
     ========================================== -->
     <header class="navbar navbar-solid" id="top">
-        <a href="{{ url_for('home') }}" class="logo">
-            {{ brand_name|upper }}
+        <a href="{{ url_for('home') }}" class="logo" style="display:inline-flex;align-items:center;gap:10px;">
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="logo-img" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;box-shadow:0 2px 10px rgba(0,0,0,0.15);background:#fff;">
+            <span>TULSA <span style="font-size:0.75em;opacity:0.85;font-weight:400;letter-spacing:0.12em;">BY ANJALI</span></span>
         </a>
 
         <nav class="nav-links" id="navLinks">
@@ -312,9 +318,21 @@
                             <span id="coSubtotal">₹{{ "{:,.0f}".format(subtotal if subtotal else (total if is_cart_checkout else product.price)) }}</span>
                         </div>
 
-                        <div class="bag-calc-line">
-                            <span>Insured Pan-India Courier</span>
-                            <span style="color: #2e7d32; font-weight: 500;">Complimentary</span>
+                        <div class="bag-calc-line" id="coShippingRow">
+                            <span id="coShippingLabel">
+                                {% if shipping_quote and shipping_quote.serviceable %}
+                                {{ shipping_quote.provider }} ({{ shipping_quote.estimated_days }} days)
+                                {% else %}
+                                Insured Express Delivery
+                                {% endif %}
+                            </span>
+                            <span id="coShippingValue" style="{% if shipping_quote and shipping_quote.shipping_fee == 0 %}color: #2e7d32; font-weight: 500;{% else %}font-weight: 600;{% endif %}">
+                                {% if shipping_quote and shipping_quote.serviceable %}
+                                    {% if shipping_quote.shipping_fee == 0 %}Complimentary{% else %}₹{{ "{:,.0f}".format(shipping_quote.shipping_fee) }}{% endif %}
+                                {% else %}
+                                    Calculated at PIN code
+                                {% endif %}
+                            </span>
                         </div>
 
                         <div class="bag-calc-line" id="coDiscountRow" style="display: {% if discount_amount and discount_amount > 0 %}flex{% else %}none{% endif %}; color: var(--accent-burgundy); font-weight: 600;">
@@ -364,32 +382,88 @@
         </div>
     </div>
 
-    <!-- CUSTOMER LOGIN MODAL -->
-    <div id="customerLoginModal" class="size-chart-modal" role="dialog" aria-modal="true">
-        <div style="background: #fff; max-width: 440px; width: 100%; border-radius: 4px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 36px 32px; position: relative;">
+    <!-- CUSTOMER AUTH MODAL (LOGIN & REGISTER) -->
+    <div id="customerLoginModal" class="size-chart-modal" role="dialog" aria-modal="true" style="display:none;">
+        <div style="background: #fff; max-width: 480px; width: 100%; border-radius: 8px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 32px 28px; position: relative;">
             <button type="button" onclick="closeCustomerLoginModal()" style="position: absolute; top: 16px; right: 18px; background: none; border: none; font-size: 26px; cursor: pointer; line-height: 1;">&times;</button>
-            <p class="eyebrow" style="margin-bottom: 6px; color: var(--accent-burgundy);">RETURNING CLIENT</p>
-            <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 500; margin: 0 0 10px;">Sign In to Profile</h3>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 22px; line-height: 1.5;">Enter your registered mobile phone and password to immediately auto-fill delivery details.</p>
-
-            <div style="margin-bottom: 18px;">
-                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 6px;">Mobile Number</label>
-                <input type="tel" id="loginModalPhone" placeholder="10-digit number" class="luxury-text-input">
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" style="width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #c9a96e; margin-bottom: 8px;">
+                <h3 style="font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 600; margin: 0;">Tulsa by Anjali</h3>
+                <p style="font-size: 12.5px; color: var(--text-muted); margin: 3px 0 0;">Sign in or create an account for 1-click delivery auto-fill & live order tracking</p>
             </div>
 
-            <div style="margin-bottom: 22px;">
-                <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 6px;">Password</label>
-                <input type="password" id="loginModalPassword" placeholder="Your password" class="luxury-text-input">
+            <!-- Modal Nav Tabs -->
+            <div style="display: flex; border-bottom: 2px solid #eee; margin-bottom: 20px;">
+                <button type="button" id="modalTabLogin" onclick="switchAuthTab('login')" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid #c9a96e; font-weight: 600; font-size: 14px; cursor: pointer; color: #1a120c;">
+                    Sign In
+                </button>
+                <button type="button" id="modalTabRegister" onclick="switchAuthTab('register')" style="flex: 1; padding: 10px; background: none; border: none; border-bottom: 3px solid transparent; font-weight: 600; font-size: 14px; cursor: pointer; color: #888;">
+                    Create Account
+                </button>
             </div>
 
-            <div id="loginModalMsg" style="display: none; font-size: 12px; color: #c0392b; margin-bottom: 16px; background: #fdf0ed; padding: 10px 14px; border: 1px solid #f5c6cb; border-radius: 2px;"></div>
+            <!-- TAB 1: SIGN IN -->
+            <div id="authSectionLogin">
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">Mobile Phone or Email</label>
+                    <input type="text" id="loginModalPhone" placeholder="10-digit mobile number or email" class="luxury-text-input">
+                </div>
 
-            <button type="button" id="loginModalBtn" onclick="submitCustomerLogin()" class="btn-bag-checkout" style="margin: 0; padding: 16px;">
-                Sign In to Profile →
-            </button>
+                <div style="margin-bottom: 18px;">
+                    <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">Password</label>
+                    <input type="password" id="loginModalPassword" placeholder="Enter your password" class="luxury-text-input">
+                </div>
+
+                <div id="loginModalMsg" style="display: none; font-size: 12px; color: #c0392b; margin-bottom: 14px; background: #fdf0ed; padding: 10px; border: 1px solid #f5c6cb; border-radius: 4px;"></div>
+
+                <button type="button" id="loginModalBtn" onclick="submitCustomerLogin()" class="btn-bag-checkout" style="margin: 0 0 12px 0; padding: 14px;">
+                    Sign In & Auto-Fill Details →
+                </button>
+            </div>
+
+            <!-- TAB 2: REGISTER -->
+            <div id="authSectionRegister" style="display: none;">
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">Full Name *</label>
+                    <input type="text" id="regModalName" placeholder="Enter your full name" class="luxury-text-input">
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                    <div>
+                        <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">Mobile (+91) *</label>
+                        <input type="tel" id="regModalPhone" placeholder="10-digit mobile" class="luxury-text-input">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">City *</label>
+                        <input type="text" id="regModalCity" placeholder="City" class="luxury-text-input">
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">Email Address</label>
+                    <input type="email" id="regModalEmail" placeholder="Email for invoices" class="luxury-text-input">
+                </div>
+
+                <div style="margin-bottom: 18px;">
+                    <label style="display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--text-primary); font-weight: 600; margin-bottom: 5px;">Set Password (min 6 chars) *</label>
+                    <input type="password" id="regModalPassword" placeholder="Choose account password" class="luxury-text-input">
+                </div>
+
+                <div id="regModalMsg" style="display: none; font-size: 12px; color: #c0392b; margin-bottom: 14px; background: #fdf0ed; padding: 10px; border: 1px solid #f5c6cb; border-radius: 4px;"></div>
+
+                <button type="button" id="regModalBtn" onclick="submitCustomerRegister()" class="btn-bag-checkout" style="margin: 0 0 12px 0; padding: 14px; background: #251b18;">
+                    Create Account & Continue →
+                </button>
+            </div>
+
+            <div style="text-align: center; margin-top: 14px; border-top: 1px solid #f0eae1; padding-top: 12px;">
+                <button type="button" onclick="closeCustomerLoginModal()" style="background: none; border: none; color: #888; font-size: 12px; text-decoration: underline; cursor: pointer;">
+                    Continue as Guest for Now
+                </button>
+            </div>
         </div>
     </div>
-
     <!-- =========================================
          FOOTER
     ========================================== -->
@@ -528,6 +602,71 @@
             }
         }
 
+        // Live Shipping Quote Recalculation on PIN code
+        let shippingDebounce = null;
+        async function fetchLiveShippingQuote(pincode) {
+            const cleanPin = pincode.replace(/\D/g, '');
+            if (cleanPin.length !== 6) return;
+
+            const labelEl = document.getElementById('coShippingLabel');
+            const valEl = document.getElementById('coShippingValue');
+            const totalEl = document.getElementById('coTotalDisplay');
+
+            if (labelEl) labelEl.innerText = "Calculating courier rate...";
+            if (valEl) valEl.innerText = "Checking...";
+
+            try {
+                const res = await fetch('/api/shipping/quote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pincode: cleanPin,
+                        {% if not is_cart_checkout and product %}
+                        product_id: {{ product.id }}
+                        {% endif %}
+                    })
+                });
+                const data = await res.json();
+                if (data.success && data.serviceable) {
+                    if (labelEl) labelEl.innerText = (data.provider || 'Express Courier') + (data.estimated_days ? ` (${data.estimated_days} days)` : '');
+                    if (valEl) {
+                        if (data.shipping_fee === 0) {
+                            valEl.innerText = "Complimentary";
+                            valEl.style.color = "#2e7d32";
+                        } else {
+                            valEl.innerText = '₹' + Math.round(data.shipping_fee).toLocaleString();
+                            valEl.style.color = "inherit";
+                        }
+                    }
+                    if (totalEl && data.final_total !== undefined) {
+                        totalEl.innerText = '₹' + Math.round(data.final_total).toLocaleString();
+                    }
+                } else {
+                    if (labelEl) labelEl.innerText = "Delivery Unavailable";
+                    if (valEl) {
+                        valEl.innerText = data.message || "Not serviceable";
+                        valEl.style.color = "#c0392b";
+                    }
+                }
+            } catch (err) {
+                if (labelEl) labelEl.innerText = "Insured Delivery";
+                if (valEl) valEl.innerText = "Calculated at order";
+            }
+        }
+
+        const pincodeInput = document.getElementById('pincode');
+        if (pincodeInput) {
+            pincodeInput.addEventListener('input', (e) => {
+                clearTimeout(shippingDebounce);
+                shippingDebounce = setTimeout(() => {
+                    fetchLiveShippingQuote(e.target.value);
+                }, 400);
+            });
+            if (pincodeInput.value && pincodeInput.value.trim().length === 6) {
+                fetchLiveShippingQuote(pincodeInput.value.trim());
+            }
+        }
+
         // Customer Login AJAX
         async function submitCustomerLogin() {
             const phoneInput = document.getElementById("loginModalPhone");
@@ -587,6 +726,29 @@
             }
         }
     </script>
+
+    <script>
+        // Trigger login modal when user touches address details if not logged in
+        let hasPromptedLogin = false;
+        function handleAddressFocusPrompt() {
+            {% if not current_customer %}
+            if (!hasPromptedLogin) {
+                hasPromptedLogin = true;
+                openCustomerLoginModal();
+            }
+            {% endif %}
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const addrInputs = ['name', 'phone', 'email', 'address', 'city', 'pincode'];
+            addrInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('focus', handleAddressFocusPrompt, { once: true });
+                }
+            });
+        });
+    </script>
+
 </body>
 
 </html>
