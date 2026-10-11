@@ -63,6 +63,10 @@ from services.checkout_calculator import calculate_bag_and_checkout, to_paise, t
 from services.shipping_service import get_shipping_quote, get_order_package_specs, DEFAULT_WAREHOUSE
 import urllib.parse
 import random
+try:
+    import qrcode
+except ImportError:
+    qrcode = None
 
 
 # =========================================
@@ -195,6 +199,25 @@ def validate_utr(utr_str):
     if any(cleaned == p or cleaned.startswith("TEST") for p in dummy_patterns):
         return False
     return True
+
+
+def get_merchant_upi_config():
+    """Retrieve trusted merchant UPI ID and payee name from admin settings or environment variables."""
+    admin_cfg = AdminUser.query.first()
+    upi_id = ""
+    if admin_cfg and admin_cfg.upi_id:
+        upi_id = admin_cfg.upi_id.strip()
+    if not upi_id:
+        upi_id = os.getenv("MERCHANT_UPI_ID", "9350439667@okbizaxis").strip()
+
+    payee_name = ""
+    if admin_cfg and admin_cfg.upi_payee_name:
+        payee_name = admin_cfg.upi_payee_name.strip()
+    if not payee_name:
+        payee_name = os.getenv("MERCHANT_NAME", "Tulsa Wears").strip()
+
+    return upi_id, payee_name
+
 
 # Admin Anti-Brute-Force Rate Limiting Store
 FAILED_ADMIN_LOGINS = {}  # ip -> {"count": int, "lockout_until": float}
@@ -1080,9 +1103,8 @@ def checkout():
             db.session.commit()
 
         admin_cfg = AdminUser.query.first()
-        active_razorpay_key = RAZORPAY_KEY_ID
-        active_upi_id = admin_cfg.upi_id if admin_cfg else ""
-        active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
+        active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+        active_upi_id, active_upi_name = get_merchant_upi_config()
 
         return render_template(
             "payment.html",
@@ -1343,9 +1365,8 @@ def buy_now(product_id):
             db.session.commit()
 
         admin_cfg = AdminUser.query.first()
-        active_razorpay_key = RAZORPAY_KEY_ID
-        active_upi_id = admin_cfg.upi_id if admin_cfg else ""
-        active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
+        active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+        active_upi_id, active_upi_name = get_merchant_upi_config()
 
         return render_template(
             "payment.html",
@@ -1384,6 +1405,8 @@ def buy_now(product_id):
 # =========================================
 
 def _can_access_order(order):
+    if session.get("admin_logged_in"):
+        return True
     customer_id = session.get("customer_id")
     if customer_id and order.customer_id == customer_id:
         return True
@@ -1393,14 +1416,13 @@ def _can_access_order(order):
 @app.route("/submit-payment-proof/<int:order_id>", methods=["GET"])
 @app.route("/confirm-dev-payment/<int:order_id>", methods=["GET"])
 def view_payment_step(order_id):
-    order = Order.query.get_or_404(order_id)
-    if not _can_access_order(order):
+    order = db.session.get(Order, order_id) if hasattr(db.session, "get") else Order.query.get_or_404(order_id)
+    if not order or not _can_access_order(order):
         return "Not found", 404
-    product = Product.query.get(order.product_id) or Product.query.first()
+    product = (db.session.get(Product, order.product_id) if hasattr(db.session, "get") else Product.query.get(order.product_id)) or Product.query.first()
     admin_cfg = AdminUser.query.first()
-    active_razorpay_key = RAZORPAY_KEY_ID
-    active_upi_id = admin_cfg.upi_id if admin_cfg else ""
-    active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
+    active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+    active_upi_id, active_upi_name = get_merchant_upi_config()
     return render_template(
         "payment.html",
         order=order,
@@ -1409,6 +1431,64 @@ def view_payment_step(order_id):
         upi_id=active_upi_id,
         upi_payee_name=active_upi_name
     )
+
+
+# =========================================
+# DYNAMIC UPI QR CODE API
+# =========================================
+
+@app.route("/api/order/<int:order_id>/upi-qr.png")
+def get_order_upi_qr(order_id):
+    order = db.session.get(Order, order_id) if hasattr(db.session, "get") else Order.query.get_or_404(order_id)
+    if not order or not _can_access_order(order):
+        return "Not found", 404
+
+    upi_id, payee_name = get_merchant_upi_config()
+    amount = float(order.price)
+    note = f"Order_{order.id}_Tulsa"
+    txn_ref = f"{order.id}"
+
+    upi_uri = f"upi://pay?pa={upi_id}&pn={urllib.parse.quote(payee_name)}&am={amount:.2f}&cu=INR&tr={txn_ref}&tn={note}"
+
+    if qrcode is not None:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=8,
+            border=3,
+        )
+        qr.add_data(upi_uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="#121316", back_color="#ffffff")
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+    else:
+        return redirect(f"https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={urllib.parse.quote(upi_uri)}")
+
+
+@app.route("/api/order/<int:order_id>/payment-qr-details")
+def get_order_payment_qr_details(order_id):
+    order = db.session.get(Order, order_id) if hasattr(db.session, "get") else Order.query.get_or_404(order_id)
+    if not order or not _can_access_order(order):
+        return jsonify({"success": False, "message": "Order not found"}), 404
+
+    upi_id, payee_name = get_merchant_upi_config()
+    amount = float(order.price)
+    note = f"Order_{order.id}_Tulsa"
+    txn_ref = f"{order.id}"
+    upi_uri = f"upi://pay?pa={upi_id}&pn={urllib.parse.quote(payee_name)}&am={amount:.2f}&cu=INR&tr={txn_ref}&tn={note}"
+
+    return jsonify({
+        "success": True,
+        "order_id": order.id,
+        "amount": amount,
+        "upi_id": upi_id,
+        "payee_name": payee_name,
+        "upi_uri": upi_uri,
+        "qr_image_url": url_for("get_order_upi_qr", order_id=order.id)
+    })
 
 
 @app.route(
@@ -1427,7 +1507,14 @@ def submit_payment_proof(order_id):
         return "Order is no longer accepting payment submissions", 409
 
     payment_method = request.form.get("payment_method", "").strip()
-    if payment_method not in {"UPI (GPay / PhonePe / QR)", "Cash on Delivery"}:
+    valid_upi_methods = {
+        "UPI (GPay / PhonePe / QR)",
+        "Google Pay",
+        "PhonePe",
+        "Paytm / UPI",
+        "UPI"
+    }
+    if payment_method not in valid_upi_methods and payment_method != "Cash on Delivery":
         return "Invalid payment method", 400
 
     if payment_method == "Cash on Delivery":
@@ -2744,6 +2831,26 @@ def admin_add_product():
     except (ValueError, TypeError):
         stock = 10
 
+    try:
+        weight_kg = float(request.form.get("weight_kg", 0.5))
+    except (ValueError, TypeError):
+        weight_kg = 0.5
+
+    try:
+        length_cm = float(request.form.get("length_cm", 30.0))
+    except (ValueError, TypeError):
+        length_cm = 30.0
+
+    try:
+        width_cm = float(request.form.get("width_cm", 25.0))
+    except (ValueError, TypeError):
+        width_cm = 25.0
+
+    try:
+        height_cm = float(request.form.get("height_cm", 5.0))
+    except (ValueError, TypeError):
+        height_cm = 5.0
+
     if not name:
         flash("Please enter a name for the new garment.", "warning")
         return redirect(url_for("admin_products"))
@@ -2765,7 +2872,11 @@ def admin_add_product():
         description=description or "A bespoke handcrafted garment created slowly by atelier artisans.",
         image=image_filename,
         stock=stock,
-        best_seller=best_seller
+        best_seller=best_seller,
+        weight_kg=weight_kg,
+        length_cm=length_cm,
+        width_cm=width_cm,
+        height_cm=height_cm
     )
     db.session.add(new_product)
     db.session.commit()
@@ -2796,6 +2907,27 @@ def admin_edit_product(product_id):
             product.stock = stock
     except (ValueError, TypeError):
         pass
+
+    if request.form.get("weight_kg"):
+        try:
+            product.weight_kg = float(request.form.get("weight_kg"))
+        except (ValueError, TypeError):
+            pass
+    if request.form.get("length_cm"):
+        try:
+            product.length_cm = float(request.form.get("length_cm"))
+        except (ValueError, TypeError):
+            pass
+    if request.form.get("width_cm"):
+        try:
+            product.width_cm = float(request.form.get("width_cm"))
+        except (ValueError, TypeError):
+            pass
+    if request.form.get("height_cm"):
+        try:
+            product.height_cm = float(request.form.get("height_cm"))
+        except (ValueError, TypeError):
+            pass
 
     product.category = request.form.get("category", product.category).strip()
     product.fabric = request.form.get("fabric", product.fabric).strip()

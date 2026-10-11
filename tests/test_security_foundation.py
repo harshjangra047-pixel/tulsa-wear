@@ -249,7 +249,11 @@ with admin_app.app.app_context():
     db.session.add(Product(name='Shared test product', price=1234.0, category='Test', stock=4))
     db.session.commit()
 """
+        with site.app.app_context():
+            site.db.session.remove()
+            site.db.engine.dispose()
         env = dict(os.environ)
+        env["DATABASE_URL"] = site.app.config.get("SQLALCHEMY_DATABASE_URI", env.get("DATABASE_URL"))
         env["PYTHONDONTWRITEBYTECODE"] = "1"
         env["PYTHONPATH"] = os.pathsep.join(filter(None, ["/tmp/tulsa-wears-test-deps", env.get("PYTHONPATH", "")]))
         result = subprocess.run([sys.executable, "-c", writer], cwd=admin_root, env=env,
