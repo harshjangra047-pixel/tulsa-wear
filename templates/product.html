@@ -88,7 +88,7 @@
                                 {% if product.image or product.gallery_images %}
                                 {% set gallery_items = product.gallery_images|list %}
 {% if gallery_items %}
-    {% set gallery_primary = product.image or gallery_items[0].image_url %}
+    {% set gallery_primary = gallery_items[0].image_url %}
 {% else %}
     {% set gallery_primary = product.image %}
 {% endif %}
