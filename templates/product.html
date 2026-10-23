@@ -85,10 +85,10 @@
                     <div class="pdp-3d-stage" id="pdp3dStage">
                         <div class="pdp-interactive-frame" id="pdpFrame">
                             <div class="pdp-main-image-wrap">
-                                {% if product.image %}
+                                {% if product.image or product.gallery_images %}
                                 {% set gallery_items = product.gallery_images|list %}
 {% if gallery_items %}
-    {% set gallery_primary = gallery_items[0].image_url %}
+    {% set gallery_primary = product.image or gallery_items[0].image_url %}
 {% else %}
     {% set gallery_primary = product.image %}
 {% endif %}
@@ -97,10 +97,10 @@
 <div class="pdp-gallery-stage">
     <img
         id="mainPdpImage"
-        src="{% if gallery_primary.startswith(('http://', 'https://')) %}{{ gallery_primary }}{% else %}{{ product_image_url(gallery_primary) }}{% endif %}?v={{ cache_id }}"
+        src="{{ product_image_url(gallery_primary) }}?v={{ cache_id }}"
         alt="{{ product.name }}"
         loading="eager"
-        onerror="this.onerror=null;this.src='{{ product_image_url("editorial-hero.jpg") }}';"
+        onerror="this.onerror=null;this.alt='Product photo unavailable';this.classList.add('image-unavailable');this.removeAttribute('src');"
     >
 </div>
 
@@ -110,12 +110,12 @@
     <button
         type="button"
         class="pdp-gallery-thumb{% if loop.first %} active{% endif %}"
-        data-full-src="{{ gallery_image.image_url }}"
+        data-full-src="{{ product_image_url(gallery_image.image_url) }}"
         data-alt="{{ product.name }} photo {{ loop.index }}"
         aria-label="View {{ product.name }} photo {{ loop.index }}"
     >
         <img
-            src="{{ gallery_image.image_url }}"
+            src="{{ product_image_url(gallery_image.image_url) }}"
             alt="{{ product.name }} thumbnail {{ loop.index }}"
             loading="lazy"
         >
@@ -390,6 +390,32 @@
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
     <script>
+        // Product gallery: each thumbnail switches the main image to that exact upload.
+        (function () {
+            const mainImage = document.getElementById("mainPdpImage");
+            const thumbnails = document.querySelectorAll(".pdp-gallery-thumb");
+            if (!mainImage || !thumbnails.length) return;
+            thumbnails.forEach(function (thumbnail) {
+                thumbnail.addEventListener("click", function () {
+                    const nextSrc = thumbnail.getAttribute("data-full-src");
+                    if (!nextSrc) return;
+                    mainImage.onerror = function () {
+                        mainImage.onerror = null;
+                        mainImage.alt = "Product photo unavailable";
+                        mainImage.classList.add("image-unavailable");
+                        mainImage.removeAttribute("src");
+                    };
+                    mainImage.src = nextSrc;
+                    mainImage.alt = thumbnail.getAttribute("data-alt") || mainImage.alt;
+                    mainImage.classList.remove("image-unavailable");
+                    thumbnails.forEach(function (item) {
+                        item.classList.toggle("active", item === thumbnail);
+                        item.setAttribute("aria-pressed", item === thumbnail ? "true" : "false");
+                    });
+                });
+            });
+        })();
+
         // AI Product Q&A Interaction
         document.querySelectorAll(".ai-qa-chip").forEach(function(chip) {
             chip.addEventListener("click", function() {

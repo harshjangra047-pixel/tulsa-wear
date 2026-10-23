@@ -148,6 +148,13 @@
             background: #eee;
         }
 
+        .prod-thumb-placeholder {
+            width: 58px; height: 74px; box-sizing: border-box; padding: 5px;
+            display: flex; align-items: center; justify-content: center; text-align: center;
+            color: var(--muted); background: #f0ece6; border: 1px dashed var(--border);
+            border-radius: 2px; font-size: 9px;
+        }
+
         .price-input {
             width: 90px;
             padding: 6px 10px;
@@ -458,7 +465,11 @@
                                 <td>
                                     <div class="photo-upload-box">
                                         <a href="{{ url_for('product_detail', product_id=p.id) }}" target="_blank">
-                                            <img src="{{ product_image_url(p.image, 'product-1.jpg') }}?v={{ cache_id }}" alt="{{ p.name }}" class="prod-thumb">
+                                            {% if p.image %}
+                                            <img src="{{ product_image_url(p.image) }}?v={{ cache_id }}" alt="{{ p.name }}" class="prod-thumb" onerror="this.onerror=null;this.replaceWith(Object.assign(document.createElement('span'),{className:'prod-thumb-placeholder',textContent:'Photo unavailable'}));">
+                                        {% else %}
+                                            <span class="prod-thumb-placeholder">No photo</span>
+                                        {% endif %}
                                         </a>
                                     </div>
                                 </td>
@@ -497,9 +508,9 @@
                                 <!-- PHOTO UPLOAD MINI FORM -->
                                 <td>
                                     <form action="{{ url_for('admin_update_product_image', product_id=p.id) }}" method="POST" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 6px;">
-                                        <input type="file" name="image" id="file_{{ p.id }}" accept="image/*" required style="display: none;" onchange="this.form.submit()">
+                                        <input type="file" name="images" id="file_{{ p.id }}" accept="image/jpeg,image/png,image/webp,image/avif" multiple required style="display: none;" onchange="submitProductPhotoForm(this.form, this)">
                                         <label for="file_{{ p.id }}" class="file-label-btn">
-                                            📷 Choose Photo
+                                            📷 Choose Photos (up to 8)
                                         </label>
                                     </form>
                                 </td>
@@ -580,8 +591,8 @@
                         </div>
 
                         <div class="form-group-admin">
-                            <label>Garment Photograph (.jpg, .jpeg, .png, .webp)</label>
-                            <input type="file" name="image" accept="image/*" style="padding: 10px; border: 1px dashed var(--border); width: 100%; box-sizing: border-box; background: #faf8f5;">
+                            <label>Garment Photos (JPG, PNG, WEBP, AVIF — select up to 8)</label>
+                            <input type="file" name="images" accept="image/jpeg,image/png,image/webp,image/avif" multiple style="padding: 10px; border: 1px dashed var(--border); width: 100%; box-sizing: border-box; background: #faf8f5;">
                         </div>
 
                         <!-- Shipping Parcel Specifications -->
@@ -733,8 +744,8 @@
                 </div>
 
                 <div class="form-group-admin">
-                    <label>Replace Photo (Optional)</label>
-                    <input type="file" name="image" accept="image/*" style="padding: 10px; border: 1px dashed var(--border); width: 100%; box-sizing: border-box; background: #faf8f5;">
+                    <label>Replace Gallery Photos (Optional — select up to 8)</label>
+                    <input type="file" name="images" accept="image/jpeg,image/png,image/webp,image/avif" multiple style="padding: 10px; border: 1px dashed var(--border); width: 100%; box-sizing: border-box; background: #faf8f5;">
                 </div>
 
                 <!-- Shipping Parcel Specifications -->
@@ -769,6 +780,81 @@
     </div>
 
     <script>
+        // Compress selected photos before posting them to a Vercel Function.
+        // This keeps multi-photo uploads below common serverless request-size limits.
+        async function prepareProductPhotoInput(input) {
+            const files = Array.from(input.files || []);
+            if (files.length > 8) throw new Error("Choose no more than 8 garment photos.");
+            const transfer = new DataTransfer();
+            for (const file of files) {
+                let outputFile = file;
+                if (file.type && file.type.startsWith("image/")) {
+                    let bitmap = null;
+                    try {
+                        bitmap = await createImageBitmap(file);
+                        const scale = Math.min(1, 1800 / bitmap.width, 2200 / bitmap.height);
+                        if (scale < 1 || file.size > 450 * 1024 || files.length > 1) {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+                            canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+                            const context = canvas.getContext("2d");
+                            context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+                            const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/webp", 0.88));
+                            if (blob && blob.size < file.size) {
+                                const baseName = file.name.replace(/\.[^.]+$/, "");
+                                outputFile = new File([blob], baseName + ".webp", {
+                                    type: "image/webp", lastModified: Date.now()
+                                });
+                            }
+                        }
+                    } catch (error) {
+                        // Keep the original if this browser cannot decode a specific image format.
+                    } finally {
+                        if (bitmap && bitmap.close) bitmap.close();
+                    }
+                }
+                transfer.items.add(outputFile);
+            }
+            input.files = transfer.files;
+            const totalBytes = Array.from(input.files).reduce((sum, file) => sum + file.size, 0);
+            if (totalBytes > 3.7 * 1024 * 1024) {
+                input.dataset.productPhotosOptimized = "";
+                throw new Error("The selected photos are still too large for a reliable upload. Choose smaller photos or fewer at once (limit: about 3.7 MB total).");
+            }
+            input.dataset.productPhotosOptimized = "1";
+        }
+
+        async function submitProductPhotoForm(form, input) {
+            if (!form || form.dataset.submittingPhotos === "1") return;
+            form.dataset.submittingPhotos = "1";
+            try {
+                await prepareProductPhotoInput(input);
+                form.submit();
+            } catch (error) {
+                form.dataset.submittingPhotos = "";
+                alert(error.message || "Could not prepare those photos. Please try smaller images.");
+            }
+        }
+
+        document.querySelectorAll('form input[type="file"][name="images"]').forEach(function (input) {
+            const form = input.closest("form");
+            if (!form || input.id.startsWith("file_")) return;
+            form.addEventListener("submit", async function (event) {
+                if (form.dataset.productPhotosReady === "1") return;
+                event.preventDefault();
+                try {
+                    for (const imageInput of form.querySelectorAll('input[type="file"][name="images"]')) {
+                        await prepareProductPhotoInput(imageInput);
+                    }
+                    form.dataset.productPhotosReady = "1";
+                    form.submit();
+                } catch (error) {
+                    form.dataset.productPhotosReady = "";
+                    alert(error.message || "Could not prepare those photos. Please try smaller images.");
+                }
+            });
+        });
+
         function openTab(evt, tabName) {
             const contents = document.querySelectorAll('.tab-content');
             contents.forEach(el => el.classList.remove('active'));

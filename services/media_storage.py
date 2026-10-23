@@ -22,7 +22,10 @@ def _blob_client(private=False):
 
 
 def put_public_image(path_prefix, content, content_type="image/webp"):
-    pathname = f"{path_prefix.rstrip('/')}/{uuid.uuid4().hex}.webp"
+    extension = {
+        "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif",
+    }.get(content_type, "webp")
+    pathname = f"{path_prefix.rstrip('/')}/{uuid.uuid4().hex}.{extension}"
     client = _blob_client(private=False)
     try:
         result = client.put(pathname, content, access="public", content_type=content_type, add_random_suffix=False)

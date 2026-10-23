@@ -8,6 +8,7 @@ import io
 import csv
 import json
 import hashlib
+import mimetypes
 
 import razorpay
 
@@ -60,6 +61,7 @@ from services.site_content import (
     validate_editor_theme
 )
 from services.private_storage import read_payment_proof, upload_payment_proof
+from services.media_storage import put_public_image
 from services.checkout_calculator import calculate_bag_and_checkout, to_paise, to_rupees
 from services.shipping_service import get_shipping_quote, get_order_package_specs, DEFAULT_WAREHOUSE
 import urllib.parse
@@ -87,18 +89,19 @@ app = Flask(__name__)
 
 @app.template_global()
 def product_image_url(image, fallback="editorial-hero.jpg"):
-    """
-    Supports:
-    - existing local image filenames
-    - absolute Vercel Blob URLs uploaded by the Admin Portal
-    """
+    """Return a working URL for a Vercel Blob URL or legacy local image filename."""
     if image:
         image = str(image).strip()
-        if image.startswith(("http://", "https://")):
+        if image.startswith(("http://", "https://", "/")):
             return image
+        if image.startswith("static/"):
+            image = image[len("static/"):]
+        if image.startswith("images/"):
+            return url_for("static", filename=image)
         return url_for("static", filename=f"images/{image}")
-
-    return url_for("static", filename=f"images/{fallback}")
+    if fallback and str(fallback).startswith(("http://", "https://", "/")):
+        return str(fallback)
+    return url_for("static", filename=f"images/{fallback or 'editorial-hero.jpg'}")
 
 # Persistent High-Entropy Cryptographic Session Key
 SECRET_KEY_FILE = os.path.join(app.root_path, ".session_secret")
@@ -162,6 +165,80 @@ def is_valid_image_file(file_storage):
         except Exception:
             pass
         return False
+
+
+def store_product_image(file_storage, prefix="products"):
+    """Persist a real product image; use Vercel Blob in production, local disk only for local dev."""
+    if not file_storage or not file_storage.filename:
+        raise ValueError("Choose at least one garment photo.")
+    if not allowed_file(file_storage.filename):
+        raise ValueError("Use JPG, JPEG, PNG, WEBP, or AVIF images only.")
+    if not is_valid_image_file(file_storage):
+        raise ValueError(f"'{file_storage.filename}' is not a readable image file.")
+
+    extension = file_storage.filename.rsplit(".", 1)[1].lower()
+    content = file_storage.read()
+    if not content:
+        raise ValueError(f"'{file_storage.filename}' is empty.")
+    content_type = file_storage.mimetype or {
+        "jpg": "image/jpeg", "jpeg": "image/jpeg", "png": "image/png",
+        "webp": "image/webp", "avif": "image/avif",
+    }.get(extension, "application/octet-stream")
+
+    # Product media must be durable in a serverless deployment. A successful upload
+    # must produce a public Blob URL saved into the database, not a temporary filename.
+    has_public_token = bool(os.getenv("PUBLIC_BLOB_READ_WRITE_TOKEN")) or (
+        os.getenv("VERCEL") == "1" and bool(os.getenv("BLOB_READ_WRITE_TOKEN"))
+    )
+    if has_public_token:
+        try:
+            return put_public_image(prefix, content, content_type=content_type)
+        except Exception as exc:
+            raise RuntimeError(f"Vercel Blob upload failed: {exc}") from exc
+
+    if PRODUCTION_RUNTIME or os.getenv("VERCEL") == "1":
+        raise RuntimeError(
+            "Product photo storage is not configured. Add PUBLIC_BLOB_READ_WRITE_TOKEN "
+            "or BLOB_READ_WRITE_TOKEN to this Vercel project and redeploy."
+        )
+
+    # Local development fallback only. These filenames should not be used in Vercel production.
+    safe_name = f"prod_{uuid.uuid4().hex[:16]}.{extension}"
+    os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+    with open(os.path.join(app.config["UPLOAD_FOLDER"], safe_name), "wb") as output:
+        output.write(content)
+    return safe_name
+
+
+def apply_product_images(product, image_urls, replace_gallery=False):
+    """Set the cover photo and persist ordered gallery URLs in product_images."""
+    if not image_urls:
+        return
+    product.image = image_urls[0]
+
+    existing = sorted(
+        list(product.gallery_images),
+        key=lambda item: (item.sort_order or 0, item.id or 0),
+    )
+    if replace_gallery:
+        product.gallery_images.clear()
+        for order, image_url in enumerate(image_urls):
+            product.gallery_images.append(
+                ProductImage(image_url=image_url, sort_order=order)
+            )
+        return
+
+    # A one-photo quick replacement changes the cover and the first gallery slide,
+    # but keeps any other previously uploaded gallery photos.
+    if existing:
+        existing[0].image_url = image_urls[0]
+        existing[0].sort_order = 0
+        for order, item in enumerate(existing[1:], start=1):
+            item.sort_order = order
+    else:
+        product.gallery_images.append(
+            ProductImage(image_url=image_urls[0], sort_order=0)
+        )
 
 def validate_indian_phone(phone_str):
     """
@@ -2795,22 +2872,34 @@ def admin_quick_update_product(product_id):
 @admin_required
 def admin_update_product_image(product_id):
     product = Product.query.get_or_404(product_id)
-    file = request.files.get("image")
+    uploads = [
+        item
+        for field_name in ("images", "image")
+        for item in request.files.getlist(field_name)
+        if item and item.filename
+    ]
 
-    if file and file.filename and allowed_file(file.filename):
-        ext = file.filename.rsplit(".", 1)[1].lower()
-        safe_name = f"prod_{product.id}_{uuid.uuid4().hex[:6]}.{ext}"
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], safe_name)
-        file.save(save_path)
+    if not uploads:
+        flash("Choose one or more valid garment photos before uploading.", "warning")
+        return redirect(url_for("admin_products"))
+    if len(uploads) > 8:
+        flash("Upload up to 8 photos per garment at a time.", "warning")
+        return redirect(url_for("admin_products"))
 
-        product.image = safe_name
-        db.session.commit()
-        flash(f"Uploaded new photograph for '{product.name}'.", "success")
-    else:
-        flash("Please choose a valid image file (.jpg, .jpeg, .png, .webp, .avif).", "warning")
+    try:
+        batch_prefix = f"products/{product.id}"
+        image_urls = [store_product_image(item, prefix=batch_prefix) for item in uploads]
+    except (ValueError, RuntimeError) as exc:
+        db.session.rollback()
+        flash(f"Photo upload failed: {exc}", "warning")
+        return redirect(url_for("admin_products"))
 
+    # More than one chosen photo replaces the complete gallery. One chosen photo
+    # replaces only the cover while preserving the remaining gallery images.
+    apply_product_images(product, image_urls, replace_gallery=(len(image_urls) > 1))
+    db.session.commit()
+    flash(f"Saved {len(image_urls)} photo(s) for '{product.name}'.", "success")
     return redirect(url_for("admin_products"))
-
 
 @app.route("/admin/products/add", methods=["POST"])
 @admin_required
@@ -2856,13 +2945,24 @@ def admin_add_product():
         flash("Please enter a name for the new garment.", "warning")
         return redirect(url_for("admin_products"))
 
-    image_filename = "product-1.jpg"
-    file = request.files.get("image")
-    if file and file.filename and allowed_file(file.filename):
-        ext = file.filename.rsplit(".", 1)[1].lower()
-        image_filename = f"prod_{uuid.uuid4().hex[:8]}.{ext}"
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], image_filename)
-        file.save(save_path)
+    uploaded_files = [
+        item
+        for field_name in ("images", "image")
+        for item in request.files.getlist(field_name)
+        if item and item.filename
+    ]
+    if len(uploaded_files) > 8:
+        flash("Upload up to 8 photos per garment at a time.", "warning")
+        return redirect(url_for("admin_products"))
+    try:
+        batch_prefix = f"products/new-{uuid.uuid4().hex[:12]}"
+        image_urls = [store_product_image(item, prefix=batch_prefix) for item in uploaded_files]
+    except (ValueError, RuntimeError) as exc:
+        db.session.rollback()
+        flash(f"Photo upload failed: {exc}", "warning")
+        return redirect(url_for("admin_products"))
+    # Do not use a generic product-1.jpg fallback; it made unrelated garments look identical.
+    image_filename = image_urls[0] if image_urls else None
 
     new_product = Product(
         name=name,
@@ -2881,6 +2981,10 @@ def admin_add_product():
     )
     db.session.add(new_product)
     db.session.commit()
+    if image_urls:
+        for order, image_url in enumerate(image_urls):
+            new_product.gallery_images.append(ProductImage(image_url=image_url, sort_order=order))
+        db.session.commit()
 
     flash(f"Added '{name}' (₹{price:,.0f}) to the atelier catalog.", "success")
     return redirect(url_for("admin_products"))
@@ -2936,13 +3040,34 @@ def admin_edit_product(product_id):
     product.description = request.form.get("description", product.description).strip()
     product.best_seller = bool(request.form.get("best_seller"))
 
-    file = request.files.get("image")
-    if file and file.filename and allowed_file(file.filename):
-        ext = file.filename.rsplit(".", 1)[1].lower()
-        safe_name = f"prod_{product.id}_{uuid.uuid4().hex[:6]}.{ext}"
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], safe_name)
-        file.save(save_path)
-        product.image = safe_name
+    gallery_field_has_files = any(
+        item and item.filename for item in request.files.getlist("images")
+    )
+    uploaded_files = [
+        item
+        for field_name in ("images", "image")
+        for item in request.files.getlist(field_name)
+        if item and item.filename
+    ]
+    if len(uploaded_files) > 8:
+        db.session.rollback()
+        flash("Upload up to 8 photos per garment at a time.", "warning")
+        return redirect(url_for("admin_products"))
+    if uploaded_files:
+        try:
+            image_urls = [
+                store_product_image(item, prefix=f"products/{product.id}")
+                for item in uploaded_files
+            ]
+        except (ValueError, RuntimeError) as exc:
+            db.session.rollback()
+            flash(f"Photo upload failed: {exc}", "warning")
+            return redirect(url_for("admin_products"))
+        apply_product_images(
+            product,
+            image_urls,
+            replace_gallery=gallery_field_has_files or len(image_urls) > 1,
+        )
 
     db.session.commit()
     flash(f"Garment details updated for '{product.name}'.", "success")
