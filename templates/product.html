@@ -80,76 +80,91 @@
 
             <!-- Main PDP 2-Column Split -->
             <div class="pdp-split-layout">
-                <!-- Left: 3D Pedestal Media Gallery -->
+                <!-- Left: Horizontal Scrollable Media Gallery -->
                 <div class="pdp-media-gallery">
-                    <div class="pdp-3d-stage" id="pdp3dStage">
-                        <div class="pdp-interactive-frame" id="pdpFrame">
-                            <div class="pdp-main-image-wrap">
-                                {% if product.image or product.gallery_images %}
-                                {% set gallery_items = product.gallery_images|list %}
-{% if gallery_items %}
-    {% set gallery_primary = gallery_items[0].image_url %}
-{% else %}
-    {% set gallery_primary = product.image %}
-{% endif %}
-
-{% if gallery_primary %}
-<div class="pdp-gallery-stage">
-    <img
-        id="mainPdpImage"
-        src="{{ product_image_url(gallery_primary) }}?v={{ cache_id }}"
-        alt="{{ product.name }}"
-        loading="eager"
-        onerror="this.onerror=null;this.alt='Product photo unavailable';this.classList.add('image-unavailable');this.removeAttribute('src');"
-    >
-</div>
-
-{% if gallery_items %}
-<div class="pdp-gallery-thumbs" aria-label="Product photos">
-    {% for gallery_image in gallery_items %}
-    <button
-        type="button"
-        class="pdp-gallery-thumb{% if loop.first %} active{% endif %}"
-        data-full-src="{{ product_image_url(gallery_image.image_url) }}"
-        data-alt="{{ product.name }} photo {{ loop.index }}"
-        aria-label="View {{ product.name }} photo {{ loop.index }}"
-    >
-        <img
-            src="{{ product_image_url(gallery_image.image_url) }}"
-            alt="{{ product.name }} thumbnail {{ loop.index }}"
-            loading="lazy"
-        >
-    </button>
-    {% endfor %}
-</div>
-{% endif %}
-{% endif %}
-                                {% else %}
-                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #eee8df; color: var(--text-muted); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">
-                                    Atelier Archive Piece
+                    <div class="pdp-gallery-card">
+                        <!-- Horizontal Carousel Slider Track (Scroll Right to view all photos) -->
+                        <div class="pdp-carousel-wrapper">
+                            <div class="pdp-slider-track" id="pdpSliderTrack" aria-label="Product photos gallery" tabindex="0">
+                                {% for photo_url in product.all_photo_urls %}
+                                <div class="pdp-slide" data-index="{{ loop.index0 }}" id="pdpSlide-{{ loop.index0 }}">
+                                    <img
+                                        {% if loop.first %}id="mainPdpImage"{% endif %}
+                                        src="{{ product_image_url(photo_url) }}?v={{ cache_id }}"
+                                        alt="{{ product.name }} - View {{ loop.index }} of {{ product.all_photo_urls|length }}"
+                                        loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
+                                        decoding="async"
+                                        class="pdp-slide-img"
+                                        onerror="this.onerror=null; this.src='/static/images/placeholder.jpg';"
+                                    >
                                 </div>
-                                {% endif %}
-
-                                {% if product.best_seller %}
-                                <span class="badge-best-seller">✦ Atelier Best Seller</span>
-                                {% endif %}
+                                {% endfor %}
                             </div>
+
+                            {% if product.best_seller %}
+                            <span class="badge-best-seller">✦ Atelier Best Seller</span>
+                            {% endif %}
+
+                            {% if product.all_photo_urls|length > 1 %}
+                            <!-- Photo Counter Pill (e.g. ✦ 1 / 5) -->
+                            <div class="pdp-gallery-counter" id="pdpGalleryCounter" aria-live="polite">
+                                <span class="counter-icon">✦</span>
+                                <span id="pdpCurrentSlideNum">1</span> / <span>{{ product.all_photo_urls|length }}</span>
+                            </div>
+
+                            <!-- Left Arrow Button -->
+                            <button type="button" class="pdp-nav-arrow pdp-nav-prev" id="pdpPrevBtn" aria-label="Previous photo">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            </button>
+
+                            <!-- Right Arrow Button (Scroll Right) -->
+                            <button type="button" class="pdp-nav-arrow pdp-nav-next" id="pdpNextBtn" aria-label="Next photo (scroll right)">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            </button>
+
+                            <!-- Scroll Right Visual Indicator / Swipe Hint -->
+                            <div class="pdp-scroll-hint" id="pdpScrollHint">
+                                <span>Swipe or scroll right →</span>
+                            </div>
+                            {% endif %}
                         </div>
-                        <div class="pdp-pedestal"></div>
+
+                        <!-- Horizontal Thumbnail Strip Below Gallery -->
+                        {% if product.all_photo_urls|length > 1 %}
+                        <div class="pdp-thumbs-strip pdp-gallery-thumbs" id="pdpThumbsStrip" aria-label="Product thumbnails">
+                            {% for photo_url in product.all_photo_urls %}
+                            <button
+                                type="button"
+                                class="pdp-thumb-item pdp-gallery-thumb{% if loop.first %} active{% endif %}"
+                                data-slide-index="{{ loop.index0 }}"
+                                data-full-src="{{ product_image_url(photo_url) }}"
+                                data-alt="{{ product.name }} photo {{ loop.index }}"
+                                aria-label="View photo {{ loop.index }} of {{ product.all_photo_urls|length }}"
+                            >
+                                <img
+                                    src="{{ product_image_url(photo_url) }}"
+                                    alt="{{ product.name }} thumbnail {{ loop.index }}"
+                                    loading="lazy"
+                                >
+                                <span class="pdp-thumb-order">{{ loop.index }}</span>
+                            </button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #fff; border: 1px solid var(--border-light); padding: 14px; border-radius: 2px; text-align: center;">
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                            <span style="font-size: 16px;">🪡</span>
-                            <span style="font-family: 'Inter', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;">Hand-Tailored</span>
+                    <div class="pdp-trust-bar">
+                        <div class="pdp-trust-item">
+                            <span class="pdp-trust-icon">🪡</span>
+                            <span class="pdp-trust-label">Hand-Tailored</span>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                            <span style="font-size: 16px;">✨</span>
-                            <span style="font-family: 'Inter', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;">Custom Sizing</span>
+                        <div class="pdp-trust-item">
+                            <span class="pdp-trust-icon">✨</span>
+                            <span class="pdp-trust-label">Custom Sizing</span>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                            <span style="font-size: 16px;">📦</span>
-                            <span style="font-family: 'Inter', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;">Insured Shipping</span>
+                        <div class="pdp-trust-item">
+                            <span class="pdp-trust-icon">📦</span>
+                            <span class="pdp-trust-label">Insured Shipping</span>
                         </div>
                     </div>
                 </div>
@@ -390,29 +405,118 @@
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
     <script>
-        // Product gallery: each thumbnail switches the main image to that exact upload.
+        // Horizontal Scrolling PDP Gallery with Touch-Swipe, Arrow Navigation, and Thumbnails
         (function () {
-            const mainImage = document.getElementById("mainPdpImage");
-            const thumbnails = document.querySelectorAll(".pdp-gallery-thumb");
-            if (!mainImage || !thumbnails.length) return;
-            thumbnails.forEach(function (thumbnail) {
-                thumbnail.addEventListener("click", function () {
-                    const nextSrc = thumbnail.getAttribute("data-full-src");
-                    if (!nextSrc) return;
-                    mainImage.onerror = function () {
-                        mainImage.onerror = null;
-                        mainImage.alt = "Product photo unavailable";
-                        mainImage.classList.add("image-unavailable");
-                        mainImage.removeAttribute("src");
-                    };
-                    mainImage.src = nextSrc;
-                    mainImage.alt = thumbnail.getAttribute("data-alt") || mainImage.alt;
-                    mainImage.classList.remove("image-unavailable");
-                    thumbnails.forEach(function (item) {
-                        item.classList.toggle("active", item === thumbnail);
-                        item.setAttribute("aria-pressed", item === thumbnail ? "true" : "false");
-                    });
+            const track = document.getElementById("pdpSliderTrack");
+            const prevBtn = document.getElementById("pdpPrevBtn");
+            const nextBtn = document.getElementById("pdpNextBtn");
+            const counterNum = document.getElementById("pdpCurrentSlideNum");
+            const scrollHint = document.getElementById("pdpScrollHint");
+            const thumbs = document.querySelectorAll(".pdp-thumb-item, .pdp-gallery-thumb");
+            const slides = document.querySelectorAll(".pdp-slide");
+
+            if (!track || !slides.length) return;
+
+            let currentIndex = 0;
+            const totalSlides = slides.length;
+
+            function updateActiveIndex(idx) {
+                if (idx < 0) idx = 0;
+                if (idx >= totalSlides) idx = totalSlides - 1;
+                currentIndex = idx;
+
+                if (counterNum) {
+                    counterNum.textContent = (currentIndex + 1);
+                }
+
+                thumbs.forEach(function (thumb, tIdx) {
+                    const isActive = tIdx === currentIndex;
+                    thumb.classList.toggle("active", isActive);
+                    thumb.setAttribute("aria-pressed", isActive ? "true" : "false");
+                    if (isActive && thumb.scrollIntoView) {
+                        thumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+                    }
                 });
+
+                if (scrollHint && currentIndex > 0) {
+                    scrollHint.style.opacity = "0";
+                    setTimeout(function () {
+                        if (scrollHint.parentNode) scrollHint.style.display = "none";
+                    }, 500);
+                }
+            }
+
+            function scrollToIndex(idx) {
+                if (idx < 0) idx = 0;
+                if (idx >= totalSlides) idx = totalSlides - 1;
+                const targetSlide = slides[idx];
+                if (targetSlide) {
+                    track.scrollTo({
+                        left: targetSlide.offsetLeft,
+                        behavior: "smooth"
+                    });
+                }
+                updateActiveIndex(idx);
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    if (currentIndex < totalSlides - 1) {
+                        scrollToIndex(currentIndex + 1);
+                    } else {
+                        scrollToIndex(0);
+                    }
+                });
+            }
+
+            if (prevBtn) {
+                prevBtn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    if (currentIndex > 0) {
+                        scrollToIndex(currentIndex - 1);
+                    } else {
+                        scrollToIndex(totalSlides - 1);
+                    }
+                });
+            }
+
+            thumbs.forEach(function (thumb, idx) {
+                thumb.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    scrollToIndex(idx);
+                });
+            });
+
+            // Track scroll listener to sync active index and thumbnails when user swipes/scrolls right
+            let isScrolling = null;
+            track.addEventListener("scroll", function () {
+                window.clearTimeout(isScrolling);
+                isScrolling = setTimeout(function () {
+                    const scrollLeft = track.scrollLeft;
+                    const slideWidth = track.clientWidth || track.offsetWidth;
+                    if (slideWidth > 0) {
+                        const calculatedIndex = Math.round(scrollLeft / slideWidth);
+                        if (calculatedIndex !== currentIndex) {
+                            updateActiveIndex(calculatedIndex);
+                        }
+                    }
+                }, 60);
+
+                if (scrollHint) {
+                    scrollHint.style.opacity = "0";
+                }
+            }, { passive: true });
+
+            // Keyboard navigation (ArrowLeft / ArrowRight)
+            track.addEventListener("keydown", function (e) {
+                if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    scrollToIndex(currentIndex + 1);
+                } else if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    scrollToIndex(currentIndex - 1);
+                }
             });
         })();
 

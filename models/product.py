@@ -86,6 +86,21 @@ class Product(db.Model):
                     return item.image_url.strip()
         return self.image or "product-1.jpg"
 
+    @property
+    def all_photo_urls(self):
+        urls = []
+        if self.gallery_images:
+            for item in self.gallery_images:
+                if item.image_url and item.image_url.strip():
+                    clean = item.image_url.strip()
+                    if clean not in urls:
+                        urls.append(clean)
+        if not urls and self.image:
+            urls.append(self.image.strip())
+        if not urls:
+            urls.append("product-1.jpg")
+        return urls
+
     def __repr__(self):
 
         return (
