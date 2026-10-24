@@ -90,6 +90,11 @@ app = Flask(__name__)
 @app.template_global()
 def product_image_url(image, fallback="editorial-hero.jpg"):
     """Return a working URL for a Vercel Blob URL or legacy local image filename."""
+    if hasattr(image, "primary_photo_url"):
+        image = image.primary_photo_url
+    elif hasattr(image, "image"):
+        image = image.image
+
     if image:
         image = str(image).strip()
         if image.startswith(("http://", "https://", "/")):

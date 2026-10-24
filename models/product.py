@@ -78,6 +78,14 @@ class Product(db.Model):
     )
 
 
+    @property
+    def primary_photo_url(self):
+        if self.gallery_images:
+            for item in self.gallery_images:
+                if item.image_url and item.image_url.strip():
+                    return item.image_url.strip()
+        return self.image or "product-1.jpg"
+
     def __repr__(self):
 
         return (

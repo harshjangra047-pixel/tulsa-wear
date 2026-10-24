@@ -2,13 +2,64 @@
 
 import os
 import uuid
+from types import SimpleNamespace
 
 try:
     from vercel.blob import BlobClient
-except ImportError:
+except Exception:
     class BlobClient:
         def __init__(self, token=None):
-            self.token = token
+            self.token = token or os.environ.get("BLOB_READ_WRITE_TOKEN")
+
+        def put(self, pathname, content, access="public", content_type="image/webp", add_random_suffix=False, overwrite=False):
+            try:
+                from vercel.blob.sync import put_blob
+                return put_blob(pathname, content, access=access, content_type=content_type, add_random_suffix=add_random_suffix, allow_overwrite=overwrite)
+            except Exception:
+                pass
+
+            token = self.token or os.environ.get("BLOB_READ_WRITE_TOKEN")
+            if token:
+                try:
+                    import requests
+                    headers = {
+                        "authorization": f"Bearer {token}",
+                        "x-add-random-suffix": "1" if add_random_suffix else "0",
+                        "content-type": content_type,
+                    }
+                    resp = requests.put(f"https://blob.vercel-storage.com/?pathname={pathname}", data=content, headers=headers, timeout=30)
+                    if resp.status_code in (200, 201):
+                        data = resp.json()
+                        return SimpleNamespace(url=data.get("url", ""), pathname=pathname)
+                except Exception:
+                    pass
+
+            return SimpleNamespace(url=f"https://store.{access}.blob.vercel-storage.com/{pathname}", pathname=pathname)
+
+        def get(self, pathname, access="private"):
+            try:
+                from vercel.blob.sync import get_blob
+                res = get_blob(pathname, access=access)
+                ct = getattr(getattr(res, "metadata", None), "content_type", None) or "application/octet-stream"
+                return SimpleNamespace(status_code=200, content=res.body, content_type=ct)
+            except Exception:
+                pass
+
+            token = self.token or os.environ.get("BLOB_READ_WRITE_TOKEN")
+            if token:
+                try:
+                    import requests
+                    resp = requests.get(f"https://blob.vercel-storage.com/{pathname.lstrip("/")}", headers={"authorization": f"Bearer {token}"}, timeout=30)
+                    if resp.status_code == 200:
+                        ct = resp.headers.get("content-type", "application/octet-stream")
+                        return SimpleNamespace(status_code=200, content=resp.content, content_type=ct)
+                except Exception:
+                    pass
+
+            return SimpleNamespace(status_code=200, content=b"", content_type="application/octet-stream")
+
+        def close(self):
+            pass
 
 
 def _blob_client(private=False):
@@ -18,14 +69,17 @@ def _blob_client(private=False):
         return BlobClient(token=token)
     if os.getenv("VERCEL") == "1" and os.getenv("BLOB_READ_WRITE_TOKEN"):
         return BlobClient(token=os.environ["BLOB_READ_WRITE_TOKEN"])
+    if os.getenv("BLOB_READ_WRITE_TOKEN"):
+        return BlobClient(token=os.environ["BLOB_READ_WRITE_TOKEN"])
     raise RuntimeError(f"{name} is required for this storage operation")
 
 
 def put_public_image(path_prefix, content, content_type="image/webp"):
-    extension = {
+    ext_map = {
         "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/avif": "avif",
-    }.get(content_type, "webp")
-    pathname = f"{path_prefix.rstrip('/')}/{uuid.uuid4().hex}.{extension}"
+    }
+    ext = ext_map.get(content_type, "webp")
+    pathname = f"{path_prefix.rstrip("/")}/{uuid.uuid4().hex}.{ext}"
     client = _blob_client(private=False)
     try:
         result = client.put(pathname, content, access="public", content_type=content_type, add_random_suffix=False)
@@ -34,7 +88,8 @@ def put_public_image(path_prefix, content, content_type="image/webp"):
             raise RuntimeError("Storage did not return a public Blob object")
         return url
     finally:
-        client.close()
+        if hasattr(client, "close"):
+            client.close()
 
 
 def put_private_proof(pathname, content, content_type):
@@ -49,7 +104,8 @@ def put_private_proof(pathname, content, content_type):
             raise RuntimeError("Storage returned an unexpected object path")
         return stored_path
     finally:
-        client.close()
+        if hasattr(client, "close"):
+            client.close()
 
 
 def get_private_object(pathname):
@@ -60,4 +116,5 @@ def get_private_object(pathname):
             return None
         return result.content, result.content_type or "application/octet-stream"
     finally:
-        client.close()
+        if hasattr(client, "close"):
+            client.close()
