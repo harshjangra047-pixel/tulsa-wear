@@ -716,9 +716,17 @@ def shop():
     max_price = request.args.get("max_price", type=float)
     sort = request.args.get("sort", "newest").strip()
 
-    # CATEGORY FILTER
+    # CATEGORY FILTER (with legacy backward compatibility)
     if category:
-        query = query.filter(Product.category == category)
+        cat_clean = category.strip()
+        if cat_clean in ["Palazzo & Kurta Set", "Plazo / Kurta", "Plazo & Kurta"]:
+            query = query.filter(Product.category.in_(["Palazzo & Kurta Set", "Plazo / Kurta", "Plazo & Kurta"]))
+        elif cat_clean in ["Festival / Wedding Regalia", "Wedding Wear", "Party Wear", "Wedding Regalia"]:
+            query = query.filter(Product.category.in_(["Festival / Wedding Regalia", "Wedding Wear", "Party Wear", "Wedding Regalia"]))
+        elif cat_clean in ["Casual / Kurti", "Casual Atelier", "Casual"]:
+            query = query.filter(Product.category.in_(["Casual / Kurti", "Casual Atelier", "Casual"]))
+        else:
+            query = query.filter(Product.category == cat_clean)
 
     # FABRIC FILTER
     if fabric:
@@ -750,10 +758,10 @@ def shop():
     products = query.all()
 
     all_categories = [
-        "Plazo / Kurta",
+        "Palazzo & Kurta Set",
         "Salwar Kameez",
-        "Party Wear",
-        "Wedding Wear"
+        "Casual / Kurti",
+        "Festival / Wedding Regalia",
     ]
 
     return render_template(

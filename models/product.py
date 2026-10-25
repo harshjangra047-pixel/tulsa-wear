@@ -1,82 +1,46 @@
 from .database import db
 
-
 class Product(db.Model):
-
     __tablename__ = "products"
 
-    id = db.Column(
-        db.Integer,
-        primary_key=True
-    )
-
-    name = db.Column(
-        db.String(150),
-        nullable=False
-    )
-
-    price = db.Column(
-        db.Float,
-        nullable=False
-    )
-
-    category = db.Column(
-        db.String(100),
-        nullable=False
-    )
-
-    fabric = db.Column(
-        db.String(100)
-    )
-
-    color = db.Column(
-        db.String(100)
-    )
-
-    description = db.Column(
-        db.Text
-    )
-
-    image = db.Column(
-        db.String(255)
-    )
-
-    stock = db.Column(
-        db.Integer,
-        default=0
-    )
-
-    best_seller = db.Column(
-        db.Boolean,
-        default=False
-    )
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(150), nullable=False)
+    price = db.Column(db.Float, nullable=False)
+    original_price = db.Column(db.Float, nullable=True)
+    discount_percent = db.Column(db.Integer, nullable=True)
+    category = db.Column(db.String(100), nullable=False)
+    fabric = db.Column(db.String(100))
+    color = db.Column(db.String(100))
+    description = db.Column(db.Text)
+    image = db.Column(db.String(255))
+    stock = db.Column(db.Integer, default=0)
+    best_seller = db.Column(db.Boolean, default=False)
 
     # Shipping attributes
-    weight_kg = db.Column(
-        db.Float,
-        default=0.5
+    weight_kg = db.Column(db.Float, default=0.5)
+    length_cm = db.Column(db.Float, default=30.0)
+    width_cm = db.Column(db.Float, default=25.0)
+    height_cm = db.Column(db.Float, default=5.0)
+
+    created_at = db.Column(db.DateTime, server_default=db.func.now())
+
+    gallery_images = db.relationship(
+        "ProductImage",
+        backref="product",
+        cascade="all, delete-orphan",
+        order_by="ProductImage.sort_order",
+        lazy="selectin",
     )
 
-    length_cm = db.Column(
-        db.Float,
-        default=30.0
-    )
+    @property
+    def effective_discount_percent(self):
+        if self.original_price and self.original_price > self.price and self.original_price > 0:
+            return int(round(((self.original_price - self.price) / self.original_price) * 100))
+        return 0
 
-    width_cm = db.Column(
-        db.Float,
-        default=25.0
-    )
-
-    height_cm = db.Column(
-        db.Float,
-        default=5.0
-    )
-
-    created_at = db.Column(
-        db.DateTime,
-        server_default=db.func.now()
-    )
-
+    @property
+    def has_discount(self):
+        return bool(self.original_price and self.original_price > self.price and self.original_price > 0)
 
     @property
     def primary_photo_url(self):
@@ -102,14 +66,4 @@ class Product(db.Model):
         return urls
 
     def __repr__(self):
-
-        return (
-            f"<Product {self.name}>"
-        )
-    gallery_images = db.relationship(
-        "ProductImage",
-        backref="product",
-        cascade="all, delete-orphan",
-        order_by="ProductImage.sort_order",
-        lazy="selectin",
-    )
+        return f"<Product {self.name}>"

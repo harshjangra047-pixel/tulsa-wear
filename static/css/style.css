@@ -2721,8 +2721,9 @@ p {
 .pdp-slide-img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center top;
+    object-fit: contain;
+    background: #faf8f5;
+    object-position: center;
     display: block;
     user-select: none;
     -webkit-user-drag: none;
@@ -4051,5 +4052,82 @@ html {
     .hero-background {
         transition: none !important;
         transform: none !important;
+    }
+}
+
+
+/* =========================================
+   AMAZON-STYLE VERTICAL GALLERY (DESKTOP)
+========================================= */
+.pdp-amazon-gallery-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 16px;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.pdp-desktop-vertical-thumbs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 76px;
+    flex-shrink: 0;
+    max-height: 580px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #c9a96e transparent;
+}
+
+.pdp-vthumb-item {
+    position: relative;
+    width: 76px;
+    height: 96px;
+    padding: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 2px solid #ede7de;
+    background: #faf8f5;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pdp-vthumb-item:hover {
+    border-color: #c9a96e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.pdp-vthumb-item.active {
+    border-color: #8b263e;
+    box-shadow: 0 0 0 1.5px #8b263e, 0 4px 12px rgba(139, 38, 62, 0.18);
+}
+
+.pdp-vthumb-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #faf8f5;
+    display: block;
+}
+
+@media (max-width: 768px) {
+    .pdp-amazon-gallery-wrapper {
+        flex-direction: column;
+    }
+    .pdp-desktop-vertical-thumbs {
+        display: none !important;
+    }
+    .pdp-gallery-card {
+        width: 100%;
+    }
+    .pdp-thumbs-strip {
+        display: flex !important;
+    }
+}
+
+@media (min-width: 769px) {
+    .pdp-thumbs-strip {
+        display: none !important;
     }
 }

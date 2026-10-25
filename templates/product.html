@@ -80,9 +80,33 @@
 
             <!-- Main PDP 2-Column Split -->
             <div class="pdp-split-layout">
-                <!-- Left: Horizontal Scrollable Media Gallery -->
+                <!-- Left: Amazon-Style Product Gallery (Vertical Thumbs on Desktop, Horizontal on Mobile) -->
                 <div class="pdp-media-gallery">
-                    <div class="pdp-gallery-card">
+                    <div class="pdp-amazon-gallery-wrapper">
+                        <!-- Desktop Vertical Thumbnail Column -->
+                        {% if product.all_photo_urls|length > 1 %}
+                        <div class="pdp-desktop-vertical-thumbs" id="pdpVerticalThumbs" aria-label="Product thumbnails">
+                            {% for photo_url in product.all_photo_urls %}
+                            <button
+                                type="button"
+                                class="pdp-vthumb-item{% if loop.first %} active{% endif %}"
+                                data-slide-index="{{ loop.index0 }}"
+                                data-full-src="{{ product_image_url(photo_url) }}"
+                                data-alt="{{ product.name }} thumbnail {{ loop.index }}"
+                                aria-label="View photo {{ loop.index }} of {{ product.all_photo_urls|length }}"
+                            >
+                                <img
+                                    src="{{ product_image_url(photo_url) }}"
+                                    alt="{{ product.name }} thumbnail {{ loop.index }}"
+                                    loading="lazy"
+                                    onerror="this.onerror=null; this.src='/static/images/placeholder.jpg';"
+                                >
+                            </button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <div class="pdp-gallery-card">
                         <!-- Horizontal Carousel Slider Track (Scroll Right to view all photos) -->
                         <div class="pdp-carousel-wrapper">
                             <div class="pdp-slider-track" id="pdpSliderTrack" aria-label="Product photos gallery" tabindex="0">
@@ -152,6 +176,7 @@
                         </div>
                         {% endif %}
                     </div>
+                    </div>
 
                     <div class="pdp-trust-bar">
                         <div class="pdp-trust-item">
@@ -174,9 +199,13 @@
                     <p class="pdp-eyebrow">✦ {{ product.category|upper }} ARCHIVE</p>
                     <h1 class="pdp-title">{{ product.name }}</h1>
 
-                    <div class="pdp-price-row">
-                        <span class="pdp-price">₹{{ "{:,.0f}".format(product.price) }}</span>
-                        <span class="pdp-tax-badge">Inclusive of all artisanal taxes • Free shipping pan-India</span>
+                    <div class="pdp-price-row" style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+                        <span class="pdp-price" style="font-size: 32px; font-weight: 600; color: #1a1a1a;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                        {% if product.has_discount %}
+                        <span class="pdp-mrp" style="text-decoration: line-through; font-size: 18px; color: #888;">₹{{ "{:,.0f}".format(product.original_price) }}</span>
+                        <span class="pdp-discount-badge" style="background: rgba(34, 197, 94, 0.12); color: #16a34a; font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(22, 163, 74, 0.25); letter-spacing: 0.04em;">{{ product.effective_discount_percent }}% OFF</span>
+                        {% endif %}
+                        <span class="pdp-tax-badge" style="width: 100%; display: block; font-size: 12px; color: #777; margin-top: 2px;">Inclusive of all artisanal taxes • Free shipping pan-India</span>
                     </div>
 
                     <div class="pdp-description-text">
@@ -211,18 +240,15 @@
                         <div class="bespoke-customizer-box">
                             <div class="bespoke-box-header">
                                 <span class="bespoke-box-title">
-                                    <span>✂</span> Bespoke Tailoring & Fit
+                                    <span>👗</span> Select Standard Size
                                 </span>
                                 <button type="button" onclick="openSizeChartModal()" class="size-chart-trigger-btn">
                                     📏 View Size Chart
                                 </button>
                             </div>
 
-                            <!-- Standard Size Pill Selection -->
-                            <div class="size-selector-row">
-                                <label class="pdp-input-label">
-                                    Select Standard Size <span style="color: var(--accent-burgundy);">*</span>
-                                </label>
+                            <!-- Standard Size Pill Selection (XS to 4XL) -->
+                            <div class="size-selector-row" style="margin-top: 10px;">
                                 <div class="size-pill-group">
                                     {% for s in ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'] %}
                                     <label class="pdp-size-radio">
@@ -232,47 +258,6 @@
                                     {% endfor %}
                                 </div>
                             </div>
-
-                            <!-- Custom Lengths -->
-                            <div class="lengths-grid-inputs">
-                                <div>
-                                    <label class="pdp-input-label" for="prodTopLength">
-                                        Kurti / Top Length (in) <span style="color: var(--accent-burgundy);">*</span>
-                                    </label>
-                                    <input type="number" id="prodTopLength" name="top_length" value="30" min="15" max="60" required class="luxury-number-input">
-                                </div>
-                                <div>
-                                    <label class="pdp-input-label" for="prodSleevesLength">
-                                        Sleeves Length (in) <span style="color: var(--accent-burgundy);">*</span>
-                                    </label>
-                                    <input type="number" id="prodSleevesLength" name="sleeves_length" value="18" min="5" max="40" required class="luxury-number-input">
-                                </div>
-                            </div>
-
-                            <!-- Optional Custom Body Measurements -->
-                            <details class="custom-measurements-drawer">
-                                <summary>
-                                    + Add Custom Body Measurements (Optional)
-                                </summary>
-                                <div class="measurements-subgrid">
-                                    <div>
-                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodBust">Bust (in)</label>
-                                        <input type="number" id="prodBust" name="bust" placeholder="e.g. 36" class="luxury-number-input" style="padding: 8px;">
-                                    </div>
-                                    <div>
-                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodWaist">Waist (in)</label>
-                                        <input type="number" id="prodWaist" name="waist" placeholder="e.g. 32" class="luxury-number-input" style="padding: 8px;">
-                                    </div>
-                                    <div>
-                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodHip">Hip (in)</label>
-                                        <input type="number" id="prodHip" name="hip" placeholder="e.g. 40" class="luxury-number-input" style="padding: 8px;">
-                                    </div>
-                                    <div>
-                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodShoulder">Shoulder (in)</label>
-                                        <input type="number" id="prodShoulder" name="shoulder" placeholder="e.g. 14.5" class="luxury-number-input" style="padding: 8px;">
-                                    </div>
-                                </div>
-                            </details>
                         </div>
 
                         <!-- Action Buttons -->
@@ -412,7 +397,7 @@
             const nextBtn = document.getElementById("pdpNextBtn");
             const counterNum = document.getElementById("pdpCurrentSlideNum");
             const scrollHint = document.getElementById("pdpScrollHint");
-            const thumbs = document.querySelectorAll(".pdp-thumb-item, .pdp-gallery-thumb");
+            const thumbs = document.querySelectorAll(".pdp-thumb-item, .pdp-gallery-thumb, .pdp-vthumb-item");
             const slides = document.querySelectorAll(".pdp-slide");
 
             if (!track || !slides.length) return;
@@ -429,13 +414,11 @@
                     counterNum.textContent = (currentIndex + 1);
                 }
 
-                thumbs.forEach(function (thumb, tIdx) {
-                    const isActive = tIdx === currentIndex;
+                thumbs.forEach(function (thumb) {
+                    const sIdx = parseInt(thumb.dataset.slideIndex);
+                    const isActive = (sIdx === currentIndex);
                     thumb.classList.toggle("active", isActive);
                     thumb.setAttribute("aria-pressed", isActive ? "true" : "false");
-                    if (isActive && thumb.scrollIntoView) {
-                        thumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
-                    }
                 });
 
                 if (scrollHint && currentIndex > 0) {
@@ -481,10 +464,11 @@
                 });
             }
 
-            thumbs.forEach(function (thumb, idx) {
+            thumbs.forEach(function (thumb) {
                 thumb.addEventListener("click", function (e) {
                     e.preventDefault();
-                    scrollToIndex(idx);
+                    const sIdx = parseInt(this.dataset.slideIndex);
+                    scrollToIndex(isNaN(sIdx) ? 0 : sIdx);
                 });
             });
 
@@ -563,28 +547,12 @@
             if (e.target === modal) closeSizeChartModal();
         });
 
-        // Buy Now handler
+        // Buy Now handler (Standard Size only)
         function proceedToBuyNow() {
             const form = document.getElementById("productPurchaseForm");
             if (!form) return;
             const size = form.querySelector('input[name="size"]:checked')?.value || 'M';
-            const topLength = form.querySelector('#prodTopLength')?.value || '30';
-            const sleevesLength = form.querySelector('#prodSleevesLength')?.value || '18';
-            const bust = form.querySelector('#prodBust')?.value || '';
-            const waist = form.querySelector('#prodWaist')?.value || '';
-            const hip = form.querySelector('#prodHip')?.value || '';
-            const shoulder = form.querySelector('#prodShoulder')?.value || '';
-
-            const params = new URLSearchParams({
-                size: size,
-                top_length: topLength,
-                sleeves_length: sleevesLength,
-                bust: bust,
-                waist: waist,
-                hip: hip,
-                shoulder: shoulder
-            });
-
+            const params = new URLSearchParams({ size: size });
             window.location.href = "{{ url_for('buy_now', product_id=product.id) }}?" + params.toString();
         }
 

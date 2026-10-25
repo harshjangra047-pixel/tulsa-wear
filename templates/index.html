@@ -212,7 +212,7 @@
 
             <div class="arched-grid">
 
-                <a href="{{ url_for('shop', category='Plazo / Kurta') }}" class="arched-card reveal reveal-delay-1">
+                <a href="{{ url_for('shop', category='Palazzo & Kurta Set') }}" class="arched-card reveal reveal-delay-1">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'editorial-category-1.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat1_title', 'Plazo & Kurta') }}" 
@@ -242,7 +242,7 @@
                     </div>
                 </a>
 
-                <a href="{{ url_for('shop', category='Party Wear') }}" class="arched-card reveal reveal-delay-3">
+                <a href="{{ url_for('shop', category='Casual / Kurti') }}" class="arched-card reveal reveal-delay-3">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-category-3.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat3_title', 'Party Wear') }}" 
@@ -257,7 +257,7 @@
                     </div>
                 </a>
 
-                <a href="{{ url_for('shop', category='Wedding Wear') }}" class="arched-card reveal reveal-delay-4">
+                <a href="{{ url_for('shop', category='Festival / Wedding Regalia') }}" class="arched-card reveal reveal-delay-4">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'editorial-category-4.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat4_title', 'Wedding Regalia') }}" 
@@ -321,7 +321,13 @@
                             <p class="curved-category">{{ product.category }}</p>
                             <h3 class="curved-title">{{ product.name }}</h3>
                             <div class="curved-price-row">
-                                <span class="curved-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                <div>
+                                    <span class="curved-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                    {% if product.has_discount %}
+                                    <span style="text-decoration: line-through; font-size: 13px; color: #888; margin-left: 6px;">₹{{ "{:,.0f}".format(product.original_price) }}</span>
+                                    <span style="background: rgba(34, 197, 94, 0.12); color: #16a34a; font-weight: 600; font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-left: 6px;">{{ product.effective_discount_percent }}% OFF</span>
+                                    {% endif %}
+                                </div>
                                 <a href="{{ url_for('product_detail', product_id=product.id) }}" class="curved-btn">View Piece →</a>
                             </div>
                         </div>
@@ -468,6 +474,10 @@
                                 </h3>
                                 <p class="product-price">
                                     ₹{{ "{:,.0f}".format(product.price) }}
+                                    {% if product.has_discount %}
+                                    <span style="text-decoration: line-through; font-size: 12px; color: #888; margin-left: 6px;">₹{{ "{:,.0f}".format(product.original_price) }}</span>
+                                    <span style="background: rgba(34, 197, 94, 0.12); color: #16a34a; font-weight: 600; font-size: 10px; padding: 2px 5px; border-radius: 3px; margin-left: 4px;">{{ product.effective_discount_percent }}% OFF</span>
+                                    {% endif %}
                                 </p>
                             </div>
                         </a>
@@ -568,7 +578,7 @@
                         <p class="eyebrow">{{ cms.get('bridal_eyebrow', 'THE BRIDAL EDIT') }}</p>
                         <h2>{{ cms.get('bridal_title', 'Made for moments that stay with you.') }}</h2>
                         <p>{{ cms.get('bridal_desc', 'Opulent ensembles woven from heritage silks and embellished with handwork. Crafted to capture the light in sacred celebrations.') }}</p>
-                        <a href="{{ cms.get('bridal_cta_link', url_for('shop', category='Wedding Wear')) }}" class="btn-luxury-gold">
+                        <a href="{{ cms.get('bridal_cta_link', url_for('shop', category='Festival / Wedding Regalia')) }}" class="btn-luxury-gold">
                             {{ cms.get('bridal_cta_text', 'View The Bridal Edit →') }}
                         </a>
                     </div>
@@ -882,7 +892,7 @@
             <div class="category-grid">
 
                 <a
-                    href="{{ url_for('shop', category='Plazo / Kurta') }}"
+                    href="{{ url_for('shop', category='Palazzo & Kurta Set') }}"
                     class="category-card reveal reveal-delay-1"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-1.jpg') }}');"
                 >
@@ -908,7 +918,7 @@
                 </a>
 
                 <a
-                    href="{{ url_for('shop', category='Party Wear') }}"
+                    href="{{ url_for('shop', category='Casual / Kurti') }}"
                     class="category-card reveal reveal-delay-3"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-3.jpg') }}');"
                 >
@@ -921,7 +931,7 @@
                 </a>
 
                 <a
-                    href="{{ url_for('shop', category='Wedding Wear') }}"
+                    href="{{ url_for('shop', category='Festival / Wedding Regalia') }}"
                     class="category-card reveal reveal-delay-4"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-4.jpg') }}');"
                 >
@@ -1682,7 +1692,7 @@
              INSTAGRAM
         ========================================== -->
 
-        <section class="instagram-section">
+        <section class="instagram-section" id="instagram-section">
 
             <div class="section-heading centered reveal">
 
@@ -1724,7 +1734,7 @@
              NEWSLETTER
         ========================================== -->
 
-        <section class="newsletter-section">
+        <section class="newsletter-section" id="newsletter-section">
 
             <p class="eyebrow reveal">
                 LETTERS FROM THE STUDIO
