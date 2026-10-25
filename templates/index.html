@@ -212,7 +212,7 @@
 
             <div class="arched-grid">
 
-                <a href="{{ url_for('shop', category='Palazzo & Kurta Set') }}" class="arched-card reveal reveal-delay-1">
+                <a href="{{ cms.get('mood_cat1_link') or url_for('shop', category=cms.get('mood_cat1_title', 'Palazzo & Kurta Set')) }}" class="arched-card reveal reveal-delay-1">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'editorial-category-1.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat1_title', 'Plazo & Kurta') }}" 
@@ -227,7 +227,7 @@
                     </div>
                 </a>
 
-                <a href="{{ url_for('shop', category='Salwar Kameez') }}" class="arched-card reveal reveal-delay-2">
+                <a href="{{ cms.get('mood_cat2_link') or url_for('shop', category=cms.get('mood_cat2_title', 'Salwar Kameez')) }}" class="arched-card reveal reveal-delay-2">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'editorial-category-2.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}" 
@@ -242,7 +242,7 @@
                     </div>
                 </a>
 
-                <a href="{{ url_for('shop', category='Casual / Kurti') }}" class="arched-card reveal reveal-delay-3">
+                <a href="{{ cms.get('mood_cat3_link') or url_for('shop', category=cms.get('mood_cat3_title', 'Casual / Kurti')) }}" class="arched-card reveal reveal-delay-3">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-category-3.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat3_title', 'Party Wear') }}" 
@@ -257,7 +257,7 @@
                     </div>
                 </a>
 
-                <a href="{{ url_for('shop', category='Festival / Wedding Regalia') }}" class="arched-card reveal reveal-delay-4">
+                <a href="{{ cms.get('mood_cat4_link') or url_for('shop', category=cms.get('mood_cat4_title', 'Festival / Wedding Regalia')) }}" class="arched-card reveal reveal-delay-4">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'editorial-category-4.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat4_title', 'Wedding Regalia') }}" 
@@ -892,7 +892,7 @@
             <div class="category-grid">
 
                 <a
-                    href="{{ url_for('shop', category='Palazzo & Kurta Set') }}"
+                    href="{{ cms.get('mood_cat1_link') or url_for('shop', category=cms.get('mood_cat1_title', 'Palazzo & Kurta Set')) }}"
                     class="category-card reveal reveal-delay-1"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-1.jpg') }}');"
                 >
@@ -905,7 +905,7 @@
                 </a>
 
                 <a
-                    href="{{ url_for('shop', category='Salwar Kameez') }}"
+                    href="{{ cms.get('mood_cat2_link') or url_for('shop', category=cms.get('mood_cat2_title', 'Salwar Kameez')) }}"
                     class="category-card reveal reveal-delay-2"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-2.jpg') }}');"
                 >
@@ -918,7 +918,7 @@
                 </a>
 
                 <a
-                    href="{{ url_for('shop', category='Casual / Kurti') }}"
+                    href="{{ cms.get('mood_cat3_link') or url_for('shop', category=cms.get('mood_cat3_title', 'Casual / Kurti')) }}"
                     class="category-card reveal reveal-delay-3"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-3.jpg') }}');"
                 >
@@ -931,7 +931,7 @@
                 </a>
 
                 <a
-                    href="{{ url_for('shop', category='Festival / Wedding Regalia') }}"
+                    href="{{ cms.get('mood_cat4_link') or url_for('shop', category=cms.get('mood_cat4_title', 'Festival / Wedding Regalia')) }}"
                     class="category-card reveal reveal-delay-4"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-4.jpg') }}');"
                 >

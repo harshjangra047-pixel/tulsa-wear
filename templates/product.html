@@ -82,100 +82,66 @@
             <div class="pdp-split-layout">
                 <!-- Left: Amazon-Style Product Gallery (Vertical Thumbs on Desktop, Horizontal on Mobile) -->
                 <div class="pdp-media-gallery">
-                    <div class="pdp-amazon-gallery-wrapper">
-                        <!-- Desktop Vertical Thumbnail Column -->
-                        {% if product.all_photo_urls|length > 1 %}
-                        <div class="pdp-desktop-vertical-thumbs" id="pdpVerticalThumbs" aria-label="Product thumbnails">
+                    <!-- Standard E-Commerce Image Gallery Constrained to 70vh Bounding Box -->
+                    <div class="pdp-ecommerce-gallery">
+                        <div class="pdp-main-bounding-box" id="pdpMainBox">
                             {% for photo_url in product.all_photo_urls %}
-                            <button
-                                type="button"
-                                class="pdp-vthumb-item{% if loop.first %} active{% endif %}"
-                                data-slide-index="{{ loop.index0 }}"
-                                data-full-src="{{ product_image_url(photo_url) }}"
-                                data-alt="{{ product.name }} thumbnail {{ loop.index }}"
-                                aria-label="View photo {{ loop.index }} of {{ product.all_photo_urls|length }}"
-                            >
+                            <div class="pdp-main-slide{% if loop.first %} active{% endif %}" id="pdpSlide-{{ loop.index0 }}" data-index="{{ loop.index0 }}">
                                 <img
-                                    src="{{ product_image_url(photo_url) }}"
-                                    alt="{{ product.name }} thumbnail {{ loop.index }}"
-                                    loading="lazy"
+                                    src="{{ product_image_url(photo_url) }}?v={{ cache_id }}"
+                                    alt="{{ product.name }} - View {{ loop.index }} of {{ product.all_photo_urls|length }}"
+                                    class="pdp-contained-img"
+                                    loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
                                     onerror="this.onerror=null; this.src='/static/images/placeholder.jpg';"
                                 >
-                            </button>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
-
-                        <div class="pdp-gallery-card">
-                        <!-- Horizontal Carousel Slider Track (Scroll Right to view all photos) -->
-                        <div class="pdp-carousel-wrapper">
-                            <div class="pdp-slider-track" id="pdpSliderTrack" aria-label="Product photos gallery" tabindex="0">
-                                {% for photo_url in product.all_photo_urls %}
-                                <div class="pdp-slide" data-index="{{ loop.index0 }}" id="pdpSlide-{{ loop.index0 }}">
-                                    <img
-                                        {% if loop.first %}id="mainPdpImage"{% endif %}
-                                        src="{{ product_image_url(photo_url) }}?v={{ cache_id }}"
-                                        alt="{{ product.name }} - View {{ loop.index }} of {{ product.all_photo_urls|length }}"
-                                        loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
-                                        decoding="async"
-                                        class="pdp-slide-img"
-                                        onerror="this.onerror=null; this.src='/static/images/placeholder.jpg';"
-                                    >
-                                </div>
-                                {% endfor %}
                             </div>
+                            {% endfor %}
 
                             {% if product.best_seller %}
                             <span class="badge-best-seller">✦ Atelier Best Seller</span>
                             {% endif %}
 
                             {% if product.all_photo_urls|length > 1 %}
-                            <!-- Photo Counter Pill (e.g. ✦ 1 / 5) -->
-                            <div class="pdp-gallery-counter" id="pdpGalleryCounter" aria-live="polite">
-                                <span class="counter-icon">✦</span>
-                                <span id="pdpCurrentSlideNum">1</span> / <span>{{ product.all_photo_urls|length }}</span>
-                            </div>
-
-                            <!-- Left Arrow Button -->
-                            <button type="button" class="pdp-nav-arrow pdp-nav-prev" id="pdpPrevBtn" aria-label="Previous photo">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                            <button type="button" class="pdp-main-nav-arrow pdp-main-nav-prev" id="pdpMainPrev" aria-label="Previous photograph">
+                                ‹
                             </button>
-
-                            <!-- Right Arrow Button (Scroll Right) -->
-                            <button type="button" class="pdp-nav-arrow pdp-nav-next" id="pdpNextBtn" aria-label="Next photo (scroll right)">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                            <button type="button" class="pdp-main-nav-arrow pdp-main-nav-next" id="pdpMainNext" aria-label="Next photograph">
+                                ›
                             </button>
-
-                            <!-- Scroll Right Visual Indicator / Swipe Hint -->
-                            <div class="pdp-scroll-hint" id="pdpScrollHint">
-                                <span>Swipe or scroll right →</span>
+                            <div class="pdp-photo-counter-badge" id="pdpPhotoCounter">
+                                <span id="pdpCurrentIndexLabel">1</span> / {{ product.all_photo_urls|length }}
                             </div>
                             {% endif %}
                         </div>
 
-                        <!-- Horizontal Thumbnail Strip Below Gallery -->
+                        <!-- Responsive Thumbnail Gallery Below Main Image -->
                         {% if product.all_photo_urls|length > 1 %}
-                        <div class="pdp-thumbs-strip pdp-gallery-thumbs" id="pdpThumbsStrip" aria-label="Product thumbnails">
-                            {% for photo_url in product.all_photo_urls %}
-                            <button
-                                type="button"
-                                class="pdp-thumb-item pdp-gallery-thumb{% if loop.first %} active{% endif %}"
-                                data-slide-index="{{ loop.index0 }}"
-                                data-full-src="{{ product_image_url(photo_url) }}"
-                                data-alt="{{ product.name }} photo {{ loop.index }}"
-                                aria-label="View photo {{ loop.index }} of {{ product.all_photo_urls|length }}"
-                            >
-                                <img
-                                    src="{{ product_image_url(photo_url) }}"
-                                    alt="{{ product.name }} thumbnail {{ loop.index }}"
-                                    loading="lazy"
-                                >
-                                <span class="pdp-thumb-order">{{ loop.index }}</span>
+                        <div class="pdp-thumb-strip-container">
+                            <button type="button" class="pdp-thumb-scroll-btn pdp-thumb-scroll-left" id="pdpThumbScrollLeft" aria-label="Scroll thumbnails left">
+                                ‹
                             </button>
-                            {% endfor %}
+                            <div class="pdp-thumb-track" id="pdpThumbTrack" tabindex="0" role="region" aria-label="Thumbnail carousel">
+                                {% for photo_url in product.all_photo_urls %}
+                                <button
+                                    type="button"
+                                    class="pdp-thumb-card-item{% if loop.first %} active{% endif %}"
+                                    data-slide-index="{{ loop.index0 }}"
+                                    aria-label="View photograph {{ loop.index }} of {{ product.all_photo_urls|length }}"
+                                >
+                                    <img
+                                        src="{{ product_image_url(photo_url) }}"
+                                        alt="{{ product.name }} thumb {{ loop.index }}"
+                                        loading="lazy"
+                                        onerror="this.onerror=null; this.src='/static/images/placeholder.jpg';"
+                                    >
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="pdp-thumb-scroll-btn pdp-thumb-scroll-right" id="pdpThumbScrollRight" aria-label="Scroll thumbnails right">
+                                ›
+                            </button>
                         </div>
                         {% endif %}
-                    </div>
                     </div>
 
                     <div class="pdp-trust-bar">
@@ -391,117 +357,107 @@
     <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
     <script>
         // Horizontal Scrolling PDP Gallery with Touch-Swipe, Arrow Navigation, and Thumbnails
+        // Standard E-Commerce Gallery Controller (70vh Bounding Box & Thumbnails)
         (function () {
-            const track = document.getElementById("pdpSliderTrack");
-            const prevBtn = document.getElementById("pdpPrevBtn");
-            const nextBtn = document.getElementById("pdpNextBtn");
-            const counterNum = document.getElementById("pdpCurrentSlideNum");
-            const scrollHint = document.getElementById("pdpScrollHint");
-            const thumbs = document.querySelectorAll(".pdp-thumb-item, .pdp-gallery-thumb, .pdp-vthumb-item");
-            const slides = document.querySelectorAll(".pdp-slide");
+            const slides = document.querySelectorAll(".pdp-main-slide");
+            const thumbs = document.querySelectorAll(".pdp-thumb-card-item");
+            const counterLabel = document.getElementById("pdpCurrentIndexLabel");
+            const prevBtn = document.getElementById("pdpMainPrev");
+            const nextBtn = document.getElementById("pdpMainNext");
+            const thumbTrack = document.getElementById("pdpThumbTrack");
+            const thumbLeftBtn = document.getElementById("pdpThumbScrollLeft");
+            const thumbRightBtn = document.getElementById("pdpThumbScrollRight");
 
-            if (!track || !slides.length) return;
+            if (!slides.length) return;
 
             let currentIndex = 0;
-            const totalSlides = slides.length;
+            const total = slides.length;
 
-            function updateActiveIndex(idx) {
-                if (idx < 0) idx = 0;
-                if (idx >= totalSlides) idx = totalSlides - 1;
-                currentIndex = idx;
+            function goToSlide(index) {
+                if (index < 0) index = 0;
+                if (index >= total) index = total - 1;
+                currentIndex = index;
 
-                if (counterNum) {
-                    counterNum.textContent = (currentIndex + 1);
-                }
-
-                thumbs.forEach(function (thumb) {
-                    const sIdx = parseInt(thumb.dataset.slideIndex);
-                    const isActive = (sIdx === currentIndex);
-                    thumb.classList.toggle("active", isActive);
-                    thumb.setAttribute("aria-pressed", isActive ? "true" : "false");
+                slides.forEach(function(slide, idx) {
+                    slide.classList.toggle("active", idx === currentIndex);
                 });
 
-                if (scrollHint && currentIndex > 0) {
-                    scrollHint.style.opacity = "0";
-                    setTimeout(function () {
-                        if (scrollHint.parentNode) scrollHint.style.display = "none";
-                    }, 500);
+                thumbs.forEach(function(thumb, idx) {
+                    const isActive = (idx === currentIndex);
+                    thumb.classList.toggle("active", isActive);
+                    thumb.setAttribute("aria-pressed", isActive ? "true" : "false");
+                    if (isActive && thumb.scrollIntoView) {
+                        thumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+                    }
+                });
+
+                if (counterLabel) {
+                    counterLabel.textContent = (currentIndex + 1);
                 }
             }
 
-            function scrollToIndex(idx) {
-                if (idx < 0) idx = 0;
-                if (idx >= totalSlides) idx = totalSlides - 1;
-                const targetSlide = slides[idx];
-                if (targetSlide) {
-                    track.scrollTo({
-                        left: targetSlide.offsetLeft,
-                        behavior: "smooth"
-                    });
-                }
-                updateActiveIndex(idx);
+            thumbs.forEach(function(thumb) {
+                thumb.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    const idx = parseInt(this.dataset.slideIndex, 10);
+                    goToSlide(isNaN(idx) ? 0 : idx);
+                });
+            });
+
+            if (prevBtn) {
+                prevBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    goToSlide(currentIndex > 0 ? currentIndex - 1 : total - 1);
+                });
             }
 
             if (nextBtn) {
-                nextBtn.addEventListener("click", function (e) {
+                nextBtn.addEventListener("click", function(e) {
                     e.preventDefault();
-                    if (currentIndex < totalSlides - 1) {
-                        scrollToIndex(currentIndex + 1);
-                    } else {
-                        scrollToIndex(0);
-                    }
+                    goToSlide(currentIndex < total - 1 ? currentIndex + 1 : 0);
                 });
             }
 
-            if (prevBtn) {
-                prevBtn.addEventListener("click", function (e) {
+            if (thumbLeftBtn && thumbTrack) {
+                thumbLeftBtn.addEventListener("click", function(e) {
                     e.preventDefault();
-                    if (currentIndex > 0) {
-                        scrollToIndex(currentIndex - 1);
-                    } else {
-                        scrollToIndex(totalSlides - 1);
-                    }
+                    thumbTrack.scrollBy({ left: -160, behavior: "smooth" });
                 });
             }
 
-            thumbs.forEach(function (thumb) {
-                thumb.addEventListener("click", function (e) {
+            if (thumbRightBtn && thumbTrack) {
+                thumbRightBtn.addEventListener("click", function(e) {
                     e.preventDefault();
-                    const sIdx = parseInt(this.dataset.slideIndex);
-                    scrollToIndex(isNaN(sIdx) ? 0 : sIdx);
+                    thumbTrack.scrollBy({ left: 160, behavior: "smooth" });
                 });
-            });
-
-            // Track scroll listener to sync active index and thumbnails when user swipes/scrolls right
-            let isScrolling = null;
-            track.addEventListener("scroll", function () {
-                window.clearTimeout(isScrolling);
-                isScrolling = setTimeout(function () {
-                    const scrollLeft = track.scrollLeft;
-                    const slideWidth = track.clientWidth || track.offsetWidth;
-                    if (slideWidth > 0) {
-                        const calculatedIndex = Math.round(scrollLeft / slideWidth);
-                        if (calculatedIndex !== currentIndex) {
-                            updateActiveIndex(calculatedIndex);
-                        }
-                    }
-                }, 60);
-
-                if (scrollHint) {
-                    scrollHint.style.opacity = "0";
-                }
-            }, { passive: true });
+            }
 
             // Keyboard navigation (ArrowLeft / ArrowRight)
-            track.addEventListener("keydown", function (e) {
+            window.addEventListener("keydown", function(e) {
+                if (e.target && ['input', 'textarea', 'select'].includes(e.target.tagName.toLowerCase())) return;
                 if (e.key === "ArrowRight") {
-                    e.preventDefault();
-                    scrollToIndex(currentIndex + 1);
+                    goToSlide(currentIndex < total - 1 ? currentIndex + 1 : 0);
                 } else if (e.key === "ArrowLeft") {
-                    e.preventDefault();
-                    scrollToIndex(currentIndex - 1);
+                    goToSlide(currentIndex > 0 ? currentIndex - 1 : total - 1);
                 }
             });
+
+            // Touch swipe on main bounding box
+            const mainBox = document.getElementById("pdpMainBox");
+            if (mainBox) {
+                let touchStartX = 0;
+                mainBox.addEventListener("touchstart", function(e) {
+                    touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+                mainBox.addEventListener("touchend", function(e) {
+                    const touchEndX = e.changedTouches[0].screenX;
+                    if (touchStartX - touchEndX > 45) {
+                        goToSlide(currentIndex < total - 1 ? currentIndex + 1 : 0);
+                    } else if (touchEndX - touchStartX > 45) {
+                        goToSlide(currentIndex > 0 ? currentIndex - 1 : total - 1);
+                    }
+                }, { passive: true });
+            }
         })();
 
         // AI Product Q&A Interaction
