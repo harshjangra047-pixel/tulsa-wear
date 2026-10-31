@@ -46,3 +46,4 @@ class OrderNotification(db.Model):
 
     def __repr__(self):
         return f"<OrderNotification #{self.id} {self.channel}:{self.event_type} -> Order #{self.order_id} ({self.status})>"
+

@@ -22,6 +22,8 @@ class Product(db.Model):
     image = db.Column(db.String(255))
     stock = db.Column(db.Integer, default=0)
     best_seller = db.Column(db.Boolean, default=False)
+    sku = db.Column(db.String(50), nullable=True)
+    cost_price = db.Column(db.Float, default=0.0)
 
     # Shipping attributes
     weight_kg = db.Column(db.Float, default=0.5)
@@ -45,6 +47,16 @@ class Product(db.Model):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+
+    @property
+    def effective_sku(self):
+        if self.sku and self.sku.strip():
+            return self.sku.strip()
+        cat_code = "TW"
+        if self.category:
+            parts = [w[:3].upper() for w in self.category.split() if w]
+            cat_code = f"TW-{''.join(parts[:2])}"
+        return f"{cat_code}-{self.id:04d}" if self.id else f"{cat_code}-0000"
 
     @property
     def alt_category_1(self):

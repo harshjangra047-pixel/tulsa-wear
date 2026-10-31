@@ -413,7 +413,12 @@ def ensure_schema_migrations():
             "email_notification_status": "VARCHAR(50) DEFAULT 'Pending'",
             "order_items_data": "TEXT",
             "delivery_window_start": "VARCHAR(100)",
-            "delivery_window_end": "VARCHAR(100)"
+            "delivery_window_end": "VARCHAR(100)",
+            "production_status": "VARCHAR(50) DEFAULT 'Pending'",
+            "dispatch_status": "VARCHAR(50) DEFAULT 'Awaiting Production'",
+            "dispatch_date": "TIMESTAMP",
+            "dispatched_courier": "VARCHAR(100)",
+            "cost_price": "FLOAT DEFAULT 0.0"
         }
 
         with db.engine.begin() as connection:
@@ -437,7 +442,9 @@ def ensure_schema_migrations():
             "discount_percent": "INTEGER",
             "category_2": "VARCHAR(100)",
             "category_3": "VARCHAR(100)",
-            "category_4": "VARCHAR(100)"
+            "category_4": "VARCHAR(100)",
+            "sku": "VARCHAR(50)",
+            "cost_price": "FLOAT DEFAULT 0.0"
         }
         with db.engine.begin() as connection:
             for col_name, col_type in new_prod_cols.items():
@@ -511,6 +518,21 @@ def ensure_schema_migrations():
         ProductCategory.__table__.create(bind=db.engine, checkfirst=True)
     except Exception:
         pass
+    try:
+        from models.production_batch import ProductionBatch
+        ProductionBatch.__table__.create(bind=db.engine, checkfirst=True)
+    except Exception:
+        pass
+    try:
+        from models.production_allocation import ProductionAllocation
+        ProductionAllocation.__table__.create(bind=db.engine, checkfirst=True)
+    except Exception:
+        pass
+    try:
+        from models.production_setting import ProductionSetting
+        ProductionSetting.__table__.create(bind=db.engine, checkfirst=True)
+    except Exception:
+        pass
 
     try:
         db.create_all()
@@ -567,6 +589,7 @@ def ensure_schema_migrations():
     required_tables = {
         "products", "orders", "site_content", "site_content_revisions",
         "customer_addresses", "editor_preview_tokens", "order_notifications",
+        "production_batches", "production_allocations", "production_settings"
     }
     present_tables = set(inspect(db.engine).get_table_names())
     missing_tables = required_tables - present_tables

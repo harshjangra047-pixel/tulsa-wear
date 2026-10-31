@@ -14,6 +14,14 @@ from .editor_preview_token import EditorPreviewToken
 from .product_image import ProductImage
 from .product_category import ProductCategory
 from .order_notification import OrderNotification
+from .production_batch import ProductionBatch
+from .production_allocation import ProductionAllocation
+from .production_setting import ProductionSetting
 
-__all__ = ["db", "Product", "ProductCategory", "ProductImage", "Order", "OrderNotification", "Feedback", "CustomOrder", "AdminUser", "TrendUpload", "CustomerUser", "TrafficLog", "SiteContent", "SiteContentRevision", "CustomerAddress", "EditorPreviewToken"]
+__all__ = [
+    "db", "Product", "ProductCategory", "ProductImage", "Order", "OrderNotification",
+    "ProductionBatch", "ProductionAllocation", "ProductionSetting",
+    "Feedback", "CustomOrder", "AdminUser", "TrendUpload", "CustomerUser", "TrafficLog",
+    "SiteContent", "SiteContentRevision", "CustomerAddress", "EditorPreviewToken"
+]
 

@@ -225,6 +225,34 @@ class Order(db.Model):
         nullable=True
     )
 
+    # Production & Dispatch ERP attributes
+    production_status = db.Column(
+        db.String(50),
+        default="Pending",
+        nullable=False
+    )
+
+    dispatch_status = db.Column(
+        db.String(50),
+        default="Awaiting Production",
+        nullable=False
+    )
+
+    dispatch_date = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    dispatched_courier = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    cost_price = db.Column(
+        db.Float,
+        default=0.0
+    )
+
     created_at = db.Column(
         db.DateTime,
         server_default=db.func.now()
