@@ -358,128 +358,123 @@
             onsubmit="return validatePaymentSubmission(event)"
         >
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+            <input type="hidden" id="selectedPaymentMethod" name="payment_method" value="Google Pay">
 
-            <!-- 1. CHOOSE PAYMENT METHOD -->
-            <div style="margin-bottom: 20px;">
-                <p style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 600; color: var(--text); margin-bottom: 10px;">
-                    1. Choose Payment Method
-                </p>
+            <!-- 1. CHOOSE PAYMENT METHOD (TABS) -->
+            <div style="margin-bottom: 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <p style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: #333; margin: 0;">
+                        1. Select Payment Method
+                    </p>
+                    <span id="qrTimerBadge" style="font-size: 11px; background: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 3px; font-weight: 600;">
+                        ⏱️ QR Active • <span id="countdownText">14:59</span>
+                    </span>
+                </div>
 
-                <!-- Method: UPI -->
-                <label class="method-option selected" id="opt-upi">
-                    <input type="radio" name="payment_method" value="UPI (GPay / PhonePe / QR)" checked onchange="switchPaymentMethod(this.value)">
-                    <div style="flex: 1;">
-                        <div style="font-weight: 600; font-size: 14px;">UPI — Google Pay, PhonePe, Paytm, QR</div>
-                        <div style="font-size: 12px; color: #2e7d32; margin-top: 2px;">
-                            Pay <strong>₹{{ "{:,.0f}".format(order.price) }}</strong> • 0% Transaction Fees • Direct Bank Transfer
-                        </div>
+                <div class="payment-tabs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;">
+                    <!-- Google Pay Tab -->
+                    <div class="payment-tab-btn active tab-gpay" id="tab-gpay" onclick="selectPaymentChannel('Google Pay')">
+                        <span style="font-size: 20px;">🟢</span>
+                        <strong style="font-size: 13px; color: #111;">Google Pay</strong>
+                        <span style="font-size: 10px; color: #4285F4; font-weight: 600;">GPay QR & App</span>
                     </div>
-                </label>
 
-                <!-- Cash on delivery is recorded separately and remains unpaid until collection. -->
-                <label class="method-option" id="opt-cod">
-                    <input type="radio" name="payment_method" value="Cash on Delivery" onchange="switchPaymentMethod(this.value)">
-                    <div style="flex: 1;">
-                        <div style="font-weight: 600; font-size: 14px;">Cash on Delivery (COD)</div>
-                        <div style="font-size: 12px; color: #555; margin-top: 3px; line-height: 1.4;">
-                            The order remains unpaid until cash is collected on delivery.
-                        </div>
+                    <!-- PhonePe Tab -->
+                    <div class="payment-tab-btn tab-phonepe" id="tab-phonepe" onclick="selectPaymentChannel('PhonePe')">
+                        <span style="font-size: 20px;">🟣</span>
+                        <strong style="font-size: 13px; color: #111;">PhonePe</strong>
+                        <span style="font-size: 10px; color: #5f259f; font-weight: 600;">PhonePe QR & App</span>
                     </div>
-                </label>
+
+                    <!-- Paytm / Any UPI Tab -->
+                    <div class="payment-tab-btn tab-upi" id="tab-upi" onclick="selectPaymentChannel('Paytm / UPI')">
+                        <span style="font-size: 20px;">🔵</span>
+                        <strong style="font-size: 13px; color: #111;">Paytm / UPI</strong>
+                        <span style="font-size: 10px; color: #002e6e; font-weight: 600;">All UPI Apps</span>
+                    </div>
+
+                    <!-- COD Tab -->
+                    <div class="payment-tab-btn tab-cod" id="tab-cod" onclick="selectPaymentChannel('Cash on Delivery')">
+                        <span style="font-size: 20px;">💵</span>
+                        <strong style="font-size: 13px; color: #111;">Cash on Delivery</strong>
+                        <span style="font-size: 10px; color: #888; font-weight: 500;">Pay at Doorstep</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- 2. DYNAMIC QR CODE BOX -->
-            <div class="qr-display-box" id="qrDisplayBox">
-                <div style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 600;">
-                    Scan QR Code to Pay
+            <!-- 2. DYNAMIC QR CODE DISPLAY BOX -->
+            <div class="qr-display-box" id="qrDisplayBox" style="background: #faf8f5; border: 1px solid var(--border); padding: 24px 20px; border-radius: 4px; text-align: center; margin-bottom: 24px;">
+                
+                <!-- Channel Header Banner -->
+                <div id="channelBanner" style="display: inline-flex; align-items: center; gap: 8px; background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 12px;">
+                    <span id="channelIcon">🟢</span>
+                    <span id="channelTitle">Google Pay — Instant Verified Transfer</span>
                 </div>
 
-                <div style="font-size: 24px; font-weight: 600; color: #111; margin: 6px 0;">
-                    Amount to Pay: <span id="displayAmount" style="color: #2e7d32;">₹{{ "{:,.0f}".format(order.price) }}</span>
+                <div style="font-size: 26px; font-weight: 600; color: #111; margin: 4px 0 12px;">
+                    Payable Amount: <span id="displayAmount" style="color: #2e7d32;">₹{{ "{:,.0f}".format(order.price) }}</span>
                 </div>
 
-                {% if upi_id %}
-                <!-- Direct 1-Tap Multi-App Payment Options -->
-                <div style="margin-top: 14px; margin-bottom: 16px;">
-                    <p style="font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700; color: #555; margin-bottom: 10px;">
-                        Tap Your Preferred UPI App to Pay Directly:
-                    </p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
-                        <!-- Google Pay -->
-                        <a href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa" onclick="trackPaymentLaunch('Google Pay')" class="app-pay-btn" style="background: #ffffff; color: #1f1f1f; border: 1.5px solid #4285F4; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(0,0,0,0.06); transition: all 0.2s;">
-                            <span style="font-size: 20px;">🟢</span>
-                            <span>Google Pay</span>
-                            <span style="font-size: 10px; color: #4285F4; font-weight: 500;">Direct App Pay</span>
-                        </a>
-
-                        <!-- PhonePe -->
-                        <a href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa" onclick="trackPaymentLaunch('PhonePe')" class="app-pay-btn" style="background: #5f259f; color: #ffffff; border: 1.5px solid #5f259f; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(95,37,159,0.25); transition: all 0.2s;">
-                            <span style="font-size: 20px;">🟣</span>
-                            <span>PhonePe</span>
-                            <span style="font-size: 10px; color: #e9d5ff; font-weight: 500;">Direct App Pay</span>
-                        </a>
-
-                        <!-- Paytm -->
-                        <a href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa" onclick="trackPaymentLaunch('Paytm')" class="app-pay-btn" style="background: #002e6e; color: #ffffff; border: 1.5px solid #00b9f5; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(0,46,110,0.25); transition: all 0.2s;">
-                            <span style="font-size: 20px;">🔵</span>
-                            <span>Paytm UPI</span>
-                            <span style="font-size: 10px; color: #00b9f5; font-weight: 500;">Direct App Pay</span>
-                        </a>
-
-                        <!-- BHIM / Any UPI -->
-                        <a href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa" onclick="trackPaymentLaunch('BHIM / Other UPI')" class="app-pay-btn" style="background: #f37021; color: #ffffff; border: 1.5px solid #f37021; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-decoration: none; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(243,112,33,0.25); transition: all 0.2s;">
-                            <span style="font-size: 20px;">🟠</span>
-                            <span>BHIM / Other</span>
-                            <span style="font-size: 10px; color: #fff; font-weight: 500;">All UPI Apps</span>
-                        </a>
-                    </div>
-
-                    <!-- Payment Launch Status Banner -->
-                    <div id="paymentLaunchNotice" style="display: none; background: #ecfdf5; border: 1.5px solid #10b981; border-radius: 6px; padding: 14px 18px; margin-top: 14px; text-align: left;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span style="font-size: 20px;">⏳</span>
-                            <div>
-                                <strong style="color: #065f46; font-size: 13.5px;">Payment Initiated in UPI App!</strong>
-                                <p style="margin: 2px 0 0; font-size: 12px; color: #047857;">
-                                    Complete the payment of <strong>₹{{ "{:,.0f}".format(order.price) }}</strong> in your app, then copy your 12-digit UPI UTR number and paste it below to confirm your order.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div style="margin: 16px 0; display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--muted); font-size: 11px; letter-spacing: 0.08em;">
-                    <span style="height: 1px; width: 40px; background: var(--border);"></span>
-                    <span>OR SCAN QR WITH ANY CAMERA / UPI APP</span>
-                    <span style="height: 1px; width: 40px; background: var(--border);"></span>
-                </div>
-                <!-- Dynamic QR Code Image with multi-service & canvas fallback -->
-                <div class="qr-image-wrapper" id="qrWrapper">
+                <!-- Dynamic Server-Generated QR Image -->
+                <div class="qr-image-wrapper" id="qrWrapper" style="background: #fff; padding: 14px; display: inline-block; border: 1.5px solid #e0e0e0; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); margin: 6px 0 12px;">
                     <img id="upiQrImage"
-                         src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=upi%3A%2F%2Fpay%3Fpa%3D{{ upi_id }}%26pn%3D{{ upi_payee_name|urlencode }}%26am%3D{{ order.price }}%26cu%3DINR%26tn%3DOrder_{{ order.id }}"
+                         src="{{ url_for('get_order_upi_qr', order_id=order.id) }}"
                          onerror="handleQrFallback(this)"
-                         alt="Scan UPI QR Code"
+                         alt="Order {{ order.id }} UPI QR Code"
                          width="220"
-                         height="220">
+                         height="220"
+                         style="display: block; width: 220px; height: 220px; object-fit: contain;">
                     <div id="qrFallbackCanvas" style="display: none;"></div>
                 </div>
 
-                <div style="font-size: 12px; color: #333; margin-top: 4px;">
-                    Payee: <strong>{{ upi_payee_name }}</strong><br>
-                    UPI ID: <strong id="upiIdText" style="font-family: monospace; font-size: 13px; color: #111;">{{ upi_id }}</strong>
-                    <button type="button" onclick="copyUpiId()" style="background: none; border: 1px solid var(--border); padding: 2px 8px; font-size: 11px; cursor: pointer; border-radius: 2px; margin-left: 6px;">
-                        📋 Copy UPI
-                    </button>
+                <!-- Step-by-Step Channel Specific Instructions -->
+                <div id="channelInstructions" style="background: #ffffff; border: 1px solid #ececec; border-radius: 6px; padding: 14px 16px; margin: 12px auto 16px; max-width: 460px; text-align: left; font-size: 12.5px; line-height: 1.55; color: #444;">
+                    <strong style="color: #111; display: block; margin-bottom: 6px;" id="instructionHeader">📲 Scan with Google Pay:</strong>
+                    <ol style="margin: 0; padding-left: 18px;" id="instructionList">
+                        <li>Open the <strong>Google Pay</strong> app on your mobile phone.</li>
+                        <li>Tap <strong>Scan any QR code</strong> on your home screen.</li>
+                        <li>Point your phone camera at the QR code above.</li>
+                        <li>Verify payee <strong>{{ upi_payee_name }}</strong> and confirm payment of <strong>₹{{ "{:,.0f}".format(order.price) }}</strong>.</li>
+                    </ol>
                 </div>
 
-                {% else %}
-                <div style="background: #fff; border: 1px dashed var(--border); padding: 14px; margin-top: 10px; border-radius: 2px;">
-                    <p style="font-size: 12px; color: var(--muted); margin: 0;">
-                        ℹ️ <strong>Studio UPI ID setup:</strong> Payments will be verified manually upon UTR submission.
-                    </p>
+                <!-- 1-Tap App Launch for Mobile Browsers -->
+                <div style="max-width: 460px; margin: 0 auto 16px;">
+                    <a id="mobileAppHandoffBtn"
+                       href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa"
+                       onclick="trackPaymentLaunch('Mobile UPI App')"
+                       class="upi-app-btn"
+                       style="background: #4285F4;">
+                        <span id="handoffIcon">⚡</span>
+                        <span id="handoffText">Tap to Open Google Pay App Directly</span>
+                    </a>
+                    <small style="display: block; font-size: 11px; color: #888; margin-top: 5px;">
+                        On mobile? Tap above to launch your installed app automatically.
+                    </small>
                 </div>
-                {% endif %}
+
+                <!-- Payee Details & Copy UPI -->
+                <div style="font-size: 12px; color: #555; border-top: 1px solid #eee; padding-top: 12px; max-width: 460px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+                    <div>
+                        Payee: <strong>{{ upi_payee_name }}</strong> &bull;
+                        UPI ID: <strong id="upiIdText" style="font-family: monospace; font-size: 12.5px; color: #111;">{{ upi_id }}</strong>
+                    </div>
+                    <button type="button" onclick="copyUpiId()" style="background: #fff; border: 1px solid #ccc; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px; font-weight: 500;">
+                        📋 Copy UPI ID
+                    </button>
+                </div>
+            </div>
+
+            <!-- COD NOTICE BOX (When COD is selected) -->
+            <div id="codNoticeBox" style="display: none; background: #faf8f5; border: 1px solid #efe8df; border-radius: 6px; padding: 24px 20px; text-align: center; margin-bottom: 24px;">
+                <span style="font-size: 32px; display: block; margin-bottom: 8px;">📦</span>
+                <h3 style="font-size: 18px; margin: 0 0 8px; font-weight: 600;">Cash on Delivery (COD) Selected</h3>
+                <p style="font-size: 13px; color: #666; max-width: 460px; margin: 0 auto 14px; line-height: 1.5;">
+                    Your bespoke Tulsa Wears garment will be tailored to your measurements and dispatched to your address. The full amount of <strong>₹{{ "{:,.0f}".format(order.price) }}</strong> will be collected in cash upon doorstep delivery.
+                </p>
+                <div style="font-size: 12px; color: #2e7d32; background: #e8f5e9; padding: 8px 14px; border-radius: 4px; display: inline-block;">
+                    ✓ No advance deposit required • Doorstep verification
+                </div>
             </div>
 
             <!-- 3. PAYMENT SCREENSHOT UPLOAD SECTION (USER REQUIRED) -->
@@ -566,82 +561,180 @@ const orderId = {{ order.id }};
 const upiId = "{{ upi_id or '' }}";
 const upiName = "{{ upi_payee_name or 'Tulsa Wears' }}";
 
-function switchPaymentMethod(method) {
-    const isCod = method.includes('Cash on Delivery');
-    const payAmount = basePrice;
+// 15-Minute QR Session Timer
+let timeLeft = 15 * 60;
+const timerEl = document.getElementById('countdownText');
+if (timerEl) {
+    const timerInterval = setInterval(() => {
+        timeLeft--;
+        if (timeLeft <= 0) {
+            clearInterval(timerInterval);
+            timerEl.innerText = "00:00 (Expired)";
+            const badge = document.getElementById('qrTimerBadge');
+            if (badge) {
+                badge.style.background = "#ffebee";
+                badge.style.color = "#c62828";
+                badge.innerText = "⚠️ Session Expired • Refresh Page";
+            }
+        } else {
+            const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+            const s = (timeLeft % 60).toString().padStart(2, '0');
+            timerEl.innerText = `${m}:${s}`;
+        }
+    }, 1000);
+}
 
-    // Update radio option styles
-    document.querySelectorAll('.method-option').forEach(el => el.classList.remove('selected'));
-    if (isCod) {
-        document.getElementById('opt-cod').classList.add('selected');
-    } else {
-        document.getElementById('opt-upi').classList.add('selected');
+function selectPaymentChannel(channel) {
+    const selectedInput = document.getElementById('selectedPaymentMethod');
+    if (selectedInput) selectedInput.value = channel;
+
+    // Update Tab Styles
+    document.querySelectorAll('.payment-tab-btn').forEach(btn => btn.classList.remove('active'));
+    
+    const qrBox = document.getElementById('qrDisplayBox');
+    const uploadBox = document.getElementById('uploadDropzone');
+    const utrSection = document.querySelector('.utr-section');
+    const codBox = document.getElementById('codNoticeBox');
+    const submitBtn = document.getElementById('placeOrderBtn');
+
+    if (channel === 'Cash on Delivery') {
+        const tabCod = document.getElementById('tab-cod');
+        if (tabCod) tabCod.classList.add('active');
+        if (qrBox) qrBox.style.display = 'none';
+        if (uploadBox) uploadBox.style.display = 'none';
+        if (utrSection) utrSection.style.display = 'none';
+        if (codBox) codBox.style.display = 'block';
+        if (submitBtn) submitBtn.innerText = 'Confirm Cash on Delivery Order →';
+        return;
     }
 
-    // Update Amount Text
-    document.getElementById('displayAmount').innerText = '₹' + Math.round(payAmount).toLocaleString();
-    document.getElementById('qrDisplayBox').style.display = isCod ? 'none' : '';
-    document.getElementById('uploadDropzone').style.display = isCod ? 'none' : '';
-    document.querySelector('.utr-section').style.display = isCod ? 'none' : '';
+    // Show QR & UTR sections for digital payment
+    if (qrBox) qrBox.style.display = 'block';
+    if (uploadBox) uploadBox.style.display = 'block';
+    if (utrSection) utrSection.style.display = 'block';
+    if (codBox) codBox.style.display = 'none';
+    if (submitBtn) submitBtn.innerText = 'Confirm Payment & Place Order →';
 
-    // Update QR Code and Mobile Link
-    if (upiId) {
-        const note = encodeURIComponent('Order #' + orderId);
-        const upiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + payAmount + '&cu=INR&tn=' + note;
+    const banner = document.getElementById('channelBanner');
+    const icon = document.getElementById('channelIcon');
+    const title = document.getElementById('channelTitle');
+    const instrHeader = document.getElementById('instructionHeader');
+    const instrList = document.getElementById('instructionList');
+    const handoffBtn = document.getElementById('mobileAppHandoffBtn');
+    const handoffText = document.getElementById('handoffText');
 
-        const mobileLink = document.getElementById('upiMobileLink');
-        if (mobileLink) mobileLink.href = upiUrl;
+    const note = encodeURIComponent('Order #' + orderId);
+    const standardUpiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + basePrice + '&cu=INR&tr=' + orderId + '&tn=' + note;
 
-        const qrImg = document.getElementById('upiQrImage');
-        if (qrImg) {
-            qrImg.dataset.attempt = "0";
-            qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(upiUrl);
+    if (channel === 'Google Pay') {
+        document.getElementById('tab-gpay')?.classList.add('active');
+        if (banner) { banner.style.background = '#eef2ff'; banner.style.borderColor = '#c7d2fe'; banner.style.color = '#1e40af'; }
+        if (icon) icon.innerText = '🟢';
+        if (title) title.innerText = 'Google Pay — Instant Verified Transfer';
+        if (instrHeader) instrHeader.innerText = '📲 Scan with Google Pay:';
+        if (instrList) {
+            instrList.innerHTML = `
+                <li>Open the <strong>Google Pay</strong> app on your mobile device.</li>
+                <li>Tap <strong>Scan any QR code</strong> on your screen.</li>
+                <li>Point your camera at the QR code above.</li>
+                <li>Confirm payment of <strong>₹${Math.round(basePrice).toLocaleString()}</strong> to <strong>${upiName}</strong>.</li>
+                <li>Copy the 12-digit UPI Transaction ID (UTR) and paste it below.</li>
+            `;
         }
+        if (handoffBtn) {
+            handoffBtn.href = standardUpiUrl;
+            handoffBtn.style.background = '#4285F4';
+        }
+        if (handoffText) handoffText.innerText = 'Tap to Open Google Pay App Directly';
+    } else if (channel === 'PhonePe') {
+        document.getElementById('tab-phonepe')?.classList.add('active');
+        if (banner) { banner.style.background = '#f5f3ff'; banner.style.borderColor = '#ddd6fe'; banner.style.color = '#5b21b6'; }
+        if (icon) icon.innerText = '🟣';
+        if (title) title.innerText = 'PhonePe — Instant Verified Transfer';
+        if (instrHeader) instrHeader.innerText = '📲 Scan with PhonePe:';
+        if (instrList) {
+            instrList.innerHTML = `
+                <li>Open the <strong>PhonePe</strong> app on your mobile device.</li>
+                <li>Tap the <strong>QR Scanner icon</strong> at the top right of your home screen.</li>
+                <li>Point your camera at the QR code above.</li>
+                <li>Confirm payment of <strong>₹${Math.round(basePrice).toLocaleString()}</strong> to <strong>${upiName}</strong>.</li>
+                <li>Copy the 12-digit UTR from your payment receipt and paste it below.</li>
+            `;
+        }
+        if (handoffBtn) {
+            handoffBtn.href = standardUpiUrl;
+            handoffBtn.style.background = '#5f259f';
+        }
+        if (handoffText) handoffText.innerText = 'Tap to Open PhonePe App Directly';
+    } else {
+        document.getElementById('tab-upi')?.classList.add('active');
+        if (banner) { banner.style.background = '#f0fdf4'; banner.style.borderColor = '#bbf7d0'; banner.style.color = '#166534'; }
+        if (icon) icon.innerText = '🔵';
+        if (title) title.innerText = 'Paytm / Any UPI App — Universal Transfer';
+        if (instrHeader) instrHeader.innerText = '📲 Scan with Any UPI App:';
+        if (instrList) {
+            instrList.innerHTML = `
+                <li>Open <strong>Paytm, BHIM, CRED, Amazon Pay</strong> or your bank's UPI app.</li>
+                <li>Select <strong>Scan & Pay</strong>.</li>
+                <li>Scan the QR code above and verify payee <strong>${upiName}</strong>.</li>
+                <li>Complete payment of <strong>₹${Math.round(basePrice).toLocaleString()}</strong>.</li>
+                <li>Enter the reference / UTR number in the box below.</li>
+            `;
+        }
+        if (handoffBtn) {
+            handoffBtn.href = standardUpiUrl;
+            handoffBtn.style.background = '#002e6e';
+        }
+        if (handoffText) handoffText.innerText = 'Tap to Open Installed UPI App';
+    }
+
+    // Refresh QR Code image to ensure fresh display
+    const qrImg = document.getElementById('upiQrImage');
+    if (qrImg) {
+        qrImg.style.display = 'block';
+        qrImg.src = `/api/order/${orderId}/upi-qr.png?v=${Date.now()}`;
     }
 }
+
+// Legacy alias for compatibility
+const switchPaymentMethod = selectPaymentChannel;
 
 function handleQrFallback(imgEl) {
     const attempt = parseInt(imgEl.dataset.attempt || "0", 10);
     const note = encodeURIComponent('Order #' + orderId);
-    const upiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + basePrice + '&cu=INR&tn=' + note;
+    const upiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + basePrice + '&cu=INR&tr=' + orderId + '&tn=' + note;
 
     if (attempt === 0) {
         imgEl.dataset.attempt = "1";
-        // Fallback 1: QuickChart QR API
-        imgEl.src = 'https://quickchart.io/qr?size=220&text=' + encodeURIComponent(upiUrl);
+        imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(upiUrl);
     } else if (attempt === 1) {
         imgEl.dataset.attempt = "2";
-        // Fallback 2: Google Chart QR API
-        imgEl.src = 'https://chart.googleapis.com/chart?chs=220x220&cht=qr&chl=' + encodeURIComponent(upiUrl);
+        imgEl.src = 'https://quickchart.io/qr?size=220&text=' + encodeURIComponent(upiUrl);
     } else {
-        // Fallback 3: Text notification with direct links
         imgEl.style.display = 'none';
         const fallbackBox = document.getElementById('qrFallbackCanvas');
         if (fallbackBox) {
             fallbackBox.style.display = 'block';
             fallbackBox.innerHTML = `
                 <div style="padding: 16px; background: #fff8e1; border: 1px dashed #f57f17; border-radius: 4px; font-size: 12px; color: #555;">
-                    <p style="margin: 0 0 8px; font-weight: 600; color: #e65100;">📲 Use Direct UPI App Links Above</p>
-                    <p style="margin: 0;">Tap <strong>Google Pay</strong>, <strong>PhonePe</strong>, or <strong>Paytm</strong> above to open your payment app directly, or copy the UPI ID below.</p>
+                    <p style="margin: 0 0 8px; font-weight: 600; color: #e65100;">📲 Use Direct UPI App Button Above</p>
+                    <p style="margin: 0;">Tap the direct app launch button above or copy the UPI ID below.</p>
                 </div>
             `;
         }
     }
 }
 
-
-        function trackPaymentLaunch(appName) {
-            const notice = document.getElementById('paymentLaunchNotice');
-            if (notice) notice.style.display = 'block';
-            const utrSection = document.querySelector('.utr-section');
-            if (utrSection) {
-                utrSection.scrollIntoView({ behavior: 'smooth' });
-                setTimeout(() => {
-                    const utrInput = document.getElementById('upiUtrInput');
-                    if (utrInput) utrInput.focus();
-                }, 800);
-            }
-        }
+function trackPaymentLaunch(appName) {
+    const utrSection = document.querySelector('.utr-section');
+    if (utrSection) {
+        utrSection.scrollIntoView({ behavior: 'smooth' });
+        setTimeout(() => {
+            const utrInput = document.getElementById('upiUtrInput');
+            if (utrInput) utrInput.focus();
+        }, 800);
+    }
+}
 
         function copyUpiId() {
     if (upiId) {

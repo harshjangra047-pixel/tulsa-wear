@@ -327,6 +327,66 @@ class CommerceUpgradesTests(unittest.TestCase):
             self.assertEqual(data.get("subtotal"), 4800.0)
             self.assertEqual(data.get("final_total"), 4800.0 - 480.0)
 
+    def test_upi_qr_code_endpoints(self):
+        """API endpoints /api/order/<id>/upi-qr.png and /api/order/<id>/payment-qr-details work correctly."""
+        with site.app.app_context():
+            order = Order(
+                customer_name="Sita Sharma",
+                phone="9876543210",
+                email="sita@example.com",
+                address="12 Janpath",
+                city="New Delhi",
+                pincode="110001",
+                product_id=self.p1_id,
+                product_name="Royal Chanderi Silk Kurta",
+                price=4920.0,
+                shipping_fee=120.0,
+                status="Pending"
+            )
+            site.db.session.add(order)
+            site.db.session.commit()
+            order_id = order.id
+
+        with self.client.session_transaction() as sess:
+            sess["authorized_order_ids"] = [order_id]
+
+        # 1. Test PNG QR code generation
+        res_png = self.client.get(f"/api/order/{order_id}/upi-qr.png")
+        self.assertEqual(res_png.status_code, 200)
+        self.assertEqual(res_png.mimetype, "image/png")
+        self.assertTrue(res_png.data.startswith(b"\x89PNG\r\n\x1a\n"), "Must be a valid PNG image binary")
+
+        # 2. Test JSON details endpoint
+        res_json = self.client.get(f"/api/order/{order_id}/payment-qr-details")
+        self.assertEqual(res_json.status_code, 200)
+        data = res_json.get_json()
+        self.assertTrue(data.get("success"))
+        self.assertIn("upi://pay?", data.get("upi_uri"))
+        self.assertEqual(data.get("amount"), 4920.0)
+        self.assertEqual(data.get("order_id"), order_id)
+
+    def test_product_parcel_attributes(self):
+        """Product parcel specifications (weight, dimensions) persist accurately."""
+        with site.app.app_context():
+            prod = Product(
+                name="Heirloom Organza Dupatta",
+                price=2400.0,
+                category="Accessories",
+                weight_kg=0.35,
+                length_cm=25.0,
+                width_cm=20.0,
+                height_cm=4.0
+            )
+            site.db.session.add(prod)
+            site.db.session.commit()
+            prod_id = prod.id
+
+            fetched = site.db.session.get(Product, prod_id)
+            self.assertEqual(fetched.weight_kg, 0.35)
+            self.assertEqual(fetched.length_cm, 25.0)
+            self.assertEqual(fetched.width_cm, 20.0)
+            self.assertEqual(fetched.height_cm, 4.0)
+
 
 if __name__ == "__main__":
     unittest.main()

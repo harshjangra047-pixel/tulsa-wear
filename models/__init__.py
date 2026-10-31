@@ -11,6 +11,8 @@ from .site_content import SiteContent, SiteContentRevision
 from .customer_address import CustomerAddress
 from .editor_preview_token import EditorPreviewToken
 
-__all__ = ["db", "Product", "Order", "Feedback", "CustomOrder", "AdminUser", "TrendUpload", "CustomerUser", "TrafficLog", "SiteContent", "SiteContentRevision", "CustomerAddress", "EditorPreviewToken"]
-
 from .product_image import ProductImage
+from .product_category import ProductCategory
+
+__all__ = ["db", "Product", "ProductCategory", "ProductImage", "Order", "Feedback", "CustomOrder", "AdminUser", "TrendUpload", "CustomerUser", "TrafficLog", "SiteContent", "SiteContentRevision", "CustomerAddress", "EditorPreviewToken"]
+

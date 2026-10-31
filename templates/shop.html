@@ -102,7 +102,7 @@
                     All Pieces
                 </a>
                 {% for cat in categories %}
-                <a href="{{ url_for('shop', category=cat, sort=selected_sort, min_price=min_price, max_price=max_price) }}" class="category-pill {% if selected_category == cat %}active{% endif %}">
+                <a href="{{ url_for('shop', category=cat, sort=selected_sort, min_price=min_price, max_price=max_price) }}" class="category-pill {% if is_category_active(cat, selected_category) %}active{% endif %}">
                     {{ cat }}
                 </a>
                 {% endfor %}
@@ -187,10 +187,14 @@
                     <div class="editorial-card-content">
                         <p class="editorial-card-cat">{{ product.category }}</p>
                         <h2 class="editorial-card-title">{{ product.name }}</h2>
-                        <div class="editorial-card-bottom">
+                        <div class="editorial-card-bottom" style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px;">
                             <span class="editorial-card-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                            {% if product.has_discount %}
+                            <span style="text-decoration: line-through; font-size: 13px; color: var(--text-muted);">₹{{ "{:,.0f}".format(product.effective_original_price) }}</span>
+                            <span style="background: rgba(33, 140, 116, 0.12); color: #218c74; font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 2px;">{{ product.effective_discount_percent }}% OFF</span>
+                            {% endif %}
                             {% if product.fabric %}
-                            <span class="editorial-card-fabric">{{ product.fabric }}</span>
+                            <span class="editorial-card-fabric" style="margin-left: auto;">{{ product.fabric }}</span>
                             {% endif %}
                         </div>
                     </div>

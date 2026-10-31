@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>Edit Garment — {{ product.name }} | Tulsa Admin</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+    <style>
+        :root {
+            --admin-bg: #f8f6f2;
+            --admin-card: #ffffff;
+            --admin-border: #e6dfd5;
+            --admin-accent: #c9a96e;
+            --admin-text: #1d1b18;
+            --admin-muted: #736d64;
+            --admin-danger: #b33939;
+            --admin-success: #218c74;
+        }
+        body {
+            background-color: var(--admin-bg);
+            color: var(--admin-text);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .admin-nav {
+            background: #171513;
+            color: #fff;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(201, 169, 110, 0.3);
+        }
+        .admin-nav a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 13px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .admin-nav .brand-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            letter-spacing: 0.15em;
+            color: var(--admin-accent);
+        }
+        .edit-page-container {
+            max-width: 1100px;
+            margin: 40px auto;
+            padding: 0 24px 80px;
+        }
+        .breadcrumb-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--admin-muted);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .breadcrumb-bar a {
+            color: var(--admin-muted);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .breadcrumb-bar a:hover {
+            color: var(--admin-accent);
+        }
+        .page-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .page-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 36px;
+            font-weight: 500;
+            margin: 0 0 8px 0;
+            color: #171513;
+        }
+        .page-subtitle {
+            font-size: 14px;
+            color: var(--admin-muted);
+            margin: 0;
+        }
+        .btn-action-outline {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            background: #fff;
+            border: 1px solid var(--admin-border);
+            color: var(--admin-text);
+            text-decoration: none;
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-action-outline:hover {
+            border-color: var(--admin-accent);
+            color: var(--admin-accent);
+        }
+        .btn-save-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            background: #171513;
+            color: #fff;
+            border: 1px solid #171513;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-save-primary:hover {
+            background: var(--admin-accent);
+            border-color: var(--admin-accent);
+            color: #171513;
+        }
+        .edit-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 32px;
+        }
+        @media (max-width: 860px) {
+            .edit-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .card-section {
+            background: var(--admin-card);
+            border: 1px solid var(--admin-border);
+            border-radius: 3px;
+            padding: 28px;
+            margin-bottom: 28px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+        }
+        .section-heading {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 600;
+            margin: 0 0 6px 0;
+            color: #171513;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .section-desc {
+            font-size: 12px;
+            color: var(--admin-muted);
+            margin: 0 0 20px 0;
+            line-height: 1.5;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+        @media (max-width: 600px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        .form-group-custom {
+            margin-bottom: 18px;
+        }
+        .form-group-custom label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #444;
+            margin-bottom: 6px;
+        }
+        .form-group-custom input[type="text"],
+        .form-group-custom input[type="number"],
+        .form-group-custom select,
+        .form-group-custom textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--admin-border);
+            background: #fdfcfb;
+            font-size: 13px;
+            color: var(--admin-text);
+            border-radius: 2px;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .form-group-custom input:focus,
+        .form-group-custom select:focus,
+        .form-group-custom textarea:focus {
+            outline: none;
+            border-color: var(--admin-accent);
+            background: #fff;
+        }
+        .category-multi-box {
+            background: #faf8f5;
+            border: 1px solid var(--admin-border);
+            padding: 20px;
+            border-radius: 2px;
+            margin-bottom: 18px;
+        }
+        .category-multi-box .note-badge {
+            display: inline-block;
+            background: rgba(201, 169, 110, 0.2);
+            color: #8c6e32;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 2px;
+            margin-bottom: 12px;
+            letter-spacing: 0.05em;
+        }
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+        }
+        .gallery-item-card {
+            border: 1px solid var(--admin-border);
+            background: #fff;
+            padding: 6px;
+            border-radius: 2px;
+            position: relative;
+            text-align: center;
+        }
+        .gallery-item-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 2px;
+            display: block;
+        }
+        .gallery-item-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #171513;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 2px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .gallery-item-actions {
+            margin-top: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .btn-gallery-action {
+            background: none;
+            border: 1px solid var(--admin-border);
+            padding: 4px 6px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            border-radius: 2px;
+            transition: all 0.2s;
+        }
+        .btn-gallery-action:hover {
+            border-color: var(--admin-accent);
+            color: var(--admin-accent);
+        }
+        .btn-gallery-delete {
+            color: var(--admin-danger);
+            border-color: rgba(179, 57, 57, 0.3);
+        }
+        .btn-gallery-delete:hover {
+            background: var(--admin-danger);
+            color: #fff;
+        }
+        .discount-preview-pill {
+            display: inline-block;
+            background: rgba(33, 140, 116, 0.12);
+            color: var(--admin-success);
+            padding: 4px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 3px;
+            margin-top: 4px;
+        }
+        .flash-box {
+            padding: 12px 18px;
+            border-radius: 3px;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+        .flash-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+        .flash-danger {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="admin-nav">
+        <a href="{{ url_for('admin_products') }}" class="brand-title">TULSA ATELIER • ADMIN PORTAL</a>
+        <div style="display: flex; gap: 20px; align-items: center;">
+            <a href="{{ url_for('admin_products') }}">← Garments Catalog</a>
+            <a href="{{ url_for('home') }}" target="_blank">View Storefront ↗</a>
+        </div>
+    </nav>
+
+    <div class="edit-page-container">
+
+        <div class="breadcrumb-bar">
+            <a href="{{ url_for('admin_products') }}">Catalog & Inventory</a>
+            <span>/</span>
+            <span>Garment #{{ product.id }}</span>
+            <span>/</span>
+            <span style="color: var(--admin-text); font-weight: 600;">Edit Silhouette Details</span>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="flash-box flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="page-header-row">
+            <div>
+                <h1 class="page-title">Edit Garment: {{ product.name }}</h1>
+                <p class="page-subtitle">SKU: TW-{{ "%04d"|format(product.id) }} • Created {{ product.created_at.strftime('%d %B %Y') if product.created_at else 'Recently' }}</p>
+            </div>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <a href="{{ url_for('admin_products') }}" class="btn-action-outline">Cancel</a>
+                <button type="submit" form="mainEditForm" class="btn-save-primary">Save Changes →</button>
+            </div>
+        </div>
+
+        <form id="mainEditForm" method="POST" action="{{ url_for('admin_edit_product', product_id=product.id) }}" enctype="multipart/form-data">
+            <div class="edit-grid">
+
+                <!-- LEFT COLUMN: Main Product Details -->
+                <div class="col-main">
+
+                    <!-- SECTION 1: Basic Information -->
+                    <div class="card-section">
+                        <h2 class="section-heading">1. Basic Garment Information</h2>
+                        <p class="section-desc">Manage the primary identification and customer-facing descriptive copy for this atelier silhouette.</p>
+
+                        <div class="form-group-custom">
+                            <label>Garment Name *</label>
+                            <input type="text" name="name" id="productName" value="{{ product.name }}" required>
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label>Description & Artisanal Notes</label>
+                            <textarea name="description" rows="5" placeholder="Describe the silhouette, handwork, embroidery, and mood...">{{ product.description or '' }}</textarea>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group-custom">
+                                <label>Artisanal Fabric</label>
+                                <input type="text" name="fabric" value="{{ product.fabric or '' }}" placeholder="e.g. Pure Chanderi Silk / Modal Handloom">
+                            </div>
+                            <div class="form-group-custom">
+                                <label>Shade / Color Palette</label>
+                                <input type="text" name="color" value="{{ product.color or '' }}" placeholder="e.g. Royal Ivory / Rani Pink">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group-custom">
+                                <label>Stock Inventory *</label>
+                                <input type="number" name="stock" min="0" value="{{ product.stock or 0 }}" required>
+                            </div>
+                            <div class="form-group-custom" style="display: flex; align-items: center; margin-top: 22px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; text-transform: none; font-size: 13px;">
+                                    <input type="checkbox" name="best_seller" value="1" {% if product.best_seller %}checked{% endif %} style="transform: scale(1.3);">
+                                    <span>Feature as <strong>Atelier Best Seller</strong> on Homepage</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: Multi-Category Placement -->
+                    <div class="card-section">
+                        <div class="section-heading">
+                            <span>2. Collection & Category Placements</span>
+                            <span class="note-badge">MULTI-COLLECTION SYNC</span>
+                        </div>
+                        <p class="section-desc">Place this single garment into up to four distinct storefront collections simultaneously without duplicating product records.</p>
+
+                        <div class="category-multi-box">
+                            <div class="form-group-custom">
+                                <label style="color: #171513; font-weight: 700;">★ Primary Category (Required) *</label>
+                                <select name="category" id="primaryCategorySelect" required onchange="validateUniqueCategories()">
+                                    {% for cat in categories %}
+                                    <option value="{{ cat }}" {% if product.category == cat or is_category_active(cat, product.category) %}selected{% endif %}>{{ cat }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div style="border-top: 1px dashed var(--admin-border); margin: 16px 0; padding-top: 14px;">
+                                <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--admin-muted); display: block; margin-bottom: 12px;">Additional Collection Assignments (Optional)</span>
+
+                                <div class="form-group-custom">
+                                    <label>Alternative Category 1</label>
+                                    <select name="category_2" id="altCategory1" onchange="validateUniqueCategories()">
+                                        <option value="">-- None / No Additional Collection --</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}" {% if product.category_2 and (product.category_2 == cat or is_category_active(cat, product.category_2)) %}selected{% endif %}>{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="form-group-custom">
+                                    <label>Alternative Category 2</label>
+                                    <select name="category_3" id="altCategory2" onchange="validateUniqueCategories()">
+                                        <option value="">-- None / No Additional Collection --</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}" {% if product.category_3 and (product.category_3 == cat or is_category_active(cat, product.category_3)) %}selected{% endif %}>{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="form-group-custom">
+                                    <label>Alternative Category 3</label>
+                                    <select name="category_4" id="altCategory3" onchange="validateUniqueCategories()">
+                                        <option value="">-- None / No Additional Collection --</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}" {% if product.category_4 and (product.category_4 == cat or is_category_active(cat, product.category_4)) %}selected{% endif %}>{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div id="categoryDuplicateWarning" style="display: none; color: var(--admin-danger); font-size: 12px; margin-top: 8px;">
+                                    ⚠️ Please ensure each collection is selected only once. Duplicate categories have been flagged.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: Pricing and Discount Management -->
+                    <div class="card-section">
+                        <h2 class="section-heading">3. Pricing & Discount Architecture</h2>
+                        <p class="section-desc">Set the customer checkout price and optional original MRP to showcase strike-through discount badges on cards, PDP, and bag.</p>
+
+                        <div class="form-row">
+                            <div class="form-group-custom">
+                                <label>Selling Price (₹) *</label>
+                                <input type="number" step="1" min="1" name="price" id="editPrice" value="{{ "{:.0f}".format(product.price) }}" required oninput="recalcDiscountPreview()">
+                            </div>
+                            <div class="form-group-custom">
+                                <label>Original Price / MRP (₹) (Optional)</label>
+                                <input type="number" step="1" min="1" name="original_price" id="editOriginalPrice" value="{{ "{:.0f}".format(product.original_price) if product.original_price else '' }}" placeholder="e.g. 2999" oninput="recalcDiscountPreview()">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group-custom">
+                                <label>Discount Percentage (%)</label>
+                                <input type="number" step="1" min="0" max="95" name="discount_percent" id="editDiscountPercent" value="{{ product.discount_percent or '' }}" placeholder="Auto-calculated from MRP" oninput="recalcFromPercent()">
+                            </div>
+                            <div class="form-group-custom" style="display: flex; flex-direction: column; justify-content: center;">
+                                <label>Storefront Presentation Preview</label>
+                                <div>
+                                    <span id="discountPreviewBadge" class="discount-preview-pill">
+                                        {% if product.has_discount %}
+                                        ₹{{ "{:,.0f}".format(product.price) }} ({{ product.effective_discount_percent }}% OFF • MRP ₹{{ "{:,.0f}".format(product.original_price) }})
+                                        {% else %}
+                                        ₹{{ "{:,.0f}".format(product.price) }} (Standard Price)
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4: Shipping Logistics Specs -->
+                    <div class="card-section">
+                        <h2 class="section-heading">4. Shipping & Logistics Dimensions</h2>
+                        <p class="section-desc">Configures the physical package weight and dimensions used by the automated shipping logistics calculator.</p>
+
+                        <div class="form-row">
+                            <div class="form-group-custom">
+                                <label>Parcel Weight (kg)</label>
+                                <input type="number" step="0.05" min="0.05" name="weight_kg" value="{{ product.weight_kg or 0.5 }}">
+                            </div>
+                            <div class="form-group-custom">
+                                <label>Dimensions L × W × H (cm)</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="number" step="1" min="1" name="length_cm" value="{{ product.length_cm or 30 }}" placeholder="L" title="Length (cm)">
+                                    <input type="number" step="1" min="1" name="width_cm" value="{{ product.width_cm or 25 }}" placeholder="W" title="Width (cm)">
+                                    <input type="number" step="1" min="1" name="height_cm" value="{{ product.height_cm or 5 }}" placeholder="H" title="Height (cm)">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT COLUMN: Image & Gallery Management -->
+                <div class="col-sidebar">
+
+                    <!-- PRIMARY IMAGE CARD -->
+                    <div class="card-section">
+                        <h2 class="section-heading">Primary Cover Photo</h2>
+                        <p class="section-desc">The primary visual asset displayed on collection cards and search grids.</p>
+
+                        <div style="border: 1px solid var(--admin-border); border-radius: 2px; overflow: hidden; background: #faf8f5; text-align: center; margin-bottom: 14px;">
+                            <img id="primaryImagePreview" src="{{ product_image_url(product.primary_photo_url) }}?v={{ cache_id }}" alt="{{ product.name }}" style="width: 100%; height: 260px; object-fit: cover; display: block;">
+                        </div>
+
+                        <div class="form-group-custom">
+                            <label>Upload Replacement Cover Photo</label>
+                            <input type="file" name="image" id="primaryFileInput" accept="image/*" onchange="previewSelectedImage(this, 'primaryImagePreview')">
+                            <span style="font-size: 11px; color: var(--admin-muted); display: block; margin-top: 4px;">Supports JPG, PNG, WEBP, AVIF</span>
+                        </div>
+                    </div>
+
+                    <!-- GALLERY IMAGES CARD -->
+                    <div class="card-section">
+                        <div class="section-heading">
+                            <span>Artisanal Photo Gallery</span>
+                            <span style="font-size: 12px; font-weight: 500; color: var(--admin-muted);">{{ product.gallery_images|length }} photos</span>
+                        </div>
+                        <p class="section-desc">Manage alternate angles, textile closeups, and editorial shots.</p>
+
+                        {% if product.gallery_images %}
+                        <div class="gallery-grid">
+                            {% for img in product.gallery_images %}
+                            <div class="gallery-item-card">
+                                {% if loop.first %}
+                                <span class="gallery-item-badge">Cover</span>
+                                {% else %}
+                                <span class="gallery-item-badge">#{{ loop.index }}</span>
+                                {% endif %}
+                                <img src="{{ product_image_url(img.image_url) }}?v={{ cache_id }}" alt="Gallery shot {{ loop.index }}">
+                                <div class="gallery-item-actions">
+                                    {% if not loop.first %}
+                                    <button type="submit" form="setPrimaryForm-{{ img.id }}" class="btn-gallery-action">★ Set Cover</button>
+                                    {% endif %}
+                                    <button type="submit" form="deleteGalleryForm-{{ img.id }}" class="btn-gallery-action btn-gallery-delete" onclick="return confirm('Remove this photo from gallery?');">✕ Remove</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p style="font-size: 12px; color: var(--admin-muted); font-style: italic; margin-bottom: 14px;">No secondary gallery images uploaded yet.</p>
+                        {% endif %}
+
+                        <div style="border-top: 1px dashed var(--admin-border); margin-top: 20px; padding-top: 16px;">
+                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; display: block; margin-bottom: 6px;">Add Photos to Gallery</label>
+                            <input type="file" name="gallery_images" accept="image/*" multiple style="width: 100%; font-size: 12px;">
+                            <span style="font-size: 11px; color: var(--admin-muted); display: block; margin-top: 4px;">You can select multiple photos at once to append to the gallery.</span>
+                        </div>
+                    </div>
+
+                    <!-- QUICK ACTIONS CARD -->
+                    <div class="card-section">
+                        <h2 class="section-heading">Catalog Actions</h2>
+                        <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 14px;">
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" target="_blank" class="btn-action-outline" style="text-align: center; justify-content: center;">
+                                View on Live Storefront ↗
+                            </a>
+                            <a href="{{ url_for('admin_products') }}" class="btn-action-outline" style="text-align: center; justify-content: center;">
+                                Return to Catalog List
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </form>
+
+        <!-- Hidden Forms for individual gallery actions -->
+        {% if product.gallery_images %}
+            {% for img in product.gallery_images %}
+            <form id="deleteGalleryForm-{{ img.id }}" method="POST" action="{{ url_for('admin_delete_product_gallery_image', product_id=product.id, image_id=img.id) }}" style="display:none;"></form>
+            <form id="setPrimaryForm-{{ img.id }}" method="POST" action="{{ url_for('admin_set_primary_gallery_image', product_id=product.id, image_id=img.id) }}" style="display:none;"></form>
+            {% endfor %}
+        {% endif %}
+
+    </div>
+
+    <script>
+        function validateUniqueCategories() {
+            const p = document.getElementById('primaryCategorySelect').value;
+            const a1 = document.getElementById('altCategory1').value;
+            const a2 = document.getElementById('altCategory2').value;
+            const a3 = document.getElementById('altCategory3').value;
+
+            const selected = [p];
+            let hasDuplicate = false;
+
+            [a1, a2, a3].forEach(cat => {
+                if (cat && cat.trim() !== '') {
+                    if (selected.includes(cat)) {
+                        hasDuplicate = true;
+                    } else {
+                        selected.push(cat);
+                    }
+                }
+            });
+
+            const warning = document.getElementById('categoryDuplicateWarning');
+            if (warning) {
+                warning.style.display = hasDuplicate ? 'block' : 'none';
+            }
+            return !hasDuplicate;
+        }
+
+        function recalcDiscountPreview() {
+            const price = parseFloat(document.getElementById('editPrice').value) || 0;
+            const mrp = parseFloat(document.getElementById('editOriginalPrice').value) || 0;
+            const percentInput = document.getElementById('editDiscountPercent');
+            const previewBadge = document.getElementById('discountPreviewBadge');
+
+            if (mrp > price && price > 0) {
+                const pct = Math.round(((mrp - price) / mrp) * 100);
+                percentInput.value = pct;
+                previewBadge.textContent = '₹' + price.toLocaleString() + ' (' + pct + '% OFF • MRP ₹' + mrp.toLocaleString() + ')';
+                previewBadge.style.color = 'var(--admin-success)';
+            } else {
+                percentInput.value = '';
+                previewBadge.textContent = '₹' + price.toLocaleString() + ' (Standard Price)';
+                previewBadge.style.color = 'var(--admin-muted)';
+            }
+        }
+
+        function recalcFromPercent() {
+            const price = parseFloat(document.getElementById('editPrice').value) || 0;
+            const pct = parseFloat(document.getElementById('editDiscountPercent').value) || 0;
+            const mrpInput = document.getElementById('editOriginalPrice');
+            const previewBadge = document.getElementById('discountPreviewBadge');
+
+            if (pct > 0 && pct < 95 && price > 0) {
+                const calculatedMrp = Math.round(price / (1 - (pct / 100)));
+                mrpInput.value = calculatedMrp;
+                previewBadge.textContent = '₹' + price.toLocaleString() + ' (' + pct + '% OFF • MRP ₹' + calculatedMrp.toLocaleString() + ')';
+                previewBadge.style.color = 'var(--admin-success)';
+            }
+        }
+
+        function previewSelectedImage(input, previewId) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.getElementById(previewId);
+                    if (img) img.src = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        document.getElementById('mainEditForm').addEventListener('submit', function(e) {
+            if (!validateUniqueCategories()) {
+                e.preventDefault();
+                alert('Please remove duplicate categories before saving. A garment cannot be assigned to the same collection twice.');
+            }
+        });
+    </script>
+</body>
+</html>

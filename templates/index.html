@@ -212,22 +212,22 @@
 
             <div class="arched-grid">
 
-                <a href="{{ url_for('shop', category='Plazo / Kurta') }}" class="arched-card reveal reveal-delay-1">
+                <a href="{{ cms.get('mood_cat1_link') or url_for('shop', category=cms.get('mood_cat1_title', 'Palazzo Set')) }}" class="arched-card reveal reveal-delay-1">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'editorial-category-1.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat1_title', 'Plazo & Kurta') }}" 
+                             alt="{{ cms.get('mood_cat1_title', 'Palazzo Set') }}" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">01 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat1_title', 'Plazo & Kurta') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat1_title', 'Palazzo Set') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat1_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
-                <a href="{{ url_for('shop', category='Salwar Kameez') }}" class="arched-card reveal reveal-delay-2">
+                <a href="{{ cms.get('mood_cat2_link') or url_for('shop', category=cms.get('mood_cat2_title', 'Salwar Kameez')) }}" class="arched-card reveal reveal-delay-2">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'editorial-category-2.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}" 
@@ -242,32 +242,32 @@
                     </div>
                 </a>
 
-                <a href="{{ url_for('shop', category='Party Wear') }}" class="arched-card reveal reveal-delay-3">
+                <a href="{{ cms.get('mood_cat3_link') or url_for('shop', category=cms.get('mood_cat3_title', 'Casual Wear')) }}" class="arched-card reveal reveal-delay-3">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-category-3.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat3_title', 'Party Wear') }}" 
+                             alt="{{ cms.get('mood_cat3_title', 'Casual Wear') }}" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">03 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat3_title', 'Party Wear') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat3_title', 'Casual Wear') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat3_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
-                <a href="{{ url_for('shop', category='Wedding Wear') }}" class="arched-card reveal reveal-delay-4">
+                <a href="{{ cms.get('mood_cat4_link') or url_for('shop', category=cms.get('mood_cat4_title', 'Party / Wedding Regalia')) }}" class="arched-card reveal reveal-delay-4">
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'editorial-category-4.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat4_title', 'Wedding Regalia') }}" 
+                             alt="{{ cms.get('mood_cat4_title', 'Party / Wedding Regalia') }}" 
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">04 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat4_title', 'Wedding Regalia') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat4_title', 'Party / Wedding Regalia') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat4_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
@@ -321,7 +321,13 @@
                             <p class="curved-category">{{ product.category }}</p>
                             <h3 class="curved-title">{{ product.name }}</h3>
                             <div class="curved-price-row">
-                                <span class="curved-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                <div>
+                                    <span class="curved-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                    {% if product.has_discount %}
+                                    <span style="text-decoration: line-through; font-size: 13px; color: #888; margin-left: 6px;">₹{{ "{:,.0f}".format(product.original_price) }}</span>
+                                    <span style="background: rgba(34, 197, 94, 0.12); color: #16a34a; font-weight: 600; font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-left: 6px;">{{ product.effective_discount_percent }}% OFF</span>
+                                    {% endif %}
+                                </div>
                                 <a href="{{ url_for('product_detail', product_id=product.id) }}" class="curved-btn">View Piece →</a>
                             </div>
                         </div>
@@ -468,6 +474,10 @@
                                 </h3>
                                 <p class="product-price">
                                     ₹{{ "{:,.0f}".format(product.price) }}
+                                    {% if product.has_discount %}
+                                    <span style="text-decoration: line-through; font-size: 12px; color: #888; margin-left: 6px;">₹{{ "{:,.0f}".format(product.original_price) }}</span>
+                                    <span style="background: rgba(34, 197, 94, 0.12); color: #16a34a; font-weight: 600; font-size: 10px; padding: 2px 5px; border-radius: 3px; margin-left: 4px;">{{ product.effective_discount_percent }}% OFF</span>
+                                    {% endif %}
                                 </p>
                             </div>
                         </a>
@@ -482,8 +492,8 @@
 
                 {% if best_sellers and best_sellers|length > 3 %}
                 <div class="rail-controls" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;">
-                    <button type="button" onclick="document.getElementById('bestsellerRail').scrollBy({left: -340, behavior: 'smooth'})" aria-label="Previous best sellers" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;">←</button>
-                    <button type="button" onclick="document.getElementById('bestsellerRail').scrollBy({left: 340, behavior: 'smooth'})" aria-label="Next best sellers" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;">→</button>
+                    <button type="button" id="bestsellerPrevBtn" onclick="document.getElementById('bestsellerRail').scrollBy({left: -340, behavior: 'smooth'})" aria-label="Previous best sellers" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;">←</button>
+                    <button type="button" id="bestsellerNextBtn" onclick="document.getElementById('bestsellerRail').scrollBy({left: 340, behavior: 'smooth'})" aria-label="Next best sellers" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; font-size: 18px; display: inline-flex; align-items: center; justify-content: center; transition: all 0.2s;">→</button>
                 </div>
                 {% endif %}
             </div>
@@ -568,7 +578,7 @@
                         <p class="eyebrow">{{ cms.get('bridal_eyebrow', 'THE BRIDAL EDIT') }}</p>
                         <h2>{{ cms.get('bridal_title', 'Made for moments that stay with you.') }}</h2>
                         <p>{{ cms.get('bridal_desc', 'Opulent ensembles woven from heritage silks and embellished with handwork. Crafted to capture the light in sacred celebrations.') }}</p>
-                        <a href="{{ cms.get('bridal_cta_link', url_for('shop', category='Wedding Wear')) }}" class="btn-luxury-gold">
+                        <a href="{{ cms.get('bridal_cta_link', url_for('shop', category='Festival / Wedding Regalia')) }}" class="btn-luxury-gold">
                             {{ cms.get('bridal_cta_text', 'View The Bridal Edit →') }}
                         </a>
                     </div>
@@ -576,7 +586,14 @@
 
                 <!-- Right Floating Dark Pedestals -->
                 <div class="bridal-pedestals-column reveal reveal-delay-2">
-                    {% for p in products if p.category == 'Wedding Wear' or 'Wedding' in p.name %}
+                    {% set bridal_items = products | selectattr('category', 'equalto', 'Wedding Wear') | list %}
+                    {% if not bridal_items %}
+                        {% set bridal_items = products | selectattr('category', 'equalto', 'Party Wear') | list %}
+                    {% endif %}
+                    {% if not bridal_items %}
+                        {% set bridal_items = products[:2] %}
+                    {% endif %}
+                    {% for p in bridal_items[:3] %}
                     <div class="bridal-pedestal-card">
                         <div class="bridal-card-media">
                             <img src="{{ product_image_url(p.image, 'editorial-bridal.jpg') }}?v={{ cache_id }}"
@@ -875,53 +892,53 @@
             <div class="category-grid">
 
                 <a
-                    href="{{ url_for('shop', category='Plazo / Kurta') }}"
+                    href="{{ cms.get('mood_cat1_link') or url_for('shop', category=cms.get('mood_cat1_title', 'Palazzo Set')) }}"
                     class="category-card reveal reveal-delay-1"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-1.jpg') }}');"
                 >
                     <div class="category-card-content">
                         <span class="category-number">A</span>
-                        <h3>Plazo / Kurta</h3>
+                        <h3>{{ cms.get('mood_cat1_title', 'Palazzo Set') }}</h3>
                         <p>Everyday handcrafted elegance.</p>
                         <span class="category-link">Explore collection →</span>
                     </div>
                 </a>
 
                 <a
-                    href="{{ url_for('shop', category='Salwar Kameez') }}"
+                    href="{{ cms.get('mood_cat2_link') or url_for('shop', category=cms.get('mood_cat2_title', 'Salwar Kameez')) }}"
                     class="category-card reveal reveal-delay-2"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-2.jpg') }}');"
                 >
                     <div class="category-card-content">
                         <span class="category-number">B</span>
-                        <h3>Salwar Kameez</h3>
+                        <h3>{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}</h3>
                         <p>Traditional pieces with modern detail.</p>
                         <span class="category-link">Explore collection →</span>
                     </div>
                 </a>
 
                 <a
-                    href="{{ url_for('shop', category='Party Wear') }}"
+                    href="{{ cms.get('mood_cat3_link') or url_for('shop', category=cms.get('mood_cat3_title', 'Casual Wear')) }}"
                     class="category-card reveal reveal-delay-3"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-3.jpg') }}');"
                 >
                     <div class="category-card-content">
                         <span class="category-number">C</span>
-                        <h3>Party Wear</h3>
-                        <p>Statement pieces for special occasions.</p>
+                        <h3>{{ cms.get('mood_cat3_title', 'Casual Wear') }}</h3>
+                        <p>Hand-tailored everyday artisanal comfort.</p>
                         <span class="category-link">Explore collection →</span>
                     </div>
                 </a>
 
                 <a
-                    href="{{ url_for('shop', category='Wedding Wear') }}"
+                    href="{{ cms.get('mood_cat4_link') or url_for('shop', category=cms.get('mood_cat4_title', 'Party / Wedding Regalia')) }}"
                     class="category-card reveal reveal-delay-4"
                     style="background-image: url('{{ url_for('static', filename='images/editorial-category-4.jpg') }}');"
                 >
                     <div class="category-card-content">
                         <span class="category-number">D</span>
-                        <h3>Wedding Wear</h3>
-                        <p>Detailed handcrafted festive pieces.</p>
+                        <h3>{{ cms.get('mood_cat4_title', 'Party / Wedding Regalia') }}</h3>
+                        <p>Detailed handcrafted festive and bridal pieces.</p>
                         <span class="category-link">Explore collection →</span>
                     </div>
                 </a>
@@ -944,54 +961,66 @@
             <div class="section-heading reveal">
 
                 <p class="eyebrow">
-                    {{ cms.get('process_eyebrow', 'THE CRAFT') }}
+                    {{ cms.get('process_eyebrow', '04 / ATELIER CRAFTSMANSHIP') }}
                 </p>
 
                 <h2>
-                    {{ cms.get('process_title', 'Made by Hand.') }}
+                    {{ cms.get('process_title', 'Shaped Slowly.<br><em>Stitched by Hand.</em>')|safe }}
                 </h2>
 
                 <p class="section-intro">
-                    {{ cms.get('process_intro', 'Every piece passes through a careful journey from idea to finished garment.') }}
+                    {{ cms.get('process_intro', 'Every Tulsa Wears piece undergoes a thoughtful journey from organic fibre to bespoke tailoring.') }}
                 </p>
 
             </div>
 
+            <div class="process-editorial-split">
+                <!-- Left: Master Craft Photography -->
+                <div class="process-image-wrap reveal-scale">
+                    <img src="{{ product_image_url(cms.get('process_image'), 'editorial-process.jpg') }}?v={{ cache_id }}"
+                         alt="Tulsa Wears Atelier Handcrafting Process"
+                         loading="lazy"
+                         onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                    <div class="process-image-caption">
+                        <span style="color: var(--accent-gold); font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; display: block; margin-bottom: 4px;">✦ Artisanal Workshop &bull; Hansi Studio</span>
+                        <strong style="font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 500;">Individual tailoring tailored to your measurements.</strong>
+                    </div>
+                </div>
 
-            <div class="process-grid">
+                <!-- Right: Numbered Timeline Chapters -->
+                <div class="process-timeline reveal">
+                    <article class="process-timeline-step">
+                        <div class="process-number">01</div>
+                        <h3>{{ cms.get('process_step1_title', 'Silhouette Conception') }}</h3>
+                        <p>
+                            {{ cms.get('process_step1_desc', 'Sketches shaped slowly by drape, proportion, and Indian heritage. Modern cuts designed for longevity rather than fleeting fashion cycles.') }}
+                        </p>
+                    </article>
 
-                <article class="process-card reveal reveal-delay-1">
-                    <div class="process-number">01</div>
-                    <h3>{{ cms.get('process_step1_title', 'The Idea') }}</h3>
-                    <p>
-                        {{ cms.get('process_step1_desc', 'A sketch, a texture, a colour or an inspiration becomes the beginning.') }}
-                    </p>
-                </article>
+                    <article class="process-timeline-step">
+                        <div class="process-number">02</div>
+                        <h3>{{ cms.get('process_step2_title', 'Pure Textile Selection') }}</h3>
+                        <p>
+                            {{ cms.get('process_step2_desc', 'Mulmul cottons, Chanderi silks, organic textiles, and breathable linens curated specifically for texture, living movement, and touch.') }}
+                        </p>
+                    </article>
 
-                <article class="process-card reveal reveal-delay-2">
-                    <div class="process-number">02</div>
-                    <h3>{{ cms.get('process_step2_title', 'The Fabric') }}</h3>
-                    <p>
-                        {{ cms.get('process_step2_desc', 'Fabrics and materials are selected for their character, drape and feel.') }}
-                    </p>
-                </article>
+                    <article class="process-timeline-step">
+                        <div class="process-number">03</div>
+                        <h3>{{ cms.get('process_step3_title', 'Artisanal Needlework & Sizing') }}</h3>
+                        <p>
+                            {{ cms.get('process_step3_desc', 'Every order is cut and assembled individually by master craftspeople. Hems, borders, and custom body specs are honoured with exact precision.') }}
+                        </p>
+                    </article>
 
-                <article class="process-card reveal reveal-delay-3">
-                    <div class="process-number">03</div>
-                    <h3>{{ cms.get('process_step3_title', 'The Handwork') }}</h3>
-                    <p>
-                        {{ cms.get('process_step3_desc', 'Stitching, embroidery and finishing are completed carefully by hand.') }}
-                    </p>
-                </article>
-
-                <article class="process-card reveal reveal-delay-4">
-                    <div class="process-number">04</div>
-                    <h3>{{ cms.get('process_step4_title', 'The Final Piece') }}</h3>
-                    <p>
-                        {{ cms.get('process_step4_desc', 'Each garment receives a final quality check before it reaches its new home.') }}
-                    </p>
-                </article>
-
+                    <article class="process-timeline-step">
+                        <div class="process-number">04</div>
+                        <h3>{{ cms.get('process_step4_title', 'Atelier Examination & Dispatch') }}</h3>
+                        <p>
+                            {{ cms.get('process_step4_desc', 'Each completed garment undergoes a rigorous final quality review before being packaged in our signature box for insured delivery.') }}
+                        </p>
+                    </article>
+                </div>
             </div>
 
         </section>
@@ -1663,7 +1692,7 @@
              INSTAGRAM
         ========================================== -->
 
-        <section class="instagram-section">
+        <section class="instagram-section" id="instagram-section">
 
             <div class="section-heading centered reveal">
 
@@ -1705,7 +1734,7 @@
              NEWSLETTER
         ========================================== -->
 
-        <section class="newsletter-section">
+        <section class="newsletter-section" id="newsletter-section">
 
             <p class="eyebrow reveal">
                 LETTERS FROM THE STUDIO

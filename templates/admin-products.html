@@ -507,9 +507,9 @@
                                 <!-- ACTIONS -->
                                 <td>
                                     <div style="display: flex; gap: 8px;">
-                                        <button type="button" onclick="openEditModal('{{ p.id }}', '{{ p.name|replace('\'', '\\\'') }}', '{{ p.price }}', '{{ p.category }}', '{{ (p.fabric or '')|replace('\'', '\\\'') }}', '{{ (p.color or '')|replace('\'', '\\\'') }}', '{{ p.stock or 0 }}', '{{ (p.description or '')|replace('\'', '\\\'')|replace('\n', ' ') }}', {{ 'true' if p.best_seller else 'false' }})" style="background: none; border: 1px solid var(--border); padding: 5px 10px; font-size: 10px; text-transform: uppercase; cursor: pointer; border-radius: 2px;">
+                                        <a href="{{ url_for('admin_edit_product', product_id=p.id) }}" style="background: none; border: 1px solid var(--border); padding: 5px 10px; font-size: 10px; text-transform: uppercase; cursor: pointer; border-radius: 2px; text-decoration: none; color: inherit; display: inline-flex; align-items: center;">
                                             Edit
-                                        </button>
+                                        </a>
 
                                         <form action="{{ url_for('admin_delete_product', product_id=p.id) }}" method="POST" onsubmit="return confirm('Remove {{ p.name }} from the catalog?');">
                                             <button type="submit" class="btn-delete">
@@ -540,25 +540,65 @@
                             </div>
 
                             <div class="form-group-admin">
-                                <label>Price (₹) *</label>
+                                <label>Selling Price (₹) *</label>
                                 <input type="number" step="1" min="1" name="price" required placeholder="e.g. 3800">
                             </div>
                         </div>
 
                         <div class="form-grid-2">
                             <div class="form-group-admin">
-                                <label>Category *</label>
-                                <select name="category" required>
-                                    {% for cat in categories %}
-                                    <option value="{{ cat }}">{{ cat }}</option>
-                                    {% endfor %}
-                                    <option value="Bespoke Collection">Bespoke Collection</option>
-                                </select>
+                                <label>Original Price / MRP (₹) (Optional)</label>
+                                <input type="number" step="1" min="1" name="original_price" placeholder="e.g. 4500 (Shows discount badge)">
                             </div>
-
                             <div class="form-group-admin">
                                 <label>Stock Quantity *</label>
                                 <input type="number" min="0" name="stock" value="10" required>
+                            </div>
+                        </div>
+
+                        <!-- Multi-Category Assignment Section -->
+                        <div style="background: #faf8f5; border: 1px solid var(--border); padding: 18px; margin-bottom: 20px; border-radius: 2px;">
+                            <label style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-primary); display: block; margin-bottom: 12px;">★ Multi-Collection Category Assignments</label>
+                            
+                            <div class="form-group-admin" style="margin-bottom: 14px;">
+                                <label style="font-weight: 600;">Primary Category (Required) *</label>
+                                <select name="category" required style="width: 100%;">
+                                    {% for cat in categories %}
+                                    <option value="{{ cat }}">{{ cat }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <span style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); display: block; margin: 12px 0 8px 0;">Additional Collections (Optional — Appears in all selected collections without duplicate items)</span>
+                            
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                                <div class="form-group-admin">
+                                    <label>Alternative Category 1</label>
+                                    <select name="category_2" style="width: 100%;">
+                                        <option value="">-- None --</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}">{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group-admin">
+                                    <label>Alternative Category 2</label>
+                                    <select name="category_3" style="width: 100%;">
+                                        <option value="">-- None --</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}">{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="form-group-admin">
+                                    <label>Alternative Category 3</label>
+                                    <select name="category_4" style="width: 100%;">
+                                        <option value="">-- None --</option>
+                                        {% for cat in categories %}
+                                        <option value="{{ cat }}">{{ cat }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
                             </div>
                         </div>
 
@@ -582,6 +622,25 @@
                         <div class="form-group-admin">
                             <label>Garment Photograph (.jpg, .jpeg, .png, .webp)</label>
                             <input type="file" name="image" accept="image/*" style="padding: 10px; border: 1px dashed var(--border); width: 100%; box-sizing: border-box; background: #faf8f5;">
+                        </div>
+
+                        <!-- Shipping Parcel Specifications -->
+                        <div style="background: #faf8f5; border: 1px solid var(--border); padding: 16px; margin-bottom: 20px; border-radius: 2px;">
+                            <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); display: block; margin-bottom: 10px;">📦 Shipping & Logistics Specifications</label>
+                            <div class="form-grid-2">
+                                <div class="form-group-admin">
+                                    <label>Weight (kg)</label>
+                                    <input type="number" step="0.05" min="0.05" name="weight_kg" value="0.5" placeholder="0.5">
+                                </div>
+                                <div class="form-group-admin">
+                                    <label>Dimensions L × W × H (cm)</label>
+                                    <div style="display: flex; gap: 6px;">
+                                        <input type="number" step="1" min="1" name="length_cm" value="30" placeholder="L" style="flex:1;">
+                                        <input type="number" step="1" min="1" name="width_cm" value="25" placeholder="W" style="flex:1;">
+                                        <input type="number" step="1" min="1" name="height_cm" value="5" placeholder="H" style="flex:1;">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
@@ -718,6 +777,25 @@
                     <input type="file" name="image" accept="image/*" style="padding: 10px; border: 1px dashed var(--border); width: 100%; box-sizing: border-box; background: #faf8f5;">
                 </div>
 
+                <!-- Shipping Parcel Specifications -->
+                <div style="background: #faf8f5; border: 1px solid var(--border); padding: 14px; margin-bottom: 18px; border-radius: 2px;">
+                    <label style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted); display: block; margin-bottom: 10px;">📦 Shipping Parcel Specifications</label>
+                    <div class="form-grid-2">
+                        <div class="form-group-admin">
+                            <label>Weight (kg)</label>
+                            <input type="number" step="0.05" min="0.05" id="editWeight" name="weight_kg">
+                        </div>
+                        <div class="form-group-admin">
+                            <label>Dimensions L × W × H (cm)</label>
+                            <div style="display: flex; gap: 6px;">
+                                <input type="number" step="1" min="1" id="editLength" name="length_cm" placeholder="L" style="flex:1;">
+                                <input type="number" step="1" min="1" id="editWidth" name="width_cm" placeholder="W" style="flex:1;">
+                                <input type="number" step="1" min="1" id="editHeight" name="height_cm" placeholder="H" style="flex:1;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
                     <input type="checkbox" id="editBestSeller" name="best_seller" value="1" style="transform: scale(1.2); cursor: pointer;">
                     <label for="editBestSeller" style="font-size: 12px; cursor: pointer;">Feature as Best Seller</label>
@@ -742,7 +820,7 @@
             evt.currentTarget.classList.add('active');
         }
 
-        function openEditModal(id, name, price, category, fabric, color, stock, description, isBestSeller) {
+        function openEditModal(id, name, price, category, fabric, color, stock, description, isBestSeller, weight, length, width, height) {
             const form = document.getElementById('editProductForm');
             form.action = '/admin/products/edit/' + id;
 
@@ -754,6 +832,10 @@
             document.getElementById('editStock').value = stock;
             document.getElementById('editDescription').value = description;
             document.getElementById('editBestSeller').checked = isBestSeller;
+            document.getElementById('editWeight').value = weight || 0.5;
+            document.getElementById('editLength').value = length || 30;
+            document.getElementById('editWidth').value = width || 25;
+            document.getElementById('editHeight').value = height || 5;
 
             document.getElementById('editModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';

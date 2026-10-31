@@ -80,76 +80,82 @@
 
             <!-- Main PDP 2-Column Split -->
             <div class="pdp-split-layout">
-                <!-- Left: 3D Pedestal Media Gallery -->
+                <!-- Left: Amazon-Style Product Gallery (Vertical Thumbs on Desktop, Horizontal on Mobile) -->
                 <div class="pdp-media-gallery">
-                    <div class="pdp-3d-stage" id="pdp3dStage">
-                        <div class="pdp-interactive-frame" id="pdpFrame">
-                            <div class="pdp-main-image-wrap">
-                                {% if product.image %}
-                                {% set gallery_items = product.gallery_images|list %}
-{% if gallery_items %}
-    {% set gallery_primary = gallery_items[0].image_url %}
-{% else %}
-    {% set gallery_primary = product.image %}
-{% endif %}
-
-{% if gallery_primary %}
-<div class="pdp-gallery-stage">
-    <img
-        id="mainPdpImage"
-        src="{% if gallery_primary.startswith(('http://', 'https://')) %}{{ gallery_primary }}{% else %}{{ product_image_url(gallery_primary) }}{% endif %}?v={{ cache_id }}"
-        alt="{{ product.name }}"
-        loading="eager"
-        onerror="this.onerror=null;this.src='{{ product_image_url("editorial-hero.jpg") }}';"
-    >
-</div>
-
-{% if gallery_items %}
-<div class="pdp-gallery-thumbs" aria-label="Product photos">
-    {% for gallery_image in gallery_items %}
-    <button
-        type="button"
-        class="pdp-gallery-thumb{% if loop.first %} active{% endif %}"
-        data-full-src="{{ gallery_image.image_url }}"
-        data-alt="{{ product.name }} photo {{ loop.index }}"
-        aria-label="View {{ product.name }} photo {{ loop.index }}"
-    >
-        <img
-            src="{{ gallery_image.image_url }}"
-            alt="{{ product.name }} thumbnail {{ loop.index }}"
-            loading="lazy"
-        >
-    </button>
-    {% endfor %}
-</div>
-{% endif %}
-{% endif %}
-                                {% else %}
-                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #eee8df; color: var(--text-muted); font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">
-                                    Atelier Archive Piece
-                                </div>
-                                {% endif %}
-
-                                {% if product.best_seller %}
-                                <span class="badge-best-seller">✦ Atelier Best Seller</span>
-                                {% endif %}
+                    <!-- Standard E-Commerce Image Gallery Constrained to 70vh Bounding Box -->
+                    <div class="pdp-ecommerce-gallery">
+                        <div class="pdp-main-bounding-box" id="pdpMainBox">
+                            {% for photo_url in product.all_photo_urls %}
+                            <div class="pdp-main-slide{% if loop.first %} active{% endif %}" id="pdpSlide-{{ loop.index0 }}" data-index="{{ loop.index0 }}">
+                                <img
+                                    src="{{ product_image_url(photo_url) }}?v={{ cache_id }}"
+                                    alt="{{ product.name }} - View {{ loop.index }} of {{ product.all_photo_urls|length }}"
+                                    class="pdp-contained-img"
+                                    loading="{% if loop.first %}eager{% else %}lazy{% endif %}"
+                                    onerror="this.onerror=null; this.src='/static/images/placeholder.jpg';"
+                                >
                             </div>
+                            {% endfor %}
+
+                            {% if product.best_seller %}
+                            <span class="badge-best-seller">✦ Atelier Best Seller</span>
+                            {% endif %}
+
+                            {% if product.all_photo_urls|length > 1 %}
+                            <button type="button" class="pdp-main-nav-arrow pdp-main-nav-prev" id="pdpMainPrev" aria-label="Previous photograph">
+                                ‹
+                            </button>
+                            <button type="button" class="pdp-main-nav-arrow pdp-main-nav-next" id="pdpMainNext" aria-label="Next photograph">
+                                ›
+                            </button>
+                            <div class="pdp-photo-counter-badge" id="pdpPhotoCounter">
+                                <span id="pdpCurrentIndexLabel">1</span> / {{ product.all_photo_urls|length }}
+                            </div>
+                            {% endif %}
                         </div>
-                        <div class="pdp-pedestal"></div>
+
+                        <!-- Responsive Thumbnail Gallery Below Main Image -->
+                        {% if product.all_photo_urls|length > 1 %}
+                        <div class="pdp-thumb-strip-container">
+                            <button type="button" class="pdp-thumb-scroll-btn pdp-thumb-scroll-left" id="pdpThumbScrollLeft" aria-label="Scroll thumbnails left">
+                                ‹
+                            </button>
+                            <div class="pdp-thumb-track" id="pdpThumbTrack" tabindex="0" role="region" aria-label="Thumbnail carousel">
+                                {% for photo_url in product.all_photo_urls %}
+                                <button
+                                    type="button"
+                                    class="pdp-thumb-card-item{% if loop.first %} active{% endif %}"
+                                    data-slide-index="{{ loop.index0 }}"
+                                    aria-label="View photograph {{ loop.index }} of {{ product.all_photo_urls|length }}"
+                                >
+                                    <img
+                                        src="{{ product_image_url(photo_url) }}"
+                                        alt="{{ product.name }} thumb {{ loop.index }}"
+                                        loading="lazy"
+                                        onerror="this.onerror=null; this.src='/static/images/placeholder.jpg';"
+                                    >
+                                </button>
+                                {% endfor %}
+                            </div>
+                            <button type="button" class="pdp-thumb-scroll-btn pdp-thumb-scroll-right" id="pdpThumbScrollRight" aria-label="Scroll thumbnails right">
+                                ›
+                            </button>
+                        </div>
+                        {% endif %}
                     </div>
 
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: #fff; border: 1px solid var(--border-light); padding: 14px; border-radius: 2px; text-align: center;">
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                            <span style="font-size: 16px;">🪡</span>
-                            <span style="font-family: 'Inter', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;">Hand-Tailored</span>
+                    <div class="pdp-trust-bar">
+                        <div class="pdp-trust-item">
+                            <span class="pdp-trust-icon">🪡</span>
+                            <span class="pdp-trust-label">Hand-Tailored</span>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                            <span style="font-size: 16px;">✨</span>
-                            <span style="font-family: 'Inter', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;">Custom Sizing</span>
+                        <div class="pdp-trust-item">
+                            <span class="pdp-trust-icon">✨</span>
+                            <span class="pdp-trust-label">Custom Sizing</span>
                         </div>
-                        <div style="display: flex; flex-direction: column; align-items: center; gap: 4px;">
-                            <span style="font-size: 16px;">📦</span>
-                            <span style="font-family: 'Inter', sans-serif; font-size: 9px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 600;">Insured Shipping</span>
+                        <div class="pdp-trust-item">
+                            <span class="pdp-trust-icon">📦</span>
+                            <span class="pdp-trust-label">Insured Shipping</span>
                         </div>
                     </div>
                 </div>
@@ -159,9 +165,13 @@
                     <p class="pdp-eyebrow">✦ {{ product.category|upper }} ARCHIVE</p>
                     <h1 class="pdp-title">{{ product.name }}</h1>
 
-                    <div class="pdp-price-row">
-                        <span class="pdp-price">₹{{ "{:,.0f}".format(product.price) }}</span>
-                        <span class="pdp-tax-badge">Inclusive of all artisanal taxes • Free shipping pan-India</span>
+                    <div class="pdp-price-row" style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
+                        <span class="pdp-price" style="font-size: 32px; font-weight: 600; color: #1a1a1a;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                        {% if product.has_discount %}
+                        <span class="pdp-mrp" style="text-decoration: line-through; font-size: 18px; color: #888;">₹{{ "{:,.0f}".format(product.original_price) }}</span>
+                        <span class="pdp-discount-badge" style="background: rgba(34, 197, 94, 0.12); color: #16a34a; font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(22, 163, 74, 0.25); letter-spacing: 0.04em;">{{ product.effective_discount_percent }}% OFF</span>
+                        {% endif %}
+                        <span class="pdp-tax-badge" style="width: 100%; display: block; font-size: 12px; color: #777; margin-top: 2px;">Inclusive of all artisanal taxes • Free shipping pan-India</span>
                     </div>
 
                     <div class="pdp-description-text">
@@ -196,18 +206,15 @@
                         <div class="bespoke-customizer-box">
                             <div class="bespoke-box-header">
                                 <span class="bespoke-box-title">
-                                    <span>✂</span> Bespoke Tailoring & Fit
+                                    <span>👗</span> Select Standard Size
                                 </span>
                                 <button type="button" onclick="openSizeChartModal()" class="size-chart-trigger-btn">
                                     📏 View Size Chart
                                 </button>
                             </div>
 
-                            <!-- Standard Size Pill Selection -->
-                            <div class="size-selector-row">
-                                <label class="pdp-input-label">
-                                    Select Standard Size <span style="color: var(--accent-burgundy);">*</span>
-                                </label>
+                            <!-- Standard Size Pill Selection (XS to 4XL) -->
+                            <div class="size-selector-row" style="margin-top: 10px;">
                                 <div class="size-pill-group">
                                     {% for s in ['XS', 'S', 'M', 'L', 'XL', 'XXL', '3XL', '4XL'] %}
                                     <label class="pdp-size-radio">
@@ -217,47 +224,6 @@
                                     {% endfor %}
                                 </div>
                             </div>
-
-                            <!-- Custom Lengths -->
-                            <div class="lengths-grid-inputs">
-                                <div>
-                                    <label class="pdp-input-label" for="prodTopLength">
-                                        Kurti / Top Length (in) <span style="color: var(--accent-burgundy);">*</span>
-                                    </label>
-                                    <input type="number" id="prodTopLength" name="top_length" value="30" min="15" max="60" required class="luxury-number-input">
-                                </div>
-                                <div>
-                                    <label class="pdp-input-label" for="prodSleevesLength">
-                                        Sleeves Length (in) <span style="color: var(--accent-burgundy);">*</span>
-                                    </label>
-                                    <input type="number" id="prodSleevesLength" name="sleeves_length" value="18" min="5" max="40" required class="luxury-number-input">
-                                </div>
-                            </div>
-
-                            <!-- Optional Custom Body Measurements -->
-                            <details class="custom-measurements-drawer">
-                                <summary>
-                                    + Add Custom Body Measurements (Optional)
-                                </summary>
-                                <div class="measurements-subgrid">
-                                    <div>
-                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodBust">Bust (in)</label>
-                                        <input type="number" id="prodBust" name="bust" placeholder="e.g. 36" class="luxury-number-input" style="padding: 8px;">
-                                    </div>
-                                    <div>
-                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodWaist">Waist (in)</label>
-                                        <input type="number" id="prodWaist" name="waist" placeholder="e.g. 32" class="luxury-number-input" style="padding: 8px;">
-                                    </div>
-                                    <div>
-                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodHip">Hip (in)</label>
-                                        <input type="number" id="prodHip" name="hip" placeholder="e.g. 40" class="luxury-number-input" style="padding: 8px;">
-                                    </div>
-                                    <div>
-                                        <label class="pdp-input-label" style="font-size: 9px; color: var(--text-muted);" for="prodShoulder">Shoulder (in)</label>
-                                        <input type="number" id="prodShoulder" name="shoulder" placeholder="e.g. 14.5" class="luxury-number-input" style="padding: 8px;">
-                                    </div>
-                                </div>
-                            </details>
                         </div>
 
                         <!-- Action Buttons -->
@@ -390,6 +356,110 @@
     <!-- Scripts -->
     <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
     <script>
+        // Horizontal Scrolling PDP Gallery with Touch-Swipe, Arrow Navigation, and Thumbnails
+        // Standard E-Commerce Gallery Controller (70vh Bounding Box & Thumbnails)
+        (function () {
+            const slides = document.querySelectorAll(".pdp-main-slide");
+            const thumbs = document.querySelectorAll(".pdp-thumb-card-item");
+            const counterLabel = document.getElementById("pdpCurrentIndexLabel");
+            const prevBtn = document.getElementById("pdpMainPrev");
+            const nextBtn = document.getElementById("pdpMainNext");
+            const thumbTrack = document.getElementById("pdpThumbTrack");
+            const thumbLeftBtn = document.getElementById("pdpThumbScrollLeft");
+            const thumbRightBtn = document.getElementById("pdpThumbScrollRight");
+
+            if (!slides.length) return;
+
+            let currentIndex = 0;
+            const total = slides.length;
+
+            function goToSlide(index) {
+                if (index < 0) index = 0;
+                if (index >= total) index = total - 1;
+                currentIndex = index;
+
+                slides.forEach(function(slide, idx) {
+                    slide.classList.toggle("active", idx === currentIndex);
+                });
+
+                thumbs.forEach(function(thumb, idx) {
+                    const isActive = (idx === currentIndex);
+                    thumb.classList.toggle("active", isActive);
+                    thumb.setAttribute("aria-pressed", isActive ? "true" : "false");
+                    if (isActive && thumb.scrollIntoView) {
+                        thumb.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+                    }
+                });
+
+                if (counterLabel) {
+                    counterLabel.textContent = (currentIndex + 1);
+                }
+            }
+
+            thumbs.forEach(function(thumb) {
+                thumb.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    const idx = parseInt(this.dataset.slideIndex, 10);
+                    goToSlide(isNaN(idx) ? 0 : idx);
+                });
+            });
+
+            if (prevBtn) {
+                prevBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    goToSlide(currentIndex > 0 ? currentIndex - 1 : total - 1);
+                });
+            }
+
+            if (nextBtn) {
+                nextBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    goToSlide(currentIndex < total - 1 ? currentIndex + 1 : 0);
+                });
+            }
+
+            if (thumbLeftBtn && thumbTrack) {
+                thumbLeftBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    thumbTrack.scrollBy({ left: -160, behavior: "smooth" });
+                });
+            }
+
+            if (thumbRightBtn && thumbTrack) {
+                thumbRightBtn.addEventListener("click", function(e) {
+                    e.preventDefault();
+                    thumbTrack.scrollBy({ left: 160, behavior: "smooth" });
+                });
+            }
+
+            // Keyboard navigation (ArrowLeft / ArrowRight)
+            window.addEventListener("keydown", function(e) {
+                if (e.target && ['input', 'textarea', 'select'].includes(e.target.tagName.toLowerCase())) return;
+                if (e.key === "ArrowRight") {
+                    goToSlide(currentIndex < total - 1 ? currentIndex + 1 : 0);
+                } else if (e.key === "ArrowLeft") {
+                    goToSlide(currentIndex > 0 ? currentIndex - 1 : total - 1);
+                }
+            });
+
+            // Touch swipe on main bounding box
+            const mainBox = document.getElementById("pdpMainBox");
+            if (mainBox) {
+                let touchStartX = 0;
+                mainBox.addEventListener("touchstart", function(e) {
+                    touchStartX = e.changedTouches[0].screenX;
+                }, { passive: true });
+                mainBox.addEventListener("touchend", function(e) {
+                    const touchEndX = e.changedTouches[0].screenX;
+                    if (touchStartX - touchEndX > 45) {
+                        goToSlide(currentIndex < total - 1 ? currentIndex + 1 : 0);
+                    } else if (touchEndX - touchStartX > 45) {
+                        goToSlide(currentIndex > 0 ? currentIndex - 1 : total - 1);
+                    }
+                }, { passive: true });
+            }
+        })();
+
         // AI Product Q&A Interaction
         document.querySelectorAll(".ai-qa-chip").forEach(function(chip) {
             chip.addEventListener("click", function() {
@@ -433,28 +503,12 @@
             if (e.target === modal) closeSizeChartModal();
         });
 
-        // Buy Now handler
+        // Buy Now handler (Standard Size only)
         function proceedToBuyNow() {
             const form = document.getElementById("productPurchaseForm");
             if (!form) return;
             const size = form.querySelector('input[name="size"]:checked')?.value || 'M';
-            const topLength = form.querySelector('#prodTopLength')?.value || '30';
-            const sleevesLength = form.querySelector('#prodSleevesLength')?.value || '18';
-            const bust = form.querySelector('#prodBust')?.value || '';
-            const waist = form.querySelector('#prodWaist')?.value || '';
-            const hip = form.querySelector('#prodHip')?.value || '';
-            const shoulder = form.querySelector('#prodShoulder')?.value || '';
-
-            const params = new URLSearchParams({
-                size: size,
-                top_length: topLength,
-                sleeves_length: sleevesLength,
-                bust: bust,
-                waist: waist,
-                hip: hip,
-                shoulder: shoulder
-            });
-
+            const params = new URLSearchParams({ size: size });
             window.location.href = "{{ url_for('buy_now', product_id=product.id) }}?" + params.toString();
         }
 

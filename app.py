@@ -63,6 +63,10 @@ from services.checkout_calculator import calculate_bag_and_checkout, to_paise, t
 from services.shipping_service import get_shipping_quote, get_order_package_specs, DEFAULT_WAREHOUSE
 import urllib.parse
 import random
+try:
+    import qrcode
+except ImportError:
+    qrcode = None
 
 
 # =========================================
@@ -94,6 +98,14 @@ def product_image_url(image, fallback="editorial-hero.jpg"):
         return url_for("static", filename=f"images/{image}")
 
     return url_for("static", filename=f"images/{fallback}")
+
+
+@app.template_global()
+def is_category_active(cat_pill, selected_cat):
+    """Template helper to check if a category pill is active."""
+    from services.category_service import is_category_active as ica
+    return ica(cat_pill, selected_cat)
+
 
 # Persistent High-Entropy Cryptographic Session Key
 SECRET_KEY_FILE = os.path.join(app.root_path, ".session_secret")
@@ -195,6 +207,25 @@ def validate_utr(utr_str):
     if any(cleaned == p or cleaned.startswith("TEST") for p in dummy_patterns):
         return False
     return True
+
+
+def get_merchant_upi_config():
+    """Retrieve trusted merchant UPI ID and payee name from admin settings or environment variables."""
+    admin_cfg = AdminUser.query.first()
+    upi_id = ""
+    if admin_cfg and admin_cfg.upi_id:
+        upi_id = admin_cfg.upi_id.strip()
+    if not upi_id:
+        upi_id = os.getenv("MERCHANT_UPI_ID", "9350439667@okbizaxis").strip()
+
+    payee_name = ""
+    if admin_cfg and admin_cfg.upi_payee_name:
+        payee_name = admin_cfg.upi_payee_name.strip()
+    if not payee_name:
+        payee_name = os.getenv("MERCHANT_NAME", "Tulsa Wears").strip()
+
+    return upi_id, payee_name
+
 
 # Admin Anti-Brute-Force Rate Limiting Store
 FAILED_ADMIN_LOGINS = {}  # ip -> {"count": int, "lockout_until": float}
@@ -393,7 +424,12 @@ def ensure_schema_migrations():
             "weight_kg": "FLOAT DEFAULT 0.5",
             "length_cm": "FLOAT DEFAULT 30.0",
             "width_cm": "FLOAT DEFAULT 25.0",
-            "height_cm": "FLOAT DEFAULT 5.0"
+            "height_cm": "FLOAT DEFAULT 5.0",
+            "original_price": "FLOAT",
+            "discount_percent": "INTEGER",
+            "category_2": "VARCHAR(100)",
+            "category_3": "VARCHAR(100)",
+            "category_4": "VARCHAR(100)"
         }
         with db.engine.begin() as connection:
             for col_name, col_type in new_prod_cols.items():
@@ -457,11 +493,26 @@ def ensure_schema_migrations():
     SiteContentRevision.__table__.create(bind=db.engine, checkfirst=True)
     CustomerAddress.__table__.create(bind=db.engine, checkfirst=True)
     EditorPreviewToken.__table__.create(bind=db.engine, checkfirst=True)
+    try:
+        from models.product_category import ProductCategory
+        ProductCategory.__table__.create(bind=db.engine, checkfirst=True)
+    except Exception:
+        pass
 
     try:
         db.create_all()
     except Exception:
         pass
+
+    try:
+        from models.product_category import ProductCategory
+        existing_assigned = {row[0] for row in db.session.query(ProductCategory.product_id).all()}
+        for p in Product.query.all():
+            if p.id not in existing_assigned and p.category:
+                db.session.add(ProductCategory(product_id=p.id, category=p.category, is_primary=True))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
 
     try:
         if AdminUser.query.count() == 0:
@@ -610,9 +661,10 @@ def shop():
     max_price = request.args.get("max_price", type=float)
     sort = request.args.get("sort", "newest").strip()
 
-    # CATEGORY FILTER
+    # CATEGORY FILTER (Multi-Category & Canonical Alias Matching)
     if category:
-        query = query.filter(Product.category == category)
+        from services.category_service import filter_products_by_category
+        query = filter_products_by_category(query, category)
 
     # FABRIC FILTER
     if fabric:
@@ -644,17 +696,22 @@ def shop():
     products = query.all()
 
     all_categories = [
-        "Plazo / Kurta",
+        "Palazzo Set",
         "Salwar Kameez",
-        "Party Wear",
-        "Wedding Wear"
+        "Casual Wear",
+        "Party / Wedding Regalia",
+        "Best Sellers",
     ]
+
+    from services.category_service import resolve_canonical_category
+    display_category = resolve_canonical_category(category) if category else ""
 
     return render_template(
         "shop.html",
         products=products,
         categories=all_categories,
         selected_category=category,
+        display_category=display_category,
         selected_fabric=fabric,
         selected_color=color,
         selected_sort=sort,
@@ -1080,9 +1137,8 @@ def checkout():
             db.session.commit()
 
         admin_cfg = AdminUser.query.first()
-        active_razorpay_key = RAZORPAY_KEY_ID
-        active_upi_id = admin_cfg.upi_id if admin_cfg else ""
-        active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
+        active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+        active_upi_id, active_upi_name = get_merchant_upi_config()
 
         return render_template(
             "payment.html",
@@ -1343,9 +1399,8 @@ def buy_now(product_id):
             db.session.commit()
 
         admin_cfg = AdminUser.query.first()
-        active_razorpay_key = RAZORPAY_KEY_ID
-        active_upi_id = admin_cfg.upi_id if admin_cfg else ""
-        active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
+        active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+        active_upi_id, active_upi_name = get_merchant_upi_config()
 
         return render_template(
             "payment.html",
@@ -1384,6 +1439,8 @@ def buy_now(product_id):
 # =========================================
 
 def _can_access_order(order):
+    if session.get("admin_logged_in"):
+        return True
     customer_id = session.get("customer_id")
     if customer_id and order.customer_id == customer_id:
         return True
@@ -1393,14 +1450,13 @@ def _can_access_order(order):
 @app.route("/submit-payment-proof/<int:order_id>", methods=["GET"])
 @app.route("/confirm-dev-payment/<int:order_id>", methods=["GET"])
 def view_payment_step(order_id):
-    order = Order.query.get_or_404(order_id)
-    if not _can_access_order(order):
+    order = db.session.get(Order, order_id) if hasattr(db.session, "get") else Order.query.get_or_404(order_id)
+    if not order or not _can_access_order(order):
         return "Not found", 404
-    product = Product.query.get(order.product_id) or Product.query.first()
+    product = (db.session.get(Product, order.product_id) if hasattr(db.session, "get") else Product.query.get(order.product_id)) or Product.query.first()
     admin_cfg = AdminUser.query.first()
-    active_razorpay_key = RAZORPAY_KEY_ID
-    active_upi_id = admin_cfg.upi_id if admin_cfg else ""
-    active_upi_name = admin_cfg.upi_payee_name if admin_cfg else "Tulsa Wears"
+    active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+    active_upi_id, active_upi_name = get_merchant_upi_config()
     return render_template(
         "payment.html",
         order=order,
@@ -1409,6 +1465,64 @@ def view_payment_step(order_id):
         upi_id=active_upi_id,
         upi_payee_name=active_upi_name
     )
+
+
+# =========================================
+# DYNAMIC UPI QR CODE API
+# =========================================
+
+@app.route("/api/order/<int:order_id>/upi-qr.png")
+def get_order_upi_qr(order_id):
+    order = db.session.get(Order, order_id) if hasattr(db.session, "get") else Order.query.get_or_404(order_id)
+    if not order or not _can_access_order(order):
+        return "Not found", 404
+
+    upi_id, payee_name = get_merchant_upi_config()
+    amount = float(order.price)
+    note = f"Order_{order.id}_Tulsa"
+    txn_ref = f"{order.id}"
+
+    upi_uri = f"upi://pay?pa={upi_id}&pn={urllib.parse.quote(payee_name)}&am={amount:.2f}&cu=INR&tr={txn_ref}&tn={note}"
+
+    if qrcode is not None:
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_M,
+            box_size=8,
+            border=3,
+        )
+        qr.add_data(upi_uri)
+        qr.make(fit=True)
+        img = qr.make_image(fill_color="#121316", back_color="#ffffff")
+        buf = io.BytesIO()
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        return send_file(buf, mimetype="image/png")
+    else:
+        return redirect(f"https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={urllib.parse.quote(upi_uri)}")
+
+
+@app.route("/api/order/<int:order_id>/payment-qr-details")
+def get_order_payment_qr_details(order_id):
+    order = db.session.get(Order, order_id) if hasattr(db.session, "get") else Order.query.get_or_404(order_id)
+    if not order or not _can_access_order(order):
+        return jsonify({"success": False, "message": "Order not found"}), 404
+
+    upi_id, payee_name = get_merchant_upi_config()
+    amount = float(order.price)
+    note = f"Order_{order.id}_Tulsa"
+    txn_ref = f"{order.id}"
+    upi_uri = f"upi://pay?pa={upi_id}&pn={urllib.parse.quote(payee_name)}&am={amount:.2f}&cu=INR&tr={txn_ref}&tn={note}"
+
+    return jsonify({
+        "success": True,
+        "order_id": order.id,
+        "amount": amount,
+        "upi_id": upi_id,
+        "payee_name": payee_name,
+        "upi_uri": upi_uri,
+        "qr_image_url": url_for("get_order_upi_qr", order_id=order.id)
+    })
 
 
 @app.route(
@@ -1427,7 +1541,14 @@ def submit_payment_proof(order_id):
         return "Order is no longer accepting payment submissions", 409
 
     payment_method = request.form.get("payment_method", "").strip()
-    if payment_method not in {"UPI (GPay / PhonePe / QR)", "Cash on Delivery"}:
+    valid_upi_methods = {
+        "UPI (GPay / PhonePe / QR)",
+        "Google Pay",
+        "PhonePe",
+        "Paytm / UPI",
+        "UPI"
+    }
+    if payment_method not in valid_upi_methods and payment_method != "Cash on Delivery":
         return "Invalid payment method", 400
 
     if payment_method == "Cash on Delivery":
@@ -2659,11 +2780,36 @@ def admin_update_custom_order_status(order_id):
 # ADMIN: PRODUCTS, PRICES & MEDIA MANAGER
 # =========================================
 
+def save_product_upload(file, fallback_prefix="prod"):
+    """Durable upload helper supporting Vercel Blob with local file fallback."""
+    if not file or not file.filename:
+        return None
+    if os.getenv("PUBLIC_BLOB_READ_WRITE_TOKEN") or (os.getenv("VERCEL") == "1" and os.getenv("BLOB_READ_WRITE_TOKEN")):
+        try:
+            from services.media_storage import put_public_image
+            data = file.read()
+            content_type = file.content_type or "image/jpeg"
+            url = put_public_image("products", data, content_type=content_type)
+            return url
+        except Exception as e:
+            app.logger.warning(f"Vercel blob upload fallback: {e}")
+            file.seek(0)
+
+    if allowed_file(file.filename):
+        ext = file.filename.rsplit(".", 1)[1].lower() if "." in file.filename else "jpg"
+        safe_name = f"{fallback_prefix}_{uuid.uuid4().hex[:8]}.{ext}"
+        save_path = os.path.join(app.config["UPLOAD_FOLDER"], safe_name)
+        file.save(save_path)
+        return safe_name
+    return None
+
+
 @app.route("/admin/products")
 @admin_required
 def admin_products():
+    from services.category_service import PRIMARY_CATEGORIES
     products = Product.query.order_by(Product.created_at.desc()).all()
-    categories = ["Plazo / Kurta", "Salwar Kameez", "Party Wear", "Wedding Wear"]
+    categories = PRIMARY_CATEGORIES
 
     total_value = sum(p.price * (p.stock or 0) for p in products)
     low_stock = sum(1 for p in products if (p.stock or 0) < 5)
@@ -2710,14 +2856,18 @@ def admin_update_product_image(product_id):
     file = request.files.get("image")
 
     if file and file.filename and allowed_file(file.filename):
-        ext = file.filename.rsplit(".", 1)[1].lower()
-        safe_name = f"prod_{product.id}_{uuid.uuid4().hex[:6]}.{ext}"
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], safe_name)
-        file.save(save_path)
-
-        product.image = safe_name
-        db.session.commit()
-        flash(f"Uploaded new photograph for '{product.name}'.", "success")
+        saved = save_product_upload(file, fallback_prefix=f"prod_{product.id}")
+        if saved:
+            product.image = saved
+            first_gallery = ProductImage.query.filter_by(product_id=product.id, sort_order=0).first()
+            if first_gallery:
+                first_gallery.image_url = saved
+            else:
+                db.session.add(ProductImage(product_id=product.id, image_url=saved, sort_order=0))
+            db.session.commit()
+            flash(f"Uploaded new photograph for '{product.name}'.", "success")
+        else:
+            flash("Image upload failed.", "danger")
     else:
         flash("Please choose a valid image file (.jpg, .jpeg, .png, .webp, .avif).", "warning")
 
@@ -2727,8 +2877,31 @@ def admin_update_product_image(product_id):
 @app.route("/admin/products/add", methods=["POST"])
 @admin_required
 def admin_add_product():
+    from services.category_service import resolve_canonical_category
+    from models.product_category import ProductCategory
+
     name = request.form.get("name", "").strip()
-    category = request.form.get("category", "Plazo / Kurta").strip()
+    primary_category = resolve_canonical_category(request.form.get("category", "Palazzo Set").strip())
+    
+    # Alternative categories
+    cat2 = request.form.get("category_2", "").strip()
+    cat3 = request.form.get("category_3", "").strip()
+    cat4 = request.form.get("category_4", "").strip()
+
+    cat2_resolved = resolve_canonical_category(cat2) if cat2 else None
+    cat3_resolved = resolve_canonical_category(cat3) if cat3 else None
+    cat4_resolved = resolve_canonical_category(cat4) if cat4 else None
+
+    # Avoid duplicate category assignments
+    unique_alts = []
+    for c in [cat2_resolved, cat3_resolved, cat4_resolved]:
+        if c and c != primary_category and c not in unique_alts:
+            unique_alts.append(c)
+
+    alt1 = unique_alts[0] if len(unique_alts) > 0 else None
+    alt2 = unique_alts[1] if len(unique_alts) > 1 else None
+    alt3 = unique_alts[2] if len(unique_alts) > 2 else None
+
     fabric = request.form.get("fabric", "").strip()
     color = request.form.get("color", "").strip()
     description = request.form.get("description", "").strip()
@@ -2739,46 +2912,120 @@ def admin_add_product():
     except (ValueError, TypeError):
         price = 1500.0
 
+    original_price_raw = request.form.get("original_price")
+    try:
+        original_price = float(original_price_raw) if original_price_raw and float(original_price_raw) > 0 else None
+    except (ValueError, TypeError):
+        original_price = None
+
+    discount_percent_raw = request.form.get("discount_percent")
+    try:
+        discount_percent = int(discount_percent_raw) if discount_percent_raw and int(discount_percent_raw) > 0 else None
+    except (ValueError, TypeError):
+        discount_percent = None
+
+    if original_price and original_price > price and not discount_percent:
+        discount_percent = int(round(((original_price - price) / original_price) * 100))
+
     try:
         stock = int(request.form.get("stock", 10))
     except (ValueError, TypeError):
         stock = 10
 
+    try:
+        weight_kg = float(request.form.get("weight_kg", 0.5))
+    except (ValueError, TypeError):
+        weight_kg = 0.5
+
+    try:
+        length_cm = float(request.form.get("length_cm", 30.0))
+    except (ValueError, TypeError):
+        length_cm = 30.0
+
+    try:
+        width_cm = float(request.form.get("width_cm", 25.0))
+    except (ValueError, TypeError):
+        width_cm = 25.0
+
+    try:
+        height_cm = float(request.form.get("height_cm", 5.0))
+    except (ValueError, TypeError):
+        height_cm = 5.0
+
     if not name:
         flash("Please enter a name for the new garment.", "warning")
         return redirect(url_for("admin_products"))
 
-    image_filename = "product-1.jpg"
-    file = request.files.get("image")
-    if file and file.filename and allowed_file(file.filename):
-        ext = file.filename.rsplit(".", 1)[1].lower()
-        image_filename = f"prod_{uuid.uuid4().hex[:8]}.{ext}"
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], image_filename)
-        file.save(save_path)
+    primary_image_file = request.files.get("image")
+    saved_primary = save_product_upload(primary_image_file, fallback_prefix="prod") if primary_image_file else None
+    image_filename = saved_primary or "product-1.jpg"
 
     new_product = Product(
         name=name,
         price=price,
-        category=category,
+        original_price=original_price,
+        discount_percent=discount_percent,
+        category=primary_category,
+        category_2=alt1,
+        category_3=alt2,
+        category_4=alt3,
         fabric=fabric or "Handwoven Cotton",
         color=color or "Natural",
         description=description or "A bespoke handcrafted garment created slowly by atelier artisans.",
         image=image_filename,
         stock=stock,
-        best_seller=best_seller
+        best_seller=best_seller,
+        weight_kg=weight_kg,
+        length_cm=length_cm,
+        width_cm=width_cm,
+        height_cm=height_cm
     )
     db.session.add(new_product)
+    db.session.flush()
+
+    # Create primary gallery image record
+    if saved_primary:
+        db.session.add(ProductImage(product_id=new_product.id, image_url=saved_primary, sort_order=0))
+
+    # Add any additional gallery images
+    gallery_files = request.files.getlist("gallery_images")
+    if gallery_files:
+        current_sort = 1
+        for gfile in gallery_files:
+            if gfile and gfile.filename and allowed_file(gfile.filename):
+                saved_gallery = save_product_upload(gfile, fallback_prefix=f"prod_{new_product.id}_gallery")
+                if saved_gallery:
+                    db.session.add(ProductImage(product_id=new_product.id, image_url=saved_gallery, sort_order=current_sort))
+                    current_sort += 1
+
+    # Populate normalized product_categories table
+    db.session.add(ProductCategory(product_id=new_product.id, category=primary_category, is_primary=True))
+    for alt_cat in [alt1, alt2, alt3]:
+        if alt_cat:
+            db.session.add(ProductCategory(product_id=new_product.id, category=alt_cat, is_primary=False))
+
     db.session.commit()
 
     flash(f"Added '{name}' (₹{price:,.0f}) to the atelier catalog.", "success")
     return redirect(url_for("admin_products"))
 
 
-@app.route("/admin/products/edit/<int:product_id>", methods=["POST"])
+@app.route("/admin/products/edit/<int:product_id>", methods=["GET", "POST"])
 @admin_required
 def admin_edit_product(product_id):
+    from services.category_service import PRIMARY_CATEGORIES, resolve_canonical_category
+    from models.product_category import ProductCategory
+
     product = Product.query.get_or_404(product_id)
 
+    if request.method == "GET":
+        return render_template(
+            "admin-product-edit.html",
+            product=product,
+            categories=PRIMARY_CATEGORIES
+        )
+
+    # POST: Save changes
     name = request.form.get("name", "").strip()
     if name:
         product.name = name
@@ -2790,6 +3037,21 @@ def admin_edit_product(product_id):
     except (ValueError, TypeError):
         pass
 
+    original_price_raw = request.form.get("original_price")
+    try:
+        product.original_price = float(original_price_raw) if original_price_raw and float(original_price_raw) > 0 else None
+    except (ValueError, TypeError):
+        product.original_price = None
+
+    discount_percent_raw = request.form.get("discount_percent")
+    try:
+        product.discount_percent = int(discount_percent_raw) if discount_percent_raw and int(discount_percent_raw) > 0 else None
+    except (ValueError, TypeError):
+        product.discount_percent = None
+
+    if product.original_price and product.original_price > product.price and not product.discount_percent:
+        product.discount_percent = int(round(((product.original_price - product.price) / product.original_price) * 100))
+
     try:
         stock = int(request.form.get("stock", product.stock))
         if stock >= 0:
@@ -2797,23 +3059,111 @@ def admin_edit_product(product_id):
     except (ValueError, TypeError):
         pass
 
-    product.category = request.form.get("category", product.category).strip()
+    if request.form.get("weight_kg"):
+        try:
+            product.weight_kg = float(request.form.get("weight_kg"))
+        except (ValueError, TypeError):
+            pass
+    if request.form.get("length_cm"):
+        try:
+            product.length_cm = float(request.form.get("length_cm"))
+        except (ValueError, TypeError):
+            pass
+    if request.form.get("width_cm"):
+        try:
+            product.width_cm = float(request.form.get("width_cm"))
+        except (ValueError, TypeError):
+            pass
+    if request.form.get("height_cm"):
+        try:
+            product.height_cm = float(request.form.get("height_cm"))
+        except (ValueError, TypeError):
+            pass
+
+    # Category and Multi-Category Handling
+    primary_category = resolve_canonical_category(request.form.get("category", product.category).strip())
+    product.category = primary_category
+
+    cat2 = request.form.get("category_2", "").strip()
+    cat3 = request.form.get("category_3", "").strip()
+    cat4 = request.form.get("category_4", "").strip()
+
+    cat2_resolved = resolve_canonical_category(cat2) if cat2 else None
+    cat3_resolved = resolve_canonical_category(cat3) if cat3 else None
+    cat4_resolved = resolve_canonical_category(cat4) if cat4 else None
+
+    unique_alts = []
+    for c in [cat2_resolved, cat3_resolved, cat4_resolved]:
+        if c and c != primary_category and c not in unique_alts:
+            unique_alts.append(c)
+
+    product.category_2 = unique_alts[0] if len(unique_alts) > 0 else None
+    product.category_3 = unique_alts[1] if len(unique_alts) > 1 else None
+    product.category_4 = unique_alts[2] if len(unique_alts) > 2 else None
+
     product.fabric = request.form.get("fabric", product.fabric).strip()
     product.color = request.form.get("color", product.color).strip()
     product.description = request.form.get("description", product.description).strip()
     product.best_seller = bool(request.form.get("best_seller"))
 
+    # Replace primary image if provided
     file = request.files.get("image")
     if file and file.filename and allowed_file(file.filename):
-        ext = file.filename.rsplit(".", 1)[1].lower()
-        safe_name = f"prod_{product.id}_{uuid.uuid4().hex[:6]}.{ext}"
-        save_path = os.path.join(app.config["UPLOAD_FOLDER"], safe_name)
-        file.save(save_path)
-        product.image = safe_name
+        saved = save_product_upload(file, fallback_prefix=f"prod_{product.id}")
+        if saved:
+            product.image = saved
+            first_gallery = ProductImage.query.filter_by(product_id=product.id, sort_order=0).first()
+            if first_gallery:
+                first_gallery.image_url = saved
+            else:
+                db.session.add(ProductImage(product_id=product.id, image_url=saved, sort_order=0))
+
+    # Add new gallery photos
+    gallery_files = request.files.getlist("gallery_images")
+    if gallery_files:
+        existing_count = ProductImage.query.filter_by(product_id=product.id).count()
+        current_sort = existing_count
+        for gfile in gallery_files:
+            if gfile and gfile.filename and allowed_file(gfile.filename):
+                saved_gallery = save_product_upload(gfile, fallback_prefix=f"prod_{product.id}_gallery")
+                if saved_gallery:
+                    db.session.add(ProductImage(product_id=product.id, image_url=saved_gallery, sort_order=current_sort))
+                    current_sort += 1
+
+    # Sync ProductCategory records
+    ProductCategory.query.filter_by(product_id=product.id).delete()
+    db.session.add(ProductCategory(product_id=product.id, category=primary_category, is_primary=True))
+    for alt_cat in [product.category_2, product.category_3, product.category_4]:
+        if alt_cat:
+            db.session.add(ProductCategory(product_id=product.id, category=alt_cat, is_primary=False))
 
     db.session.commit()
-    flash(f"Garment details updated for '{product.name}'.", "success")
-    return redirect(url_for("admin_products"))
+    flash(f"Garment details and collection placements updated for '{product.name}'.", "success")
+    return redirect(url_for("admin_edit_product", product_id=product.id))
+
+
+@app.route("/admin/products/<int:product_id>/gallery/<int:image_id>/delete", methods=["POST"])
+@admin_required
+def admin_delete_product_gallery_image(product_id, image_id):
+    product = Product.query.get_or_404(product_id)
+    img = ProductImage.query.filter_by(id=image_id, product_id=product.id).first_or_404()
+    db.session.delete(img)
+    db.session.commit()
+    flash("Gallery photo removed.", "info")
+    return redirect(url_for("admin_edit_product", product_id=product.id))
+
+
+@app.route("/admin/products/<int:product_id>/gallery/<int:image_id>/set-primary", methods=["POST"])
+@admin_required
+def admin_set_primary_gallery_image(product_id, image_id):
+    product = Product.query.get_or_404(product_id)
+    img = ProductImage.query.filter_by(id=image_id, product_id=product.id).first_or_404()
+    product.image = img.image_url
+    img.sort_order = 0
+    db.session.commit()
+    flash("Primary cover photo updated.", "success")
+    return redirect(url_for("admin_edit_product", product_id=product.id))
+
 
 
 @app.route("/admin/products/delete/<int:product_id>", methods=["POST"])
