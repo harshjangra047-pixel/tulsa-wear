@@ -57,3 +57,4 @@ class ProductionSetting(db.Model):
             "partywear_prep_minutes": self.partywear_prep_minutes,
             "batch_setup_minutes": self.batch_setup_minutes,
         }
+

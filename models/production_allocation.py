@@ -29,3 +29,4 @@ class ProductionAllocation(db.Model):
 
     def __repr__(self):
         return f"<ProductionAllocation Batch #{self.batch_id} -> Order #{self.order_id} ({self.size} x {self.quantity})>"
+
