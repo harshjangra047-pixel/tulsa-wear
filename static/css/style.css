@@ -3761,7 +3761,35 @@ p {
 
 @media (max-width: 640px) {
     .catalog-layout-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px 10px;
+    }
+
+    .editorial-card-content {
+        padding-top: 10px;
+    }
+
+    .editorial-card-title {
+        font-size: 16px;
+        line-height: 1.25;
+        margin-bottom: 4px;
+    }
+
+    .editorial-card-price {
+        font-size: 14px;
+    }
+
+    .editorial-card-cat {
+        font-size: 9px;
+        letter-spacing: 0.1em;
+        margin-bottom: 2px;
+    }
+
+    .badge-best-seller {
+        top: 8px;
+        left: 8px;
+        padding: 3px 7px;
+        font-size: 8px;
     }
 
     .shop-header-flex {
@@ -3774,8 +3802,8 @@ p {
     }
 
     .bag-product-row {
-        grid-template-columns: 80px 1fr;
-        gap: 16px;
+        grid-template-columns: 72px 1fr;
+        gap: 12px;
     }
 
     .bag-item-pricing {
@@ -4366,5 +4394,144 @@ html {
         flex: 0 0 64px;
         width: 64px;
         height: 80px;
+    }
+
+    /* Mobile horizontally scrollable filter strip */
+    .shop-filter-bar {
+        padding-bottom: 8px;
+    }
+
+    .filter-categories-pills {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 6px;
+        width: 100%;
+    }
+
+    .filter-categories-pills::-webkit-scrollbar {
+        display: none;
+    }
+
+    .category-pill {
+        flex-shrink: 0;
+        padding: 7px 15px;
+        font-size: 11px;
+    }
+
+    .shop-price-strip {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 14px;
+        width: 100%;
+    }
+
+    .shop-price-strip::-webkit-scrollbar {
+        display: none;
+    }
+
+    .price-filter-pill {
+        flex-shrink: 0;
+        padding: 5px 12px;
+        font-size: 10.5px;
+        white-space: nowrap;
+    }
+
+    .price-strip-label {
+        flex-shrink: 0;
+    }
+
+    body.nav-locked {
+        overflow: hidden !important;
+    }
+}
+
+/* ========================================================
+   PDP MOBILE STICKY PURCHASE BAR
+   ======================================================== */
+.pdp-mobile-sticky-bar {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .pdp-mobile-sticky-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 998;
+        background: rgba(255, 255, 255, 0.97);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-top: 1px solid rgba(201, 169, 110, 0.35);
+        box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+        padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .pdp-mobile-sticky-info {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .pdp-mobile-sticky-title {
+        font-family: 'Cormorant Garamond', Georgia, serif;
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.2;
+    }
+
+    .pdp-mobile-sticky-price {
+        font-family: 'Inter', sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--accent-burgundy);
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+    }
+
+    .pdp-mobile-sticky-price s {
+        font-size: 11px;
+        color: var(--text-muted);
+        font-weight: 400;
+    }
+
+    .pdp-mobile-sticky-btn {
+        background: var(--text-primary);
+        color: var(--background);
+        border: 1px solid var(--text-primary);
+        padding: 11px 18px;
+        font-family: 'Inter', sans-serif;
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-weight: 600;
+        border-radius: 2px;
+        cursor: pointer;
+        white-space: nowrap;
+        min-height: 44px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .pdp-mobile-sticky-btn:hover {
+        background: var(--accent-burgundy);
+        border-color: var(--accent-burgundy);
+        color: #fff;
     }
 }

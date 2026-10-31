@@ -240,3 +240,4 @@ def filter_products_by_category(query, category_name: str, product_model=None):
         pass
 
     return query.filter(or_(*filters)).distinct()
+

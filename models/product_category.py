@@ -18,3 +18,4 @@ class ProductCategory(db.Model):
 
     def __repr__(self):
         return f"<ProductCategory #{self.product_id}: {self.category} (primary={self.is_primary})>"
+

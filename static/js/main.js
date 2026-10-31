@@ -34,18 +34,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const navLinks = document.getElementById("navLinks");
 
     if (menuButton && navLinks) {
-        menuButton.addEventListener("click", () => {
-            const isOpen = navLinks.classList.toggle("mobile-open");
+        const toggleMobileMenu = (forceState) => {
+            const isOpen = typeof forceState === "boolean" 
+                ? navLinks.classList.toggle("mobile-open", forceState)
+                : navLinks.classList.toggle("mobile-open");
             menuButton.setAttribute("aria-expanded", isOpen);
             menuButton.innerHTML = isOpen ? "✕" : "☰";
-        });
+            document.body.classList.toggle("nav-locked", isOpen);
+        };
+
+        menuButton.addEventListener("click", () => toggleMobileMenu());
 
         navLinks.querySelectorAll("a").forEach((item) => {
             item.addEventListener("click", () => {
-                navLinks.classList.remove("mobile-open");
-                menuButton.setAttribute("aria-expanded", "false");
-                menuButton.innerHTML = "☰";
+                toggleMobileMenu(false);
             });
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && navLinks.classList.contains("mobile-open")) {
+                toggleMobileMenu(false);
+            }
         });
     }
 

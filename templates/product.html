@@ -278,6 +278,24 @@
                 </div>
             </div>
         </div>
+
+        {% if product.stock > 0 %}
+        <!-- Mobile Sticky Quick-Purchase Bar (Phones < 768px) -->
+        <aside class="pdp-mobile-sticky-bar" id="pdpMobileStickyBar" aria-label="Quick Purchase">
+            <div class="pdp-mobile-sticky-info">
+                <span class="pdp-mobile-sticky-title">{{ product.name }}</span>
+                <span class="pdp-mobile-sticky-price">
+                    ₹{{ "{:,.0f}".format(product.price) }}
+                    {% if product.has_discount %}
+                    <s>₹{{ "{:,.0f}".format(product.effective_original_price) }}</s>
+                    {% endif %}
+                </span>
+            </div>
+            <button type="button" class="pdp-mobile-sticky-btn" onclick="document.getElementById('productPurchaseForm').submit();">
+                <span>+ Add to Bag</span>
+            </button>
+        </aside>
+        {% endif %}
     </main>
 
     <!-- SIZE CHART MODAL (Properly structured outside scripts) -->
