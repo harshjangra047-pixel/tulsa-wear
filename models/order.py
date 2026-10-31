@@ -179,7 +179,72 @@ class Order(db.Model):
         nullable=True
     )
 
+    # WhatsApp consent & notification statuses
+    whatsapp_opt_in = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False
+    )
+
+    whatsapp_opt_in_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    whatsapp_opt_in_source = db.Column(
+        db.String(50),
+        nullable=True
+    )
+
+    whatsapp_notification_status = db.Column(
+        db.String(50),
+        default="Not opted in",
+        nullable=False
+    )
+
+    email_notification_status = db.Column(
+        db.String(50),
+        default="Pending",
+        nullable=False
+    )
+
+    # Itemized order details snapshot (JSON array of line items)
+    order_items_data = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+    # Central 7-15 day delivery window dates
+    delivery_window_start = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    delivery_window_end = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
     created_at = db.Column(
         db.DateTime,
         server_default=db.func.now()
     )
+
+    def get_items(self):
+        """Return list of item dictionaries from stored snapshot or fallback."""
+        import json
+        if self.order_items_data:
+            try:
+                data = json.loads(self.order_items_data)
+                if isinstance(data, list) and len(data) > 0:
+                    return data
+            except Exception:
+                pass
+        return [{
+            "product_id": self.product_id,
+            "name": self.product_name,
+            "price": self.price,
+            "quantity": 1,
+            "size": self.size or "M",
+            "image": None
+        }]

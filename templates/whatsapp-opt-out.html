@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Notification Preferences — Tulsa Wear</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body style="background: #faf7f2; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px;">
+    <div style="background: #fff; border: 1px solid var(--border-light); border-radius: 4px; padding: 40px; max-width: 520px; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center;">
+        <h2 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 28px; margin: 0 0 12px; color: var(--text-primary);">
+            Tulsa Wear Notification Preferences
+        </h2>
+        {% if opted_out %}
+        <div style="background: #e8f5e9; color: #2e7d32; border: 1px solid #c8e6c9; padding: 16px 20px; border-radius: 4px; margin: 20px 0; font-size: 14px;">
+            ✓ You have successfully opted out of automated WhatsApp order updates for <strong>{{ phone }}</strong>.
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); line-height: 1.6;">
+            You will continue receiving essential order confirmation and tracking details via your registered email address.
+        </p>
+        <a href="{{ url_for('home') }}" class="category-pill active" style="margin-top: 20px; display: inline-block;">Return to Atelier</a>
+        {% else %}
+        <p style="font-size: 14px; color: var(--text-muted); line-height: 1.6; margin-bottom: 24px;">
+            Manage transactional WhatsApp notifications for your orders. If you opt out, order confirmations and tracking information will be sent exclusively to your email address.
+        </p>
+        <form method="POST" action="{{ url_for('whatsapp_opt_out') }}">
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); font-weight: 600; margin-bottom: 6px;">
+                    Mobile Phone Number
+                </label>
+                <input type="tel" name="phone" value="{{ phone or '' }}" placeholder="Enter 10-digit mobile number" required class="luxury-text-input" style="width: 100%; padding: 12px; border: 1px solid var(--border-light); font-size: 14px;">
+            </div>
+            <button type="submit" class="btn-luxury-buynow" style="width: 100%; cursor: pointer;">
+                Opt Out of WhatsApp Updates
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</body>
+</html>

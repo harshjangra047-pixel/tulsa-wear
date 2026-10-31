@@ -1088,13 +1088,64 @@
                                 </div>
                             </td>
 
-                            <!-- Delivery Estimate -->
+                            <!-- Delivery Estimate & Notifications -->
                             <td>
-                                <div style="font-size: 12px; font-weight: 500; color: #1b5e20;">
-                                    {{ order.estimated_delivery_date or (order.estimated_delivery_days ~ ' Days') }}
+                                <div style="font-size: 12px; font-weight: 600; color: #1b5e20;">
+                                    {% if order.delivery_window_start and order.delivery_window_end %}
+                                        🗓️ {{ order.delivery_window_start }} – {{ order.delivery_window_end }}
+                                    {% else %}
+                                        {{ order.estimated_delivery_date or '7–15 Days' }}
+                                    {% endif %}
                                 </div>
                                 <div style="font-size: 10px; color: var(--muted); margin-top: 2px;">
-                                    ({{ order.estimated_delivery_days or 10 }} working days)
+                                    (Standard 7–15 Business Days)
+                                </div>
+
+                                <!-- Notification Status Badges -->
+                                <div style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed var(--border); display: flex; flex-direction: column; gap: 3px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10.5px;">
+                                        <span style="color: var(--muted);">WA:</span>
+                                        {% if order.whatsapp_notification_status in ['Sent', 'Delivered'] %}
+                                            <span style="color: #2e7d32; font-weight: 600;">✓ {{ order.whatsapp_notification_status }}</span>
+                                        {% elif order.whatsapp_notification_status == 'Pending' %}
+                                            <span style="color: #e65100; font-weight: 600;">⏳ Pending</span>
+                                        {% elif order.whatsapp_notification_status == 'Failed' %}
+                                            <span style="color: #c0392b; font-weight: 600;">⚠️ Failed</span>
+                                        {% elif not order.whatsapp_opt_in %}
+                                            <span style="color: #999;">✕ No Opt-in</span>
+                                        {% else %}
+                                            <span style="color: #999;">{{ order.whatsapp_notification_status or 'Not Sent' }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10.5px;">
+                                        <span style="color: var(--muted);">Email:</span>
+                                        {% if order.email_notification_status in ['Sent', 'Delivered'] %}
+                                            <span style="color: #2e7d32; font-weight: 600;">✓ {{ order.email_notification_status }}</span>
+                                        {% elif order.email_notification_status == 'Pending' %}
+                                            <span style="color: #e65100; font-weight: 600;">⏳ Pending</span>
+                                        {% elif order.email_notification_status == 'Failed' %}
+                                            <span style="color: #c0392b; font-weight: 600;">⚠️ Failed</span>
+                                        {% else %}
+                                            <span style="color: #999;">{{ order.email_notification_status or 'Not Sent' }}</span>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Resend Action Buttons -->
+                                    <div style="display: flex; gap: 3px; margin-top: 5px;">
+                                        <form action="{{ url_for('admin_resend_order_notification', order_id=order.id, channel='whatsapp') }}" method="POST" onsubmit="return confirm('Resend official WhatsApp confirmation for Order #{{ order.id }}?');" style="flex: 1;">
+                                            <button type="submit" style="width: 100%; font-size: 9px; padding: 3px 2px; background: #e8f5e9; border: 1px solid #c8e6c9; color: #1b5e20; border-radius: 2px; cursor: pointer; font-weight: 600;" title="Resend WhatsApp">
+                                                📲 WA
+                                            </button>
+                                        </form>
+                                        <form action="{{ url_for('admin_resend_order_notification', order_id=order.id, channel='email') }}" method="POST" onsubmit="return confirm('Resend confirmation email for Order #{{ order.id }}?');" style="flex: 1;">
+                                            <button type="submit" style="width: 100%; font-size: 9px; padding: 3px 2px; background: #e3f2fd; border: 1px solid #bbdefb; color: #0d47a1; border-radius: 2px; cursor: pointer; font-weight: 600;" title="Resend Email">
+                                                ✉️ Email
+                                            </button>
+                                        </form>
+                                    </div>
+                                    <button type="button" onclick="showNotificationHistory('{{ order.id }}')" style="width: 100%; font-size: 9px; padding: 3px 4px; background: #fafafa; border: 1px solid #ddd; color: #555; border-radius: 2px; cursor: pointer; margin-top: 3px;">
+                                        📜 Audit Log
+                                    </button>
                                 </div>
                             </td>
 
@@ -1452,6 +1503,71 @@
             </div>
         </div>
     </div>
+
+
+    <!-- NOTIFICATION HISTORY AUDIT MODAL -->
+    <div id="notificationHistoryModal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: #fff; border-radius: 6px; width: 100%; max-width: 600px; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.25); border: 1px solid var(--border);">
+            <div style="padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: #faf8f5;">
+                <h3 style="margin: 0; font-size: 15px; font-weight: 600;" id="notifModalTitle">Order Notification History</h3>
+                <button type="button" onclick="closeNotificationModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #666;">✕</button>
+            </div>
+            <div id="notifModalBody" style="padding: 18px; overflow-y: auto; flex: 1; font-size: 13px; line-height: 1.5;">
+                Loading notifications...
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function showNotificationHistory(orderId) {
+        var modal = document.getElementById('notificationHistoryModal');
+        var title = document.getElementById('notifModalTitle');
+        var body = document.getElementById('notifModalBody');
+        if (!modal) return;
+        title.innerText = 'Order #' + orderId + ' Notification Audit Log';
+        body.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Fetching notification log...</div>';
+        modal.style.display = 'flex';
+        
+        var endpoint = '/admin/orders/' + orderId + '/notifications';
+        fetch(endpoint)
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (!data.success || !data.notifications || data.notifications.length === 0) {
+                    body.innerHTML = '<div style="text-align: center; color: #888; padding: 30px;">No notifications recorded yet for Order #' + orderId + '.</div>';
+                    return;
+                }
+                var html = '<div style="display: flex; flex-direction: column; gap: 10px;">';
+                data.notifications.forEach(function(n) {
+                    var isSuccess = n.status === 'Sent' || n.status === 'Delivered';
+                    var color = isSuccess ? '#2e7d32' : (n.status === 'Pending' ? '#e65100' : '#c0392b');
+                    var icon = n.channel === 'whatsapp' ? '💬 WhatsApp' : '✉️ Email';
+                    html += '<div style="border: 1px solid #e5e5e5; background: #fdfdfd; border-radius: 4px; padding: 10px;">';
+                    html += '<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">';
+                    html += '<strong style="color: #111;">' + icon + ' (' + (n.event_type || 'order_confirmation') + ')</strong>';
+                    html += '<span style="color: ' + color + '; font-weight: 600; font-size: 11px; text-transform: uppercase;">' + n.status + '</span>';
+                    html += '</div>';
+                    html += '<div style="font-size: 12px; color: #555; margin-bottom: 3px;"><strong>Recipient:</strong> ' + (n.recipient || '-') + '</div>';
+                    if (n.provider_message_id) {
+                        html += '<div style="font-size: 11px; color: #777; font-family: monospace;">Message ID: ' + n.provider_message_id + '</div>';
+                    }
+                    if (n.last_error) {
+                        html += '<div style="font-size: 11px; color: #c0392b; margin-top: 4px; background: #fee2e2; padding: 4px 8px; border-radius: 3px;">⚠️ ' + n.last_error + '</div>';
+                    }
+                    html += '<div style="font-size: 10px; color: #888; margin-top: 5px;">Created: ' + (n.created_at || '-') + ' | Sent: ' + (n.sent_at || '-') + ' | Attempts: ' + (n.attempt_count || 1) + '</div>';
+                    html += '</div>';
+                });
+                html += '</div>';
+                body.innerHTML = html;
+            })
+            .catch(function(err) {
+                body.innerHTML = '<div style="color: #c0392b; padding: 20px;">Error loading notification history: ' + err.message + '</div>';
+            });
+    }
+    function closeNotificationModal() {
+        var modal = document.getElementById('notificationHistoryModal');
+        if (modal) modal.style.display = 'none';
+    }
+    </script>
 
 </body>
 

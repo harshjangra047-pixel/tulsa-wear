@@ -13,6 +13,7 @@ from .editor_preview_token import EditorPreviewToken
 
 from .product_image import ProductImage
 from .product_category import ProductCategory
+from .order_notification import OrderNotification
 
-__all__ = ["db", "Product", "ProductCategory", "ProductImage", "Order", "Feedback", "CustomOrder", "AdminUser", "TrendUpload", "CustomerUser", "TrafficLog", "SiteContent", "SiteContentRevision", "CustomerAddress", "EditorPreviewToken"]
+__all__ = ["db", "Product", "ProductCategory", "ProductImage", "Order", "OrderNotification", "Feedback", "CustomOrder", "AdminUser", "TrendUpload", "CustomerUser", "TrafficLog", "SiteContent", "SiteContentRevision", "CustomerAddress", "EditorPreviewToken"]
 

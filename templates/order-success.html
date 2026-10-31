@@ -80,11 +80,64 @@
                 </p>
 
                 <!-- Approval Notice Card -->
-                <div style="background: #fffdf5; border: 1px solid #ffe082; border-left: 4px solid #b26a00; padding: 18px 22px; text-align: left; border-radius: 2px; margin: 0 auto 28px; max-width: 720px; line-height: 1.6; font-size: 13px;">
+                <div style="background: #fffdf5; border: 1px solid #ffe082; border-left: 4px solid #b26a00; padding: 18px 22px; text-align: left; border-radius: 2px; margin: 0 auto 24px; max-width: 720px; line-height: 1.6; font-size: 13px;">
                     <strong style="color: #b26a00; font-size: 14px; display: block; margin-bottom: 4px;">
                         {% if order.status == 'Confirmed' %}✓ Payment confirmed{% elif order.status == 'COD Pending' %}Cash on delivery{% else %}⏱️ Payment verification required{% endif %}
                     </strong>
                     {% if order.status == 'Confirmed' %}Your Razorpay payment has been verified and your order is confirmed.{% elif order.status == 'COD Pending' %}Your order is recorded as cash on delivery. No payment has been recorded yet; the balance is due when your delivery arrives.{% else %}Your UPI reference and screenshot were received for review. They are not payment confirmation; your order will remain unpaid until the studio verifies the transaction against its trusted payment records.{% endif %}
+                </div>
+
+                <!-- 7–15 Day Delivery Timeline Card -->
+                <div style="background: #fffdf9; border: 1px solid #ebd9c4; border-radius: 4px; padding: 24px 22px; text-align: center; margin: 0 auto 28px; max-width: 720px;">
+                    <span style="font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--accent-burgundy); font-weight: 700; display: block; margin-bottom: 6px;">
+                        ✦ ATELIER ESTIMATED DELIVERY TIMELINE
+                    </span>
+                    <h3 style="font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 500; color: var(--text-primary); margin: 0 0 6px;">
+                        {{ order.delivery_window_start }} – {{ order.delivery_window_end }}
+                    </h3>
+                    <p style="font-size: 12.5px; color: var(--text-muted); margin: 0 0 20px;">
+                        Each silhouette is individually cut, tailored, and delivered in <strong>7–15 calendar days</strong> from confirmation.
+                    </p>
+
+                    <!-- Stepper Visual -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; position: relative; max-width: 580px; margin: 0 auto 10px;">
+                        <div style="position: absolute; top: 12px; left: 10%; right: 10%; height: 2px; background: #e8e2d8; z-index: 1;"></div>
+                        <div style="position: relative; z-index: 2; text-align: center; flex: 1;">
+                            <div style="width: 26px; height: 26px; border-radius: 50%; background: var(--accent-burgundy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; margin: 0 auto 6px;">✓</div>
+                            <span style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--text-primary);">Confirmed</span>
+                        </div>
+                        <div style="position: relative; z-index: 2; text-align: center; flex: 1;">
+                            <div style="width: 26px; height: 26px; border-radius: 50%; background: #c9a96e; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; margin: 0 auto 6px;">●</div>
+                            <span style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; font-weight: 600; color: var(--text-primary);">Processing</span>
+                        </div>
+                        <div style="position: relative; z-index: 2; text-align: center; flex: 1;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #f0eae1; border: 2px solid #ddd6cc; margin: 0 auto 6px;"></div>
+                            <span style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Dispatched</span>
+                        </div>
+                        <div style="position: relative; z-index: 2; text-align: center; flex: 1;">
+                            <div style="width: 24px; height: 24px; border-radius: 50%; background: #f0eae1; border: 2px solid #ddd6cc; margin: 0 auto 6px;"></div>
+                            <span style="font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted);">Delivered</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Automated Notification Confirmation Badges -->
+                <div style="display: flex; flex-direction: column; gap: 8px; margin: 0 auto 28px; max-width: 720px; text-align: left;">
+                    <div style="background: #f4fbf7; border: 1px solid #c3e6cb; padding: 10px 16px; border-radius: 4px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #155724;">
+                        <span style="font-size: 16px;">✉️</span>
+                        <span>Order confirmation and electronic receipt sent to <strong>{{ order.email }}</strong>.</span>
+                    </div>
+                    {% if order.whatsapp_opt_in %}
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 10px 16px; border-radius: 4px; display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #166534;">
+                        <span style="font-size: 16px;">💬</span>
+                        <span>WhatsApp order confirmation & 7–15 day delivery tracking updates enabled for <strong>{{ order.phone }}</strong>.</span>
+                    </div>
+                    {% else %}
+                    <div style="background: #faf8f5; border: 1px solid #eee5d8; padding: 10px 16px; border-radius: 4px; display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--text-muted);">
+                        <span>ℹ️</span>
+                        <span>WhatsApp updates are not enabled for this order. You will receive all updates via email.</span>
+                    </div>
+                    {% endif %}
                 </div>
 
                 <!-- Tracking ID Card -->

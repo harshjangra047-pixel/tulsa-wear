@@ -405,7 +405,15 @@ def ensure_schema_migrations():
             "shipping_provider": "VARCHAR(100)",
             "shipping_service": "VARCHAR(100)",
             "manual_payment_verified_by": "VARCHAR(80)",
-            "manual_payment_verified_at": "TIMESTAMP"
+            "manual_payment_verified_at": "TIMESTAMP",
+            "whatsapp_opt_in": "BOOLEAN DEFAULT FALSE",
+            "whatsapp_opt_in_at": "TIMESTAMP",
+            "whatsapp_opt_in_source": "VARCHAR(50)",
+            "whatsapp_notification_status": "VARCHAR(50) DEFAULT 'Not opted in'",
+            "email_notification_status": "VARCHAR(50) DEFAULT 'Pending'",
+            "order_items_data": "TEXT",
+            "delivery_window_start": "VARCHAR(100)",
+            "delivery_window_end": "VARCHAR(100)"
         }
 
         with db.engine.begin() as connection:
@@ -494,6 +502,11 @@ def ensure_schema_migrations():
     CustomerAddress.__table__.create(bind=db.engine, checkfirst=True)
     EditorPreviewToken.__table__.create(bind=db.engine, checkfirst=True)
     try:
+        from models.order_notification import OrderNotification
+        OrderNotification.__table__.create(bind=db.engine, checkfirst=True)
+    except Exception:
+        pass
+    try:
         from models.product_category import ProductCategory
         ProductCategory.__table__.create(bind=db.engine, checkfirst=True)
     except Exception:
@@ -553,7 +566,7 @@ def ensure_schema_migrations():
     # version before serving requests and never applies a second copy of DDL.
     required_tables = {
         "products", "orders", "site_content", "site_content_revisions",
-        "customer_addresses", "editor_preview_tokens",
+        "customer_addresses", "editor_preview_tokens", "order_notifications",
     }
     present_tables = set(inspect(db.engine).get_table_names())
     missing_tables = required_tables - present_tables
@@ -1048,6 +1061,33 @@ def checkout():
 
         items_summary = ", ".join([f"{item['product'].name} (x{item['quantity']})" for item in raw_items])
 
+        # WhatsApp opt-in consent (unchecked by default)
+        whatsapp_opt_in = (request.form.get("whatsapp_opt_in") == "1")
+        whatsapp_opt_in_at = datetime.utcnow() if whatsapp_opt_in else None
+        whatsapp_opt_in_source = "checkout" if whatsapp_opt_in else None
+
+        # 7–15 Day Delivery Timeline Calculation
+        from services.notification_service import calculate_delivery_window
+        delivery_window = calculate_delivery_window()
+        delivery_window_start = delivery_window["start_str"]
+        delivery_window_end = delivery_window["end_str"]
+
+        # Itemized snapshot for persistent receipt & notification accuracy
+        import json
+        order_items_payload = []
+        for it in raw_items:
+            order_items_payload.append({
+                "product_id": it["product"].id,
+                "name": it["product"].name,
+                "quantity": it["quantity"],
+                "price": float(it["product"].price or 0.0),
+                "size": it.get("size", "M"),
+                "top_length": it.get("top_length", "30"),
+                "bust": it.get("bust", ""),
+                "image": it["product"].image
+            })
+        order_items_data = json.dumps(order_items_payload)
+
         # Customer Account Creation / Linking
         account_password = request.form.get("account_password", "").strip()
         customer = current_customer
@@ -1098,6 +1138,14 @@ def checkout():
             shipping_fee=order_shipping_fee,
             shipping_provider=order_shipping_quote.get("provider", "Insured Courier"),
             shipping_service=order_shipping_quote.get("service", "Standard"),
+            whatsapp_opt_in=whatsapp_opt_in,
+            whatsapp_opt_in_at=whatsapp_opt_in_at,
+            whatsapp_opt_in_source=whatsapp_opt_in_source,
+            whatsapp_notification_status="Pending" if whatsapp_opt_in else "Not opted in",
+            email_notification_status="Pending",
+            order_items_data=order_items_data,
+            delivery_window_start=delivery_window_start,
+            delivery_window_end=delivery_window_end,
             status="Payment Pending"
         )
 
@@ -1309,6 +1357,30 @@ def buy_now(product_id):
         est_days = order_shipping_quote.get("estimated_days") or (admin_user.default_delivery_days if admin_user else 10)
         est_date = (datetime.now() + timedelta(days=est_days)).strftime("%A, %d %b %Y")
 
+        # WhatsApp opt-in consent (unchecked by default)
+        whatsapp_opt_in = (request.form.get("whatsapp_opt_in") == "1")
+        whatsapp_opt_in_at = datetime.utcnow() if whatsapp_opt_in else None
+        whatsapp_opt_in_source = "buy_now" if whatsapp_opt_in else None
+
+        # 7–15 Day Delivery Timeline Calculation
+        from services.notification_service import calculate_delivery_window
+        delivery_window = calculate_delivery_window()
+        delivery_window_start = delivery_window["start_str"]
+        delivery_window_end = delivery_window["end_str"]
+
+        # Itemized snapshot for persistent receipt & notification accuracy
+        import json
+        order_items_data = json.dumps([{
+            "product_id": product.id,
+            "name": product.name,
+            "quantity": 1,
+            "price": float(product.price or 0.0),
+            "size": size,
+            "top_length": top_length,
+            "bust": bust,
+            "image": product.image
+        }])
+
         # Customer Account Creation / Linking
         account_password = request.form.get("account_password", "").strip()
         customer = current_customer
@@ -1359,6 +1431,14 @@ def buy_now(product_id):
             shipping_fee=order_shipping_fee,
             shipping_provider=order_shipping_quote.get("provider", "Insured Courier"),
             shipping_service=order_shipping_quote.get("service", "Standard"),
+            whatsapp_opt_in=whatsapp_opt_in,
+            whatsapp_opt_in_at=whatsapp_opt_in_at,
+            whatsapp_opt_in_source=whatsapp_opt_in_source,
+            whatsapp_notification_status="Pending" if whatsapp_opt_in else "Not opted in",
+            email_notification_status="Pending",
+            order_items_data=order_items_data,
+            delivery_window_start=delivery_window_start,
+            delivery_window_end=delivery_window_end,
             status="Payment Pending"
         )
 
@@ -1559,6 +1639,13 @@ def submit_payment_proof(order_id):
         order.advance_paid = 0.0
         order.balance_due = order.price
         db.session.commit()
+
+        try:
+            from services.notification_service import trigger_order_notifications
+            trigger_order_notifications(order.id, event_type="order_confirmation", trigger_source="cod_submission")
+        except Exception as exc:
+            app.logger.error(f"COD notification trigger error: {exc}")
+
         return redirect(url_for("order_success", order_id=order.id))
 
     upi_utr = request.form.get("upi_utr", "").strip()
@@ -1610,6 +1697,12 @@ def submit_payment_proof(order_id):
         pass
 
     db.session.commit()
+
+    try:
+        from services.notification_service import trigger_order_notifications
+        trigger_order_notifications(order.id, event_type="payment_pending", trigger_source="upi_submission")
+    except Exception as exc:
+        app.logger.error(f"UPI payment pending notification error: {exc}")
 
     return redirect(
         url_for("order_success", order_id=order.id)
@@ -1796,6 +1889,12 @@ def payment(order_id):
     order.balance_due = 0.0
 
     db.session.commit()
+
+    try:
+        from services.notification_service import trigger_order_notifications
+        trigger_order_notifications(order.id, event_type="order_confirmation", trigger_source="razorpay_success")
+    except Exception as exc:
+        app.logger.error(f"Razorpay confirmation notification error: {exc}")
 
 
     # =====================================
@@ -2412,6 +2511,13 @@ def admin_verify_manual_payment(order_id):
     order.advance_paid = order.price
     order.balance_due = 0.0
     db.session.commit()
+
+    try:
+        from services.notification_service import trigger_order_notifications
+        trigger_order_notifications(order.id, event_type="order_confirmation", trigger_source="admin_payment_verified")
+    except Exception as exc:
+        app.logger.error(f"Manual payment verified notification error: {exc}")
+
     flash(f"Order #{order.id} payment verified against the payment record.", "success")
     return redirect(url_for("admin_orders"))
 
@@ -2430,7 +2536,95 @@ def admin_update_order_status(order_id):
         order.status = new_status
         db.session.commit()
 
+        if new_status in ("Confirmed", "Dispatched", "Out for Delivery", "Delivered"):
+            try:
+                from services.notification_service import trigger_order_notifications
+                trigger_order_notifications(order.id, event_type=f"order_{new_status.lower().replace(' ', '_')}", trigger_source="admin_status_update")
+            except Exception as exc:
+                app.logger.error(f"Status update notification error: {exc}")
+
     return redirect(url_for("admin_orders"))
+
+
+@app.route("/admin/orders/<int:order_id>/resend-notification/<channel>", methods=["POST"])
+@admin_required
+def admin_resend_order_notification(order_id, channel):
+    order = Order.query.get_or_404(order_id)
+    if channel not in ("whatsapp", "email"):
+        flash("Invalid notification channel.", "danger")
+        return redirect(url_for("admin_orders"))
+
+    from services.notification_service import send_whatsapp_order_confirmation, send_email_order_confirmation
+    admin_name = session.get("admin_user", "Admin")
+
+    if channel == "whatsapp":
+        res = send_whatsapp_order_confirmation(order, event_type="order_confirmation", force_resend=True)
+        if res.get("success"):
+            flash(f"Order #{order.id} WhatsApp confirmation resent to {order.phone}.", "success")
+        else:
+            flash(f"WhatsApp resend for Order #{order.id}: {res.get('error') or res.get('message')}", "warning")
+    elif channel == "email":
+        res = send_email_order_confirmation(order, event_type="order_confirmation", force_resend=True)
+        if res.get("success"):
+            flash(f"Order #{order.id} confirmation email resent to {order.email}.", "success")
+        else:
+            flash(f"Email resend for Order #{order.id}: {res.get('error') or res.get('message')}", "warning")
+
+    return redirect(url_for("admin_orders"))
+
+
+@app.route("/admin/orders/<int:order_id>/notifications", methods=["GET"])
+@admin_required
+def admin_get_order_notifications(order_id):
+    order = Order.query.get_or_404(order_id)
+    from models.order_notification import OrderNotification
+    notifs = OrderNotification.query.filter_by(order_id=order.id).order_by(OrderNotification.created_at.desc()).all()
+    return jsonify({
+        "success": True,
+        "order_id": order.id,
+        "customer_name": order.customer_name,
+        "phone": order.phone,
+        "email": order.email,
+        "whatsapp_opt_in": order.whatsapp_opt_in,
+        "delivery_window": f"{order.delivery_window_start} – {order.delivery_window_end}" if order.delivery_window_start else None,
+        "notifications": [n.to_dict() for n in notifs]
+    })
+
+
+@app.route("/api/notifications/process-outbox", methods=["POST"])
+def api_process_notification_outbox():
+    cron_secret = os.getenv("NOTIFICATION_CRON_SECRET", "").strip()
+    req_secret = request.headers.get("X-Cron-Secret", "").strip() or request.args.get("secret", "").strip()
+    if cron_secret and req_secret != cron_secret:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    from services.notification_service import process_pending_notifications
+    result = process_pending_notifications()
+    return jsonify({"success": True, "result": result})
+
+
+@app.route("/whatsapp-opt-out", methods=["GET", "POST"])
+def whatsapp_opt_out():
+    """Customer opt-out route for WhatsApp notifications."""
+    phone = request.args.get("phone") or request.form.get("phone")
+    order_id = request.args.get("order_id") or request.form.get("order_id")
+    opted_out = False
+
+    if request.method == "POST" and phone:
+        clean = re.sub(r"\D", "", phone)[-10:]
+        orders = Order.query.filter(Order.phone.like(f"%{clean}")).all()
+        for o in orders:
+            o.whatsapp_opt_in = False
+            o.whatsapp_notification_status = "Opted out"
+        db.session.commit()
+        opted_out = True
+
+    return render_template(
+        "whatsapp-opt-out.html",
+        phone=phone,
+        order_id=order_id,
+        opted_out=opted_out
+    )
 
 
 @app.route("/admin/orders/delete/<int:order_id>", methods=["POST"])

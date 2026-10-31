@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmed #{{ order.id }} — Tulsa Wear</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #f7f5f0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #171614;
+            -webkit-font-smoothing: antialiased;
+        }
+        table {
+            border-spacing: 0;
+            border-collapse: collapse;
+        }
+        td {
+            padding: 0;
+        }
+        img {
+            border: 0;
+        }
+        .wrapper {
+            width: 100%;
+            table-layout: fixed;
+            background-color: #f7f5f0;
+            padding-bottom: 40px;
+        }
+        .main-card {
+            background-color: #ffffff;
+            margin: 0 auto;
+            max-width: 600px;
+            border: 1px solid #ebd9c4;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .header {
+            background-color: #121316;
+            padding: 32px 24px;
+            text-align: center;
+            border-bottom: 2px solid #c9a96e;
+        }
+        .brand-title {
+            color: #c9a96e;
+            font-size: 24px;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            font-weight: 500;
+            margin: 0;
+        }
+        .brand-subtitle {
+            color: #e5ded4;
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            margin: 6px 0 0;
+            opacity: 0.85;
+        }
+        .content {
+            padding: 32px 28px;
+        }
+        .hero-title {
+            font-size: 26px;
+            font-weight: 500;
+            color: #171614;
+            margin: 0 0 10px;
+            text-align: center;
+        }
+        .hero-subtitle {
+            font-size: 14px;
+            color: #6c6a65;
+            line-height: 1.6;
+            text-align: center;
+            margin: 0 0 28px;
+        }
+        .status-pill {
+            display: inline-block;
+            background-color: #f3ece2;
+            color: #681f2e;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .meta-box {
+            background-color: #faf8f5;
+            border: 1px solid #efe8df;
+            border-radius: 4px;
+            padding: 16px 20px;
+            margin-bottom: 28px;
+        }
+        .meta-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 4px 0;
+        }
+        /* Delivery Stepper */
+        .stepper-box {
+            background-color: #fffdf9;
+            border: 1px solid #ebd9c4;
+            border-radius: 4px;
+            padding: 22px 20px;
+            margin-bottom: 28px;
+            text-align: center;
+        }
+        .stepper-heading {
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #681f2e;
+            font-weight: 700;
+            margin: 0 0 8px;
+        }
+        .stepper-window {
+            font-size: 18px;
+            font-weight: 700;
+            color: #171614;
+            margin: 0 0 4px;
+        }
+        .stepper-sub {
+            font-size: 12px;
+            color: #7a7770;
+            margin: 0 0 16px;
+        }
+        .timeline-steps {
+            width: 100%;
+            margin-top: 12px;
+        }
+        .timeline-step {
+            text-align: center;
+            font-size: 10px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #7a7770;
+            padding: 0 4px;
+        }
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #681f2e;
+            margin: 0 auto 6px;
+        }
+        .step-dot-muted {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #d8d3cb;
+            margin: 0 auto 6px;
+        }
+        /* Garments table */
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+        .items-table th {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: #7a7770;
+            border-bottom: 1px solid #ebd9c4;
+            padding: 10px 4px;
+            text-align: left;
+        }
+        .items-table td {
+            padding: 14px 4px;
+            border-bottom: 1px solid #f2ece4;
+            font-size: 13px;
+            vertical-align: middle;
+        }
+        .item-thumb {
+            width: 60px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 2px;
+            border: 1px solid #ebd9c4;
+            display: block;
+        }
+        .price-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+            color: #55534e;
+        }
+        .grand-total-line {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0 6px;
+            border-top: 1px solid #ebd9c4;
+            font-size: 16px;
+            font-weight: 700;
+            color: #171614;
+        }
+        /* Action Button */
+        .btn-track {
+            display: inline-block;
+            background-color: #121316;
+            color: #f7f5f0 !important;
+            padding: 14px 28px;
+            font-size: 12px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            text-decoration: none;
+            font-weight: 600;
+            border-radius: 2px;
+            margin-top: 14px;
+        }
+        .footer {
+            background-color: #faf8f5;
+            border-top: 1px solid #ebd9c4;
+            padding: 24px 28px;
+            text-align: center;
+            font-size: 12px;
+            color: #7a7770;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <center>
+            <table class="main-card" width="100%" cellpadding="0" cellspacing="0">
+                <!-- Brand Header -->
+                <tr>
+                    <td class="header">
+                        <h1 class="brand-title">TULSA WEAR</h1>
+                        <p class="brand-subtitle">Atelier & Slow Fashion Studio</p>
+                    </td>
+                </tr>
+
+                <!-- Content Area -->
+                <tr>
+                    <td class="content">
+                        <div style="text-align: center; margin-bottom: 16px;">
+                            <span class="status-pill">
+                                {% if order.status == 'Confirmed' %}✓ Order Confirmed (Paid)
+                                {% elif order.status == 'COD Pending' %}Cash on Delivery Confirmed
+                                {% else %}Payment Verification Pending{% endif %}
+                            </span>
+                        </div>
+
+                        <h2 class="hero-title">Namaste {{ order.customer_name }}!</h2>
+                        <p class="hero-subtitle">
+                            Thank you for choosing Tulsa Wear. Your handcrafted garment commission has been logged in our atelier archives.
+                        </p>
+
+                        <!-- Order Meta Block -->
+                        <div class="meta-box">
+                            <table width="100%">
+                                <tr>
+                                    <td style="font-size: 13px; color: #7a7770;">Order ID:</td>
+                                    <td align="right" style="font-size: 13px; font-weight: 700; color: #171614;">#{{ order.id }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 13px; color: #7a7770; padding-top: 6px;">Tracking ID:</td>
+                                    <td align="right" style="font-size: 13px; font-family: monospace; font-weight: 700; color: #681f2e; padding-top: 6px;">{{ order.tracking_id or ('TW-TRACK-' ~ order.id) }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 13px; color: #7a7770; padding-top: 6px;">Order Date:</td>
+                                    <td align="right" style="font-size: 13px; color: #171614; padding-top: 6px;">{{ order.created_at.strftime('%d %B %Y') if order.created_at else 'Recent' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 13px; color: #7a7770; padding-top: 6px;">Payment Method:</td>
+                                    <td align="right" style="font-size: 13px; color: #171614; padding-top: 6px;">{{ order.payment_method or 'UPI / Online' }}</td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 13px; color: #7a7770; padding-top: 6px;">Payment Status:</td>
+                                    <td align="right" style="font-size: 13px; font-weight: 600; color: {% if order.status == 'Confirmed' %}#1b8a5a{% elif order.status == 'COD Pending' %}#b26a00{% else %}#b26a00{% endif %}; padding-top: 6px;">
+                                        {% if order.status == 'Confirmed' %}Paid
+                                        {% elif order.status == 'COD Pending' %}Pay on Delivery
+                                        {% else %}Payment Verification Pending{% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- 7–15 Day Delivery Timeline Box -->
+                        <div class="stepper-box">
+                            <p class="stepper-heading">✦ Estimated Delivery Window</p>
+                            <h3 class="stepper-window">{{ delivery_window }}</h3>
+                            <p class="stepper-sub">Hand-cut, tailored and safely delivered to your doorstep within 7–15 calendar days.</p>
+                            
+                            <!-- Visual Progress Stepper -->
+                            <table class="timeline-steps" width="100%">
+                                <tr>
+                                    <td class="timeline-step">
+                                        <div class="step-dot"></div>
+                                        <strong>Confirmed</strong>
+                                    </td>
+                                    <td class="timeline-step">
+                                        <div class="step-dot"></div>
+                                        <span>Processing</span>
+                                    </td>
+                                    <td class="timeline-step">
+                                        <div class="step-dot-muted"></div>
+                                        <span>Dispatched</span>
+                                    </td>
+                                    <td class="timeline-step">
+                                        <div class="step-dot-muted"></div>
+                                        <span>Delivered</span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Ordered Items Breakdown -->
+                        <h4 style="font-size: 14px; letter-spacing: 0.1em; text-transform: uppercase; color: #171614; margin: 0 0 12px; border-bottom: 1px solid #ebd9c4; padding-bottom: 6px;">
+                            Ordered Silhouettes
+                        </h4>
+
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th width="70">Piece</th>
+                                    <th>Garment Details</th>
+                                    <th align="center" width="50">Qty</th>
+                                    <th align="right" width="80">Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in items %}
+                                <tr>
+                                    <td>
+                                        {% if item.image %}
+                                        <img src="{{ item.image }}" alt="{{ item.name }}" class="item-thumb" onerror="this.style.display='none';">
+                                        {% else %}
+                                        <div style="width: 50px; height: 65px; background: #faf7f2; border: 1px solid #ebd9c4; border-radius: 2px; text-align: center; line-height: 65px; font-size: 9px; color: #999;">TULSA</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong style="color: #171614; display: block; font-size: 13.5px;">{{ item.name }}</strong>
+                                        <span style="font-size: 11.5px; color: #7a7770;">Size: <strong>{{ item.size or 'M' }}</strong></span>
+                                        {% if item.top_length or item.bust %}
+                                        <div style="font-size: 11px; color: #999; margin-top: 2px;">
+                                            Length: {{ item.top_length or '30' }}"{% if item.bust %} • Bust: {{ item.bust }}"{% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </td>
+                                    <td align="center" style="font-weight: 600; color: #171614;">
+                                        {{ item.quantity }}
+                                    </td>
+                                    <td align="right" style="font-weight: 600; color: #171614;">
+                                        ₹{{ "{:,.0f}".format(item.price * item.quantity) }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+
+                        <!-- Financial Summary -->
+                        <div style="background-color: #faf8f5; border: 1px solid #efe8df; border-radius: 4px; padding: 16px 20px; margin-bottom: 24px;">
+                            <table width="100%">
+                                <tr>
+                                    <td style="font-size: 13px; color: #7a7770; padding: 4px 0;">Subtotal:</td>
+                                    <td align="right" style="font-size: 13px; color: #171614; padding: 4px 0;">₹{{ "{:,.0f}".format(subtotal) }}</td>
+                                </tr>
+                                {% if discount_amount and discount_amount > 0 %}
+                                <tr>
+                                    <td style="font-size: 13px; color: #681f2e; padding: 4px 0;">Privilege Discount ({{ order.coupon_code or 'Promo' }}):</td>
+                                    <td align="right" style="font-size: 13px; color: #681f2e; font-weight: 600; padding: 4px 0;">− ₹{{ "{:,.0f}".format(discount_amount) }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td style="font-size: 13px; color: #7a7770; padding: 4px 0;">Insured Shipping:</td>
+                                    <td align="right" style="font-size: 13px; color: #1b8a5a; font-weight: 500; padding: 4px 0;">
+                                        {% if shipping_fee and shipping_fee > 0 %}₹{{ "{:,.0f}".format(shipping_fee) }}{% else %}Complimentary{% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="font-size: 15px; font-weight: 700; color: #171614; padding-top: 10px; border-top: 1px solid #ebd9c4;">Order Total:</td>
+                                    <td align="right" style="font-size: 16px; font-weight: 700; color: #681f2e; padding-top: 10px; border-top: 1px solid #ebd9c4;">₹{{ "{:,.0f}".format(order.price) }}</td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Shipping Address -->
+                        <div style="margin-bottom: 28px; font-size: 13px; line-height: 1.6; color: #55534e;">
+                            <strong style="color: #171614; text-transform: uppercase; font-size: 11px; letter-spacing: 0.1em; display: block; margin-bottom: 6px;">
+                                Delivery Destination:
+                            </strong>
+                            {{ order.customer_name }}<br>
+                            {{ order.address }}<br>
+                            {{ order.city }} – {{ order.pincode }}, India<br>
+                            Phone: {{ order.phone }}
+                        </div>
+
+                        <!-- Track Order CTA -->
+                        <div style="text-align: center; margin: 28px 0 10px;">
+                            <a href="{{ tracking_url }}" class="btn-track" target="_blank">
+                                Track My Order →
+                            </a>
+                            <p style="font-size: 11px; color: #999; margin-top: 8px;">
+                                Tracking ID: {{ order.tracking_id or ('TW-TRACK-' ~ order.id) }}
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td class="footer">
+                        <p style="margin: 0 0 6px;"><strong>Tulsa Wear / Tulsa by Anjali</strong></p>
+                        <p style="margin: 0 0 10px;">Hansi, Haryana, India — 125033</p>
+                        <p style="margin: 0 0 6px;">
+                            Questions? Reach our concierge team at <a href="mailto:{{ support_email }}" style="color: #681f2e;">{{ support_email }}</a> or WhatsApp <a href="https://wa.me/{{ support_phone_clean }}" style="color: #681f2e;">+91 {{ support_phone_clean[-10:] }}</a>
+                        </p>
+                        <p style="font-size: 11px; color: #aaa; margin: 12px 0 0;">
+                            This is a transactional order confirmation email regarding your commission with Tulsa Wear.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </center>
+    </div>
+</body>
+</html>

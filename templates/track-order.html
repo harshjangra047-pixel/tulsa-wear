@@ -340,13 +340,17 @@
                 <!-- Estimated Delivery Banner -->
                 <div class="estimate-banner">
                     <div>
-                        <strong style="color: #1b5e20; font-size: 15px;">📦 Estimated Delivery Date:</strong>
-                        <span style="color: #2e7d32; font-weight: 600; font-size: 15px; margin-left: 6px;">
-                            {{ order.estimated_delivery_date or 'Within 10 business days' }}
+                        <strong style="color: #1b5e20; font-size: 15px;">📦 Estimated 7–15 Day Delivery Window:</strong>
+                        <span style="color: #2e7d32; font-weight: 700; font-size: 15px; margin-left: 6px;">
+                            {% if order.delivery_window_start and order.delivery_window_end %}
+                                {{ order.delivery_window_start }} – {{ order.delivery_window_end }}
+                            {% else %}
+                                {{ order.estimated_delivery_date or '7–15 days from confirmation' }}
+                            {% endif %}
                         </span>
                     </div>
                     <div style="font-size: 12px; color: #388e3c;">
-                        Crafted slowly & delivered safely via express courier
+                        Crafted slowly & delivered with insured pan-India courier within 7–15 calendar days
                     </div>
                 </div>
 
