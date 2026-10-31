@@ -34,18 +34,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const navLinks = document.getElementById("navLinks");
 
     if (menuButton && navLinks) {
-        menuButton.addEventListener("click", () => {
-            const isOpen = navLinks.classList.toggle("mobile-open");
+        const toggleMobileMenu = (forceState) => {
+            const isOpen = typeof forceState === "boolean" 
+                ? navLinks.classList.toggle("mobile-open", forceState)
+                : navLinks.classList.toggle("mobile-open");
             menuButton.setAttribute("aria-expanded", isOpen);
             menuButton.innerHTML = isOpen ? "✕" : "☰";
-        });
+            document.body.classList.toggle("nav-locked", isOpen);
+        };
+
+        menuButton.addEventListener("click", () => toggleMobileMenu());
 
         navLinks.querySelectorAll("a").forEach((item) => {
             item.addEventListener("click", () => {
-                navLinks.classList.remove("mobile-open");
-                menuButton.setAttribute("aria-expanded", "false");
-                menuButton.innerHTML = "☰";
+                toggleMobileMenu(false);
             });
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && navLinks.classList.contains("mobile-open")) {
+                toggleMobileMenu(false);
+            }
         });
     }
 
@@ -90,6 +99,38 @@ document.addEventListener("DOMContentLoaded", () => {
         // Fallback — show everything
         revealElements.forEach((el) => el.classList.add("visible"));
     }
+
+
+    /* =========================================
+       PRODUCT RAIL — Boundary & scroll sync
+    ========================================== */
+
+    const setupProductRail = (railId, prevBtnId, nextBtnId) => {
+        const rail = document.getElementById(railId);
+        const prevBtn = document.getElementById(prevBtnId);
+        const nextBtn = document.getElementById(nextBtnId);
+
+        if (!rail || !prevBtn || !nextBtn) return;
+
+        const updateBoundaryState = () => {
+            const isAtStart = rail.scrollLeft <= 10;
+            const isAtEnd = rail.scrollLeft + rail.clientWidth >= rail.scrollWidth - 10;
+
+            prevBtn.disabled = isAtStart;
+            prevBtn.style.opacity = isAtStart ? "0.3" : "1";
+            prevBtn.style.cursor = isAtStart ? "not-allowed" : "pointer";
+
+            nextBtn.disabled = isAtEnd;
+            nextBtn.style.opacity = isAtEnd ? "0.3" : "1";
+            nextBtn.style.cursor = isAtEnd ? "not-allowed" : "pointer";
+        };
+
+        rail.addEventListener("scroll", updateBoundaryState, { passive: true });
+        window.addEventListener("resize", updateBoundaryState, { passive: true });
+        updateBoundaryState();
+    };
+
+    setupProductRail("bestsellerRail", "bestsellerPrevBtn", "bestsellerNextBtn");
 
 
     /* =========================================
