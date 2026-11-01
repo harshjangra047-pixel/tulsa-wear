@@ -431,7 +431,11 @@ def ensure_schema_migrations():
             "payment_error_code": "VARCHAR(100)",
             "payment_error_desc": "TEXT",
             "payment_device": "VARCHAR(50)",
-            "payment_environment": "VARCHAR(20)"
+            "payment_environment": "VARCHAR(20)",
+            "is_archived": "BOOLEAN DEFAULT FALSE",
+            "archived_at": "TIMESTAMP",
+            "archived_by": "VARCHAR(100)",
+            "archived_reason": "VARCHAR(255)"
         }
 
         with db.engine.begin() as connection:
@@ -2765,8 +2769,43 @@ def whatsapp_opt_out():
 @admin_required
 def admin_delete_order(order_id):
     order = Order.query.get_or_404(order_id)
-    db.session.delete(order)
+    action = request.form.get("action", "archive").strip().lower()
+    reason = request.form.get("reason", "Admin action").strip()
+    admin_name = session.get("admin_user", "Admin")
+
+    if action == "permanent_delete":
+        if not order.can_safely_delete_permanently():
+            order.archive(admin_username=admin_name, reason=f"Safe archive: {reason}")
+            db.session.commit()
+            flash(f"Order #{order_id} has payment/invoice records and was safely archived.", "warning")
+            return redirect(url_for("admin_orders"))
+        try:
+            from models.order_notification import OrderNotification
+            from models.production_allocation import ProductionAllocation
+            OrderNotification.query.filter_by(order_id=order.id).delete()
+            ProductionAllocation.query.filter_by(order_id=order.id).delete()
+            db.session.delete(order)
+            db.session.commit()
+            flash(f"Draft Order #{order_id} was permanently deleted.", "success")
+        except Exception as exc:
+            db.session.rollback()
+            flash(f"Could not delete order: {exc}", "danger")
+        return redirect(url_for("admin_orders"))
+
+    # Safe Archive
+    order.archive(admin_username=admin_name, reason=reason)
     db.session.commit()
+    flash(f"Order #{order_id} safely archived. Historical records remain preserved.", "success")
+    return redirect(url_for("admin_orders"))
+
+
+@app.route("/admin/orders/restore/<int:order_id>", methods=["POST"])
+@admin_required
+def admin_restore_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    order.restore()
+    db.session.commit()
+    flash(f"Order #{order_id} restored to active orders list.", "success")
     return redirect(url_for("admin_orders"))
 
 
@@ -2780,8 +2819,20 @@ def admin_clear_all_orders():
 
 
 # =========================================
-# ADMIN: ORDER INVOICE, CSV EXPORT & DB BACKUP
+# ADMIN & SECURE CUSTOMER ORDER INVOICE
 # =========================================
+
+@app.route("/invoice/<int:order_id>")
+def public_secure_invoice(order_id):
+    from services.notification_service import verify_invoice_token
+    token = request.args.get("token", "")
+    order = Order.query.get_or_404(order_id)
+    is_admin = session.get("admin_authenticated") or session.get("admin_logged_in")
+    is_customer_auth = order.id in session.get("authorized_order_ids", [])
+    if not (is_admin or is_customer_auth or verify_invoice_token(order.id, token)):
+        return "Unauthorized: Invalid or expired invoice access link.", 403
+    return render_template("admin-invoice.html", order=order)
+
 
 @app.route("/admin/orders/invoice/<int:order_id>")
 @admin_required

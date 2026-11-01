@@ -314,6 +314,29 @@ class Order(db.Model):
         nullable=True
     )
 
+    # Order Lifecycle Archiving & Soft-Delete (Protects historical financial/audit records)
+    is_archived = db.Column(
+        db.Boolean,
+        default=False,
+        nullable=False,
+        index=True
+    )
+
+    archived_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    archived_by = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    archived_reason = db.Column(
+        db.String(255),
+        nullable=True
+    )
+
     created_at = db.Column(
         db.DateTime,
         server_default=db.func.now()
@@ -367,4 +390,39 @@ class Order(db.Model):
             self.production_status = "Pending"
         if not self.dispatch_status:
             self.dispatch_status = "Awaiting Production"
+
+    def can_safely_delete_permanently(self):
+        """
+        Determine if an order can be permanently deleted without violating financial
+        audit compliance or breaking foreign-key integrity.
+        Only unconfirmed, unpaid, abandoned, or test orders qualify.
+        """
+        if self.is_paid():
+            return False
+        if (self.status or "").lower() in ("confirmed", "dispatched", "delivered", "in production", "processing"):
+            return False
+        if self.razorpay_payment_id:
+            return False
+        return True
+
+    def archive(self, admin_username=None, reason=None):
+        """
+        Safely transition order to archived state. Removes it from active order lists
+        while completely preserving invoices, payment records, and manufacturing history.
+        """
+        from datetime import datetime
+        self.is_archived = True
+        self.archived_at = datetime.utcnow()
+        if admin_username:
+            self.archived_by = admin_username
+        if reason:
+            self.archived_reason = reason
+
+    def restore(self):
+        """Restore an archived order back to the active order management view."""
+        self.is_archived = False
+        self.archived_at = None
+        self.archived_by = None
+        self.archived_reason = None
+
 

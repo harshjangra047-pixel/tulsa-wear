@@ -39,6 +39,7 @@ from models.order import Order
 from models.product import Product
 from models.admin_user import AdminUser
 from models.payment_webhook import PaymentWebhookEvent
+from models.order_notification import OrderNotification
 from services.payment_service import (
     get_razorpay_credentials,
     get_razorpay_client,
@@ -540,6 +541,156 @@ class RazorpayIntegrationTestSuite(unittest.TestCase):
         self.assertIn("launchRazorpayModal", body)
         self.assertIn("Test Mode Active", body)
         self.assertIn("success@razorpay", body)
+
+    # -----------------------------------------------------------
+    # TEST 17: Order Safe Archiving & Permanent Deletion Rules
+    # -----------------------------------------------------------
+    def test_order_safe_archive_and_restore(self):
+        with site.app.app_context():
+            # Paid order cannot be permanently deleted
+            paid_order = make_test_order(customer_name="Paid User", payment_status="Captured", status="Confirmed")
+            self.assertFalse(paid_order.can_safely_delete_permanently())
+
+            # Unpaid draft order CAN be permanently deleted
+            draft_order = make_test_order(customer_name="Draft User", payment_status="Pending", status="Payment Pending", razorpay_payment_id=None)
+            self.assertTrue(draft_order.can_safely_delete_permanently())
+
+            # Test archive and restore
+            paid_order.archive(admin_username="test_admin", reason="Annual audit archive")
+            self.assertTrue(paid_order.is_archived)
+            self.assertIsNotNone(paid_order.archived_at)
+            self.assertEqual(paid_order.archived_by, "test_admin")
+
+            paid_order.restore()
+            self.assertFalse(paid_order.is_archived)
+            self.assertIsNone(paid_order.archived_at)
+
+    # -----------------------------------------------------------
+    # TEST 18: Admin Delete Order Route Archives Paid Orders without 500 Error
+    # -----------------------------------------------------------
+    def test_admin_delete_order_safe_archive(self):
+        with site.app.app_context():
+            o = make_test_order(customer_name="Archive Target", payment_status="Captured", status="Confirmed")
+            db.session.add(o)
+            db.session.commit()
+            order_id = o.id
+
+            # Add child notification record that used to trigger foreign-key 500 error
+            notif = OrderNotification(
+                order_id=order_id,
+                channel="email",
+                event_type="order_confirmation",
+                recipient="test@example.com",
+                status="Sent",
+                idempotency_key=f"test_fk_{order_id}"
+            )
+            db.session.add(notif)
+            db.session.commit()
+
+        with self.client.session_transaction() as sess:
+            sess["admin_authenticated"] = True
+            sess["admin_logged_in"] = True
+            sess["admin_user"] = "admin"
+
+        # Calling delete on confirmed/paid order must NOT return 500; it must safely archive
+        resp = self.client.post(f"/admin/orders/delete/{order_id}", data={"action": "archive", "reason": "Test archive"})
+        self.assertEqual(resp.status_code, 302)
+
+        with site.app.app_context():
+            chk = db.session.get(Order, order_id)
+            self.assertIsNotNone(chk)
+            self.assertTrue(chk.is_archived)
+            # Notification child record is intact
+            n_chk = OrderNotification.query.filter_by(order_id=order_id).first()
+            self.assertIsNotNone(n_chk)
+
+    # -----------------------------------------------------------
+    # TEST 19: Owner SMS Alert Generation & Outbox Auditing
+    # -----------------------------------------------------------
+    def test_owner_new_order_sms_generation(self):
+        with site.app.app_context():
+            o = make_test_order(customer_name="Pooja Verma", price=3499.0, city="Ludhiana", pincode="141001")
+            db.session.add(o)
+            db.session.commit()
+
+            from services.notification_service import format_owner_new_order_sms, send_owner_new_order_sms, build_order_items_list
+            items, total_qty = build_order_items_list(o)
+            sms_text = format_owner_new_order_sms(o, items, total_qty, "https://tulsa-wear.vercel.app")
+            self.assertIn("NEW ORDER RECEIVED – TULSA WEAR", sms_text)
+            self.assertIn(f"Order: #{o.id}", sms_text)
+            self.assertIn("Pooja Verma", sms_text)
+            self.assertIn("Rs.3,499", sms_text)
+            self.assertIn("Ludhiana", sms_text)
+            self.assertIn(f"/invoice/{o.id}", sms_text)
+
+            # Test outbox dispatch record
+            res = send_owner_new_order_sms(o)
+            self.assertIn("status", res)
+            outbox = OrderNotification.query.filter_by(order_id=o.id, channel="sms").first()
+            self.assertIsNotNone(outbox)
+            self.assertEqual(outbox.recipient, "919350439667")
+
+    # -----------------------------------------------------------
+    # TEST 20: Customer WhatsApp Lifecycle Follow-up Formatter
+    # -----------------------------------------------------------
+    def test_customer_whatsapp_lifecycle_messages(self):
+        with site.app.app_context():
+            o = make_test_order(customer_name="Meera Kapoor", tracking_id="TW-TRACK-555", dispatched_courier="BlueDart Express")
+            from services.notification_service import format_whatsapp_followup_message
+
+            # 1. Confirmed
+            msg_conf = format_whatsapp_followup_message(o, "order_confirmation")
+            self.assertIn("TULSA WEAR", msg_conf)
+            self.assertIn("Meera Kapoor", msg_conf)
+            self.assertIn("7–15 Business Days", msg_conf)
+
+            # 2. Processing
+            msg_proc = format_whatsapp_followup_message(o, "order_processing")
+            self.assertIn("now being processed with care", msg_proc)
+
+            # 3. Dispatched
+            msg_disp = format_whatsapp_followup_message(o, "order_dispatched")
+            self.assertIn("BlueDart Express", msg_disp)
+            self.assertIn("TW-TRACK-555", msg_disp)
+
+            # 4. Out for Delivery
+            msg_out = format_whatsapp_followup_message(o, "out_for_delivery")
+            self.assertIn("OUT FOR DELIVERY", msg_out)
+
+            # 5. Delivered
+            msg_del = format_whatsapp_followup_message(o, "order_delivered")
+            self.assertIn("DELIVERED", msg_del)
+
+            # 6. Post-Delivery Feedback
+            msg_feed = format_whatsapp_followup_message(o, "post_delivery_feedback")
+            self.assertIn("feedback", msg_feed.lower())
+
+    # -----------------------------------------------------------
+    # TEST 21: Secure Invoice Token Generation and Verification
+    # -----------------------------------------------------------
+    def test_secure_invoice_token(self):
+        with site.app.app_context():
+            o = make_test_order(customer_name="Invoice User")
+            db.session.add(o)
+            db.session.commit()
+            order_id = o.id
+
+            from services.notification_service import generate_secure_invoice_token, verify_invoice_token
+            token = generate_secure_invoice_token(order_id)
+            self.assertTrue(verify_invoice_token(order_id, token))
+            self.assertFalse(verify_invoice_token(order_id, "invalid_tampered_token"))
+
+            # Test invoice endpoint with valid token
+            with self.client.session_transaction() as sess:
+                sess.clear()
+            resp = self.client.get(f"/invoice/{order_id}?token={token}")
+            self.assertEqual(resp.status_code, 200)
+
+            # Test invoice endpoint without token and without admin auth
+            with self.client.session_transaction() as sess:
+                sess.clear()
+            bad_resp = self.client.get(f"/invoice/{order_id}?token=badtoken")
+            self.assertEqual(bad_resp.status_code, 403)
 
 
 if __name__ == "__main__":
