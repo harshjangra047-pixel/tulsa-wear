@@ -69,6 +69,46 @@ class Order(db.Model):
         nullable=True
     )
 
+    razorpay_signature = db.Column(
+        db.String(255),
+        nullable=True
+    )
+
+    payment_status = db.Column(
+        db.String(50),
+        default="Pending"
+    )
+
+    payment_currency = db.Column(
+        db.String(10),
+        default="INR"
+    )
+
+    payment_captured_at = db.Column(
+        db.DateTime,
+        nullable=True
+    )
+
+    refund_id = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    refund_status = db.Column(
+        db.String(50),
+        nullable=True
+    )
+
+    refund_amount = db.Column(
+        db.Float,
+        default=0.0
+    )
+
+    webhook_event_id = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
     payment_method = db.Column(
         db.String(50),
         nullable=True
@@ -276,3 +316,34 @@ class Order(db.Model):
             "size": self.size or "M",
             "image": None
         }]
+
+    def is_paid(self):
+        """Check if order has a verified captured payment or trusted manual verification."""
+        if self.payment_status in ("Captured", "Paid"):
+            return True
+        if self.status == "Confirmed" and (self.razorpay_payment_id or self.manual_payment_verified_at):
+            return True
+        return False
+
+    def is_cod(self):
+        """Check if order payment method is Cash on Delivery."""
+        return bool(self.payment_method and "delivery" in self.payment_method.lower())
+
+    def mark_as_captured(self, razorpay_payment_id, payment_method=None, signature=None):
+        """Atomically transition order state upon confirmed Razorpay payment capture."""
+        from datetime import datetime
+        self.razorpay_payment_id = razorpay_payment_id
+        self.payment_status = "Captured"
+        self.status = "Confirmed"
+        self.advance_paid = self.price or 0.0
+        self.balance_due = 0.0
+        self.payment_captured_at = datetime.utcnow()
+        if signature:
+            self.razorpay_signature = signature
+        if payment_method:
+            self.payment_method = payment_method
+        if not self.production_status or self.production_status in ("Pending", "Awaiting Payment"):
+            self.production_status = "Pending"
+        if not self.dispatch_status:
+            self.dispatch_status = "Awaiting Production"
+

@@ -61,6 +61,17 @@ from services.site_content import (
 from services.private_storage import read_payment_proof, upload_payment_proof
 from services.checkout_calculator import calculate_bag_and_checkout, to_paise, to_rupees
 from services.shipping_service import get_shipping_quote, get_order_package_specs, DEFAULT_WAREHOUSE
+from services.payment_service import (
+    get_razorpay_credentials,
+    get_razorpay_client,
+    create_razorpay_order,
+    verify_razorpay_signature,
+    verify_webhook_signature,
+    capture_order_payment,
+    process_webhook_payload,
+    process_order_refund,
+    fetch_payment_details
+)
 import urllib.parse
 import random
 try:
@@ -353,17 +364,7 @@ RAZORPAY_KEY_SECRET = os.getenv(
 )
 
 
-razorpay_client = None
-
-
-if RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET:
-
-    razorpay_client = razorpay.Client(
-        auth=(
-            RAZORPAY_KEY_ID,
-            RAZORPAY_KEY_SECRET
-        )
-    )
+razorpay_client = get_razorpay_client()
 
 
 # =========================================
@@ -418,7 +419,15 @@ def ensure_schema_migrations():
             "dispatch_status": "VARCHAR(50) DEFAULT 'Awaiting Production'",
             "dispatch_date": "TIMESTAMP",
             "dispatched_courier": "VARCHAR(100)",
-            "cost_price": "FLOAT DEFAULT 0.0"
+            "cost_price": "FLOAT DEFAULT 0.0",
+            "payment_status": "VARCHAR(50) DEFAULT 'Pending'",
+            "razorpay_signature": "VARCHAR(255)",
+            "payment_currency": "VARCHAR(10) DEFAULT 'INR'",
+            "payment_captured_at": "TIMESTAMP",
+            "refund_id": "VARCHAR(100)",
+            "refund_status": "VARCHAR(50)",
+            "refund_amount": "FLOAT DEFAULT 0.0",
+            "webhook_event_id": "VARCHAR(100)"
         }
 
         with db.engine.begin() as connection:
@@ -531,6 +540,11 @@ def ensure_schema_migrations():
     try:
         from models.production_setting import ProductionSetting
         ProductionSetting.__table__.create(bind=db.engine, checkfirst=True)
+    except Exception:
+        pass
+    try:
+        from models.payment_webhook import PaymentWebhookEvent
+        PaymentWebhookEvent.__table__.create(bind=db.engine, checkfirst=True)
     except Exception:
         pass
 
@@ -1191,24 +1205,75 @@ def checkout():
         session.pop("applied_coupon", None)
         session.modified = True
 
-        if razorpay_client is not None:
+        payment_method = request.form.get("payment_method", "razorpay").strip().lower()
+
+        if payment_method in ("cod", "cash on delivery"):
+            new_order.payment_method = "Cash on Delivery"
+            new_order.payment_status = "Pending"
+            new_order.status = "Confirmed"
+            new_order.advance_paid = 0.0
+            new_order.balance_due = final_calc["total"]
+            if not new_order.tracking_id:
+                new_order.tracking_id = f"TW-TRACK-{uuid.uuid4().hex[:6].upper()}"
             try:
-                amount_in_paise = int(round(final_calc["total"] * 100))
-                razorpay_order = razorpay_client.order.create({
-                    "amount": amount_in_paise,
-                    "currency": "INR",
-                    "receipt": f"atelier_{new_order.id}"
-                })
-                new_order.razorpay_order_id = razorpay_order["id"]
-                db.session.commit()
-            except Exception as e:
-                app.logger.error(f"Razorpay error: {e}")
-        else:
-            new_order.razorpay_order_id = f"atelier_dev_{new_order.id}"
+                admin_user = AdminUser.query.first()
+                est_days = admin_user.default_delivery_days if admin_user else 10
+            except Exception:
+                est_days = 10
+            new_order.estimated_delivery_days = est_days
+            new_order.estimated_delivery_date = (datetime.now() + timedelta(days=est_days)).strftime("%A, %d %b %Y")
             db.session.commit()
 
-        admin_cfg = AdminUser.query.first()
-        active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+            try:
+                from services.notification_service import trigger_order_notifications
+                trigger_order_notifications(new_order.id, event_type="order_confirmation", trigger_source="cod_checkout")
+            except Exception as exc:
+                app.logger.error(f"COD notification error: {exc}")
+
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.form.get("checkout_mode") == "ajax":
+                return jsonify({
+                    "success": True,
+                    "payment_method": "Cash on Delivery",
+                    "order_id": new_order.id,
+                    "redirect_url": url_for("order_success", order_id=new_order.id)
+                })
+            return redirect(url_for("order_success", order_id=new_order.id))
+
+        new_order.payment_method = "Razorpay Online"
+        new_order.payment_status = "Pending"
+        amount_in_paise = int(round(final_calc["total"] * 100))
+        active_razorpay_key = get_razorpay_credentials()["key_id"]
+
+        try:
+            rzp_order = create_razorpay_order(
+                amount_inr=final_calc["total"],
+                receipt=f"atelier_{new_order.id}",
+                notes={"order_id": str(new_order.id), "customer": new_order.customer_name}
+            )
+            new_order.razorpay_order_id = rzp_order["order_id"]
+            active_razorpay_key = rzp_order["key_id"]
+            db.session.commit()
+        except Exception as e:
+            app.logger.error(f"Razorpay order creation error: {e}")
+            new_order.razorpay_order_id = f"atelier_ord_{new_order.id}"
+            db.session.commit()
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.form.get("checkout_mode") == "ajax":
+            return jsonify({
+                "success": True,
+                "payment_method": "razorpay",
+                "order_id": new_order.id,
+                "razorpay_order_id": new_order.razorpay_order_id,
+                "amount": amount_in_paise,
+                "currency": "INR",
+                "key_id": active_razorpay_key,
+                "customer_name": new_order.customer_name,
+                "customer_email": new_order.email,
+                "customer_phone": new_order.phone,
+                "product_name": new_order.product_name,
+                "redirect_url": url_for("order_success", order_id=new_order.id)
+            })
+
         active_upi_id, active_upi_name = get_merchant_upi_config()
 
         return render_template(
@@ -1216,6 +1281,7 @@ def checkout():
             order=new_order,
             product=raw_items[0]["product"],
             razorpay_key_id=active_razorpay_key,
+            razorpay_order_id=new_order.razorpay_order_id,
             upi_id=active_upi_id,
             upi_payee_name=active_upi_name
         )
@@ -1482,27 +1548,75 @@ def buy_now(product_id):
         session.pop("applied_coupon", None)
         session.modified = True
 
-        if razorpay_client is not None:
-            try:
-                amount_in_paise = int(round(final_calc["total"] * 100))
-                razorpay_order = razorpay_client.order.create(
-                    {
-                        "amount": amount_in_paise,
-                        "currency": "INR",
-                        "receipt": f"atelier_{new_order.id}"
-                    }
-                )
-                new_order.razorpay_order_id = razorpay_order["id"]
-                db.session.commit()
-            except Exception as e:
-                app.logger.error(f"Razorpay order creation error: {e}")
+        payment_method = request.form.get("payment_method", "razorpay").strip().lower()
 
-        else:
-            new_order.razorpay_order_id = f"atelier_dev_{new_order.id}"
+        if payment_method in ("cod", "cash on delivery"):
+            new_order.payment_method = "Cash on Delivery"
+            new_order.payment_status = "Pending"
+            new_order.status = "Confirmed"
+            new_order.advance_paid = 0.0
+            new_order.balance_due = final_calc["total"]
+            if not new_order.tracking_id:
+                new_order.tracking_id = f"TW-TRACK-{uuid.uuid4().hex[:6].upper()}"
+            try:
+                admin_user = AdminUser.query.first()
+                est_days = admin_user.default_delivery_days if admin_user else 10
+            except Exception:
+                est_days = 10
+            new_order.estimated_delivery_days = est_days
+            new_order.estimated_delivery_date = (datetime.now() + timedelta(days=est_days)).strftime("%A, %d %b %Y")
             db.session.commit()
 
-        admin_cfg = AdminUser.query.first()
-        active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+            try:
+                from services.notification_service import trigger_order_notifications
+                trigger_order_notifications(new_order.id, event_type="order_confirmation", trigger_source="cod_direct_checkout")
+            except Exception as exc:
+                app.logger.error(f"COD notification error: {exc}")
+
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.form.get("checkout_mode") == "ajax":
+                return jsonify({
+                    "success": True,
+                    "payment_method": "Cash on Delivery",
+                    "order_id": new_order.id,
+                    "redirect_url": url_for("order_success", order_id=new_order.id)
+                })
+            return redirect(url_for("order_success", order_id=new_order.id))
+
+        new_order.payment_method = "Razorpay Online"
+        new_order.payment_status = "Pending"
+        amount_in_paise = int(round(final_calc["total"] * 100))
+        active_razorpay_key = get_razorpay_credentials()["key_id"]
+
+        try:
+            rzp_order = create_razorpay_order(
+                amount_inr=final_calc["total"],
+                receipt=f"atelier_{new_order.id}",
+                notes={"order_id": str(new_order.id), "customer": new_order.customer_name}
+            )
+            new_order.razorpay_order_id = rzp_order["order_id"]
+            active_razorpay_key = rzp_order["key_id"]
+            db.session.commit()
+        except Exception as e:
+            app.logger.error(f"Razorpay order creation error: {e}")
+            new_order.razorpay_order_id = f"atelier_ord_{new_order.id}"
+            db.session.commit()
+
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.form.get("checkout_mode") == "ajax":
+            return jsonify({
+                "success": True,
+                "payment_method": "razorpay",
+                "order_id": new_order.id,
+                "razorpay_order_id": new_order.razorpay_order_id,
+                "amount": amount_in_paise,
+                "currency": "INR",
+                "key_id": active_razorpay_key,
+                "customer_name": new_order.customer_name,
+                "customer_email": new_order.email,
+                "customer_phone": new_order.phone,
+                "product_name": new_order.product_name,
+                "redirect_url": url_for("order_success", order_id=new_order.id)
+            })
+
         active_upi_id, active_upi_name = get_merchant_upi_config()
 
         return render_template(
@@ -1510,6 +1624,7 @@ def buy_now(product_id):
             order=new_order,
             product=product,
             razorpay_key_id=active_razorpay_key,
+            razorpay_order_id=new_order.razorpay_order_id,
             upi_id=active_upi_id,
             upi_payee_name=active_upi_name
         )
@@ -1557,14 +1672,28 @@ def view_payment_step(order_id):
     if not order or not _can_access_order(order):
         return "Not found", 404
     product = (db.session.get(Product, order.product_id) if hasattr(db.session, "get") else Product.query.get(order.product_id)) or Product.query.first()
-    admin_cfg = AdminUser.query.first()
-    active_razorpay_key = RAZORPAY_KEY_ID or (admin_cfg.razorpay_key_id if admin_cfg else "")
+
+    if not order.razorpay_order_id or "dev" in str(order.razorpay_order_id).lower():
+        try:
+            rzp_order = create_razorpay_order(
+                amount_inr=order.price,
+                receipt=f"atelier_{order.id}",
+                notes={"order_id": str(order.id), "customer": order.customer_name}
+            )
+            order.razorpay_order_id = rzp_order["order_id"]
+            db.session.commit()
+        except Exception as exc:
+            app.logger.warning(f"Could not generate Razorpay order for #{order.id}: {exc}")
+
+    creds = get_razorpay_credentials()
+    active_razorpay_key = creds["key_id"]
     active_upi_id, active_upi_name = get_merchant_upi_config()
     return render_template(
         "payment.html",
         order=order,
         product=product,
         razorpay_key_id=active_razorpay_key,
+        razorpay_order_id=order.razorpay_order_id,
         upi_id=active_upi_id,
         upi_payee_name=active_upi_name
     )
@@ -1736,206 +1865,129 @@ confirm_dev_payment = submit_payment_proof
 
 
 # =========================================
-# PAYMENT VERIFICATION
+# RAZORPAY PAYMENT GATEWAY API & WEBHOOKS
 # =========================================
 
-@app.route(
-    "/payment/<int:order_id>",
-    methods=["POST"]
-)
-def payment(order_id):
+@app.route("/api/create-order", methods=["POST"])
+@app.route("/api/razorpay/create-order", methods=["POST"])
+def api_create_razorpay_order():
+    data = request.get_json(silent=True) or request.form.to_dict() or {}
+    order_id = data.get("order_id")
+    order = None
 
-    order = Order.query.get_or_404(
-        order_id
-    )
-
-    if not _can_access_order(order):
-        return jsonify({"success": False, "message": "Order not found."}), 404
-
-    if not razorpay_client:
-        return jsonify({"success": False, "message": "Online card payment is not configured."}), 503
-
-
-    data = request.get_json(
-        silent=True
-    )
-
-
-    if not data:
-
-        return jsonify(
-            {
-                "success": False,
-                "message":
-                    "Invalid payment response."
-            }
-        ), 400
-
-
-    razorpay_order_id = data.get(
-        "razorpay_order_id"
-    )
-
-    razorpay_payment_id = data.get(
-        "razorpay_payment_id"
-    )
-
-    razorpay_signature = data.get(
-        "razorpay_signature"
-    )
-
-    if order.status != "Payment Pending":
-        if order.status == "Confirmed" and order.razorpay_payment_id == razorpay_payment_id:
-            return jsonify({"success": True, "redirect_url": url_for("order_success", order_id=order.id)})
-        return jsonify({"success": False, "message": "This order is no longer awaiting payment."}), 409
-
-
-    # =====================================
-    # CHECK PAYMENT RESPONSE
-    # =====================================
-
-    if not all(
-        [
-            razorpay_order_id,
-            razorpay_payment_id,
-            razorpay_signature
-        ]
-    ):
-
-        return jsonify(
-            {
-                "success": False,
-                "message":
-                    "Payment information is incomplete."
-            }
-        ), 400
-
-
-    # =====================================
-    # CHECK ORDER ID
-    # =====================================
-
-    if (
-        razorpay_order_id
-        != order.razorpay_order_id
-    ):
-
-        return jsonify(
-            {
-                "success": False,
-                "message":
-                    "Order verification failed."
-            }
-        ), 400
-
-
-    # =====================================
-    # VERIFY RAZORPAY SIGNATURE
-    # =====================================
+    if order_id:
+        try:
+            order = db.session.get(Order, int(order_id)) if hasattr(db.session, "get") else Order.query.get(int(order_id))
+        except (ValueError, TypeError):
+            pass
+        if not order:
+            return jsonify({"success": False, "message": "Order not found."}), 404
+        if not _can_access_order(order):
+            return jsonify({"success": False, "message": "Unauthorized access to order."}), 403
+        amount_inr = order.price
+    else:
+        amount_inr = data.get("amount")
+        if not amount_inr:
+            cart = session.get("cart", [])
+            applied_coupon = session.get("applied_coupon")
+            calc = calculate_bag_and_checkout(cart, applied_coupon)
+            amount_inr = calc["total"]
 
     try:
-
-        razorpay_client.utility.verify_payment_signature(
-            {
-                "razorpay_order_id":
-                    razorpay_order_id,
-
-                "razorpay_payment_id":
-                    razorpay_payment_id,
-
-                "razorpay_signature":
-                    razorpay_signature
-            }
-        )
-
-    except Exception:
-
-        return jsonify(
-            {
-                "success": False,
-                "message":
-                    "Payment verification failed."
-            }
-        ), 400
-
-
-    # =====================================
-    # GET PAYMENT DETAILS
-    # =====================================
-
-    try:
-        payment_details = razorpay_client.payment.fetch(razorpay_payment_id)
-    except Exception:
-        app.logger.exception("Razorpay payment lookup failed")
-        return jsonify({"success": False, "message": "Payment status could not be confirmed."}), 502
-
-    expected_amount = int(round((order.price or 0) * 100))
-    if (payment_details.get("order_id") != order.razorpay_order_id
-            or int(payment_details.get("amount", -1)) != expected_amount
-            or str(payment_details.get("currency", "")).upper() != "INR"
-            or payment_details.get("status") != "captured"):
-        return jsonify({"success": False, "message": "The payment is not captured for the expected order amount."}), 400
-
-
-    payment_method = payment_details.get(
-        "method",
-        "Unknown"
-    )
-
-
-    # =====================================
-    # UPDATE ORDER
-    # =====================================
-
-    order.razorpay_payment_id = (
-        razorpay_payment_id
-    )
-
-    order.payment_method = (
-        payment_method
-    )
-
-    order.status = "Confirmed"
-
-    if not order.tracking_id:
-        order.tracking_id = f"TW-TRACK-{uuid.uuid4().hex[:6].upper()}"
-
-    try:
-        admin_user = AdminUser.query.first()
-        est_days = admin_user.default_delivery_days if admin_user else 10
-    except Exception:
-        est_days = 10
-
-    order.estimated_delivery_days = est_days
-    order.estimated_delivery_date = (datetime.now() + timedelta(days=est_days)).strftime("%A, %d %b %Y")
-    order.advance_paid = order.price
-    order.balance_due = 0.0
-
-    db.session.commit()
-
-    try:
-        from services.notification_service import trigger_order_notifications
-        trigger_order_notifications(order.id, event_type="order_confirmation", trigger_source="razorpay_success")
-    except Exception as exc:
-        app.logger.error(f"Razorpay confirmation notification error: {exc}")
-
-
-    # =====================================
-    # SUCCESS URL
-    # =====================================
-
-    success_url = url_for(
-        "order_success",
-        order_id=order.id
-    )
-
-
-    return jsonify(
-        {
-            "success": True,
-            "redirect_url": success_url
+        receipt = f"tulsa_ord_{order.id}" if order else None
+        notes = {
+            "order_id": str(order.id) if order else "cart_preview",
+            "customer_name": (order.customer_name if order else data.get("name", ""))[:45],
+            "customer_phone": (order.phone if order else data.get("phone", ""))[:20]
         }
+        rzp_res = create_razorpay_order(amount_inr=amount_inr, receipt=receipt, notes=notes)
+        if order:
+            order.razorpay_order_id = rzp_res["order_id"]
+            db.session.commit()
+
+        return jsonify({
+            "success": True,
+            "order_id": order.id if order else None,
+            "razorpay_order_id": rzp_res["order_id"],
+            "amount": rzp_res["amount"],
+            "currency": rzp_res["currency"],
+            "key_id": rzp_res["key_id"],
+            "customer_name": order.customer_name if order else data.get("name", ""),
+            "customer_email": order.email if order else data.get("email", ""),
+            "customer_phone": order.phone if order else data.get("phone", ""),
+            "product_name": order.product_name if order else "Tulsa Wear Couture"
+        })
+    except Exception as exc:
+        app.logger.exception("Failed to create Razorpay order")
+        return jsonify({"success": False, "message": str(exc)}), 400
+
+
+@app.route("/api/verify-payment", methods=["POST"])
+@app.route("/api/razorpay/verify-payment", methods=["POST"])
+@app.route("/payment/<int:order_id>", methods=["POST"])
+def verify_payment_endpoint(order_id=None):
+    data = request.get_json(silent=True) or request.form.to_dict() or {}
+    razorpay_order_id = (data.get("razorpay_order_id") or "").strip()
+    razorpay_payment_id = (data.get("razorpay_payment_id") or "").strip()
+    razorpay_signature = (data.get("razorpay_signature") or "").strip()
+    req_order_id = data.get("order_id") or order_id
+
+    if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
+        return jsonify({"success": False, "message": "Incomplete payment verification payload."}), 400
+
+    # 1. Cryptographic HMAC-SHA256 signature verification
+    is_valid, err_msg = verify_razorpay_signature(razorpay_order_id, razorpay_payment_id, razorpay_signature)
+    if not is_valid:
+        app.logger.warning(f"Payment signature failed: {err_msg}")
+        return jsonify({"success": False, "message": "Payment signature verification failed. Untrusted response."}), 400
+
+    # 2. Match Order
+    order = None
+    if req_order_id:
+        try:
+            order = db.session.get(Order, int(req_order_id)) if hasattr(db.session, "get") else Order.query.get(int(req_order_id))
+        except (ValueError, TypeError):
+            pass
+    if not order and razorpay_order_id:
+        order = Order.query.filter_by(razorpay_order_id=razorpay_order_id).first()
+    if not order:
+        return jsonify({"success": False, "message": "Matching order not found."}), 404
+
+    # 3. Fetch authoritative payment status from Razorpay API
+    payment_details = fetch_payment_details(razorpay_payment_id)
+
+    # 4. Atomically capture payment and confirm order
+    success, capture_msg = capture_order_payment(
+        order=order,
+        razorpay_payment_id=razorpay_payment_id,
+        razorpay_order_id=razorpay_order_id,
+        razorpay_signature=razorpay_signature,
+        payment_details=payment_details
     )
+    if not success:
+        return jsonify({"success": False, "message": capture_msg}), 400
+
+    # 5. Authorize session
+    accessible_orders = session.get("authorized_order_ids", [])
+    if order.id not in accessible_orders:
+        session["authorized_order_ids"] = (accessible_orders + [order.id])[-20:]
+        session.modified = True
+
+    return jsonify({
+        "success": True,
+        "message": "Payment verified and order confirmed.",
+        "order_id": order.id,
+        "redirect_url": url_for("order_success", order_id=order.id)
+    })
+
+
+@app.route("/api/webhooks/razorpay", methods=["POST"])
+@app.route("/api/webhook/razorpay", methods=["POST"])
+def api_razorpay_webhook():
+    raw_body = request.get_data()
+    signature = request.headers.get("X-Razorpay-Signature", "")
+    success, msg, status_code = process_webhook_payload(raw_body, signature)
+    return jsonify({"success": success, "message": msg}), status_code
 
 
 @app.route("/payment-failed/<int:order_id>", methods=["POST"])

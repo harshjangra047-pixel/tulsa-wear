@@ -15,6 +15,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Razorpay Standard Checkout SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 
     <style>
         .payment-wrapper {
@@ -358,7 +360,7 @@
             onsubmit="return validatePaymentSubmission(event)"
         >
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <input type="hidden" id="selectedPaymentMethod" name="payment_method" value="Google Pay">
+            <input type="hidden" id="selectedPaymentMethod" name="payment_method" value="Razorpay Online">
 
             <!-- 1. CHOOSE PAYMENT METHOD (TABS) -->
             <div style="margin-bottom: 22px;">
@@ -367,23 +369,30 @@
                         1. Select Payment Method
                     </p>
                     <span id="qrTimerBadge" style="font-size: 11px; background: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 3px; font-weight: 600;">
-                        ⏱️ QR Active • <span id="countdownText">14:59</span>
+                        ⏱️ Active Session • <span id="countdownText">14:59</span>
                     </span>
                 </div>
 
                 <div class="payment-tabs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;">
+                    <!-- Razorpay Online Tab (Primary & Recommended) -->
+                    <div class="payment-tab-btn active tab-razorpay" id="tab-razorpay" onclick="selectPaymentChannel('Razorpay Online')">
+                        <span style="font-size: 20px;">⚡</span>
+                        <strong style="font-size: 13px; color: #111;">Razorpay Online</strong>
+                        <span style="font-size: 10px; color: #2e7d32; font-weight: 600;">Cards, UPI, NetBanking</span>
+                    </div>
+
                     <!-- Google Pay Tab -->
-                    <div class="payment-tab-btn active tab-gpay" id="tab-gpay" onclick="selectPaymentChannel('Google Pay')">
+                    <div class="payment-tab-btn tab-gpay" id="tab-gpay" onclick="selectPaymentChannel('Google Pay')">
                         <span style="font-size: 20px;">🟢</span>
                         <strong style="font-size: 13px; color: #111;">Google Pay</strong>
-                        <span style="font-size: 10px; color: #4285F4; font-weight: 600;">GPay QR & App</span>
+                        <span style="font-size: 10px; color: #4285F4; font-weight: 600;">GPay QR &amp; App</span>
                     </div>
 
                     <!-- PhonePe Tab -->
                     <div class="payment-tab-btn tab-phonepe" id="tab-phonepe" onclick="selectPaymentChannel('PhonePe')">
                         <span style="font-size: 20px;">🟣</span>
                         <strong style="font-size: 13px; color: #111;">PhonePe</strong>
-                        <span style="font-size: 10px; color: #5f259f; font-weight: 600;">PhonePe QR & App</span>
+                        <span style="font-size: 10px; color: #5f259f; font-weight: 600;">PhonePe QR &amp; App</span>
                     </div>
 
                     <!-- Paytm / Any UPI Tab -->
@@ -399,6 +408,33 @@
                         <strong style="font-size: 13px; color: #111;">Cash on Delivery</strong>
                         <span style="font-size: 10px; color: #888; font-weight: 500;">Pay at Doorstep</span>
                     </div>
+                </div>
+            </div>
+
+            <!-- RAZORPAY 1-CLICK INSTANT PAYMENT CARD -->
+            <div class="qr-display-box" id="razorpayDisplayBox" style="background: #ffffff; border: 1.5px solid #111; padding: 28px 22px; border-radius: 6px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
+                <div style="display: inline-flex; align-items: center; gap: 8px; background: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 14px;">
+                    <span>🛡️</span>
+                    <span>100% Secure Official Razorpay Standard Checkout</span>
+                </div>
+
+                <div style="font-size: 26px; font-weight: 600; color: #111; margin: 4px 0 8px;">
+                    Total Payable: <span style="color: #2e7d32;">₹{{ "{:,.0f}".format(order.price) }}</span>
+                </div>
+                <p style="font-size: 13px; color: #666; max-width: 440px; margin: 0 auto 18px; line-height: 1.5;">
+                    Instant confirmation via UPI (Google Pay, PhonePe, Paytm, BHIM), Credit/Debit Cards, NetBanking, and Wallets.
+                </p>
+
+                <!-- 1-Click Razorpay Checkout Button -->
+                <button type="button" id="payRazorpayDirectBtn" onclick="launchRazorpayModal()" class="submit-order-btn" style="background: #111; max-width: 440px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; padding: 18px; cursor: pointer;">
+                    <span>⚡</span>
+                    <span>Pay ₹{{ "{:,.0f}".format(order.price) }} with Razorpay Now</span>
+                </button>
+
+                <div style="margin-top: 16px; font-size: 11px; color: #888; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                    <span>✓ Zero convenience fee</span>
+                    <span>✓ Instant digital receipt &amp; tracking</span>
+                    <span>✓ 256-bit SSL encryption</span>
                 </div>
             </div>
 
@@ -584,36 +620,145 @@ if (timerEl) {
     }, 1000);
 }
 
+function launchRazorpayModal() {
+    const btn = document.getElementById('payRazorpayDirectBtn');
+    if (typeof Razorpay === 'undefined') {
+        alert('Razorpay Checkout SDK is still loading. Please check your internet connection and refresh.');
+        return;
+    }
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span>⚡</span><span>Launching Razorpay Checkout...</span>';
+    }
+
+    const options = {
+        "key": "{{ razorpay_key_id }}",
+        "amount": "{{ (order.price * 100)|int }}",
+        "currency": "INR",
+        "name": "Tulsa Wear Atelier",
+        "description": "Order #{{ order.id }} - {{ order.product_name|truncate(35) }}",
+        "image": "{{ url_for('static', filename='images/tulsa-brand-logo.png') }}",
+        "order_id": "{{ order.razorpay_order_id }}",
+        "handler": async function (response) {
+            if (btn) btn.innerHTML = '<span>⏳</span><span>Verifying payment signature...</span>';
+            try {
+                const res = await fetch("/api/verify-payment", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        order_id: {{ order.id }},
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_signature: response.razorpay_signature
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = data.redirect_url;
+                } else {
+                    alert(data.message || "Payment verification failed. Please contact Tulsa concierge.");
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = '<span>⚡</span><span>Retry Razorpay Payment</span>';
+                    }
+                }
+            } catch (err) {
+                console.error("Verification error:", err);
+                window.location.href = "{{ url_for('order_success', order_id=order.id) }}";
+            }
+        },
+        "prefill": {
+            "name": "{{ order.customer_name }}",
+            "email": "{{ order.email }}",
+            "contact": "{{ order.phone }}"
+        },
+        "notes": {
+            "order_id": "{{ order.id }}",
+            "store": "Tulsa Wear"
+        },
+        "theme": {
+            "color": "#121316"
+        },
+        "modal": {
+            "ondismiss": function () {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span>⚡</span><span>Pay ₹{{ "{:,.0f}".format(order.price) }} with Razorpay Now</span>';
+                }
+            }
+        }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.on("payment.failed", function (failResp) {
+        fetch("/payment-failed/{{ order.id }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(failResp.error || {})
+        });
+        alert("Payment was not completed: " + (failResp.error && failResp.error.description ? failResp.error.description : "Declined by bank"));
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<span>⚡</span><span>Retry Razorpay Payment</span>';
+        }
+    });
+    rzp.open();
+}
+
 function selectPaymentChannel(channel) {
     const selectedInput = document.getElementById('selectedPaymentMethod');
     if (selectedInput) selectedInput.value = channel;
 
     // Update Tab Styles
     document.querySelectorAll('.payment-tab-btn').forEach(btn => btn.classList.remove('active'));
-    
+
+    const rzpBox = document.getElementById('razorpayDisplayBox');
     const qrBox = document.getElementById('qrDisplayBox');
     const uploadBox = document.getElementById('uploadDropzone');
     const utrSection = document.querySelector('.utr-section');
     const codBox = document.getElementById('codNoticeBox');
     const submitBtn = document.getElementById('placeOrderBtn');
 
+    if (channel === 'Razorpay Online') {
+        const tabRzp = document.getElementById('tab-razorpay');
+        if (tabRzp) tabRzp.classList.add('active');
+        if (rzpBox) rzpBox.style.display = 'block';
+        if (qrBox) qrBox.style.display = 'none';
+        if (uploadBox) uploadBox.style.display = 'none';
+        if (utrSection) utrSection.style.display = 'none';
+        if (codBox) codBox.style.display = 'none';
+        if (submitBtn) submitBtn.style.display = 'none';
+        return;
+    }
+
     if (channel === 'Cash on Delivery') {
         const tabCod = document.getElementById('tab-cod');
         if (tabCod) tabCod.classList.add('active');
+        if (rzpBox) rzpBox.style.display = 'none';
         if (qrBox) qrBox.style.display = 'none';
         if (uploadBox) uploadBox.style.display = 'none';
         if (utrSection) utrSection.style.display = 'none';
         if (codBox) codBox.style.display = 'block';
-        if (submitBtn) submitBtn.innerText = 'Confirm Cash on Delivery Order →';
+        if (submitBtn) {
+            submitBtn.style.display = 'block';
+            submitBtn.innerText = 'Confirm Cash on Delivery Order →';
+        }
         return;
     }
 
     // Show QR & UTR sections for digital payment
+    if (rzpBox) rzpBox.style.display = 'none';
     if (qrBox) qrBox.style.display = 'block';
     if (uploadBox) uploadBox.style.display = 'block';
     if (utrSection) utrSection.style.display = 'block';
     if (codBox) codBox.style.display = 'none';
-    if (submitBtn) submitBtn.innerText = 'Confirm Payment & Place Order →';
+    if (submitBtn) {
+        submitBtn.style.display = 'block';
+        submitBtn.innerText = 'Confirm Payment & Place Order →';
+    }
 
     const banner = document.getElementById('channelBanner');
     const icon = document.getElementById('channelIcon');
@@ -876,6 +1021,10 @@ function validatePaymentSubmission(event) {
     submitBtn.innerText = "Submitting Order for Approval...";
     return true;
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    selectPaymentChannel('Razorpay Online');
+});
 </script>
 
 </body>

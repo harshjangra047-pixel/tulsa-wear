@@ -20,6 +20,9 @@
 
     <!-- Stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+
+    <!-- Razorpay Standard Checkout SDK -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
 <body>
@@ -259,9 +262,47 @@
                             </div>
                         </div>
 
+                        <!-- Payment Method Selection -->
+                        <div class="checkout-section-panel" style="margin-bottom: 24px; padding: 20px; background: #faf8f5; border: 1px solid var(--border-light); border-radius: 4px;">
+                            <label class="pdp-input-label" style="display: block; margin-bottom: 12px; font-weight: 600; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">
+                                Select Payment Method <span style="color: var(--accent-burgundy);">*</span>
+                            </label>
+
+                            <!-- Razorpay Online Option -->
+                            <label class="payment-method-label" id="labelRazorpay" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; margin-bottom: 10px; background: #fff; border: 1.5px solid #111; border-radius: 4px; cursor: pointer; transition: all 0.2s ease;">
+                                <input type="radio" name="payment_method" id="payMethodRazorpay" value="razorpay" checked style="margin-top: 3px; accent-color: #111;" onchange="updatePaymentMethodUI()">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                                        <strong style="font-size: 13px; color: #111;">Pay Online via Razorpay</strong>
+                                        <span style="font-size: 10px; background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 3px; font-weight: 600;">RECOMMENDED • INSTANT</span>
+                                    </div>
+                                    <p style="margin: 4px 0 0; font-size: 11px; color: #666; line-height: 1.4;">
+                                        UPI (Google Pay, PhonePe, Paytm, BHIM), Credit &amp; Debit Cards, NetBanking, and Wallets via official Razorpay Checkout.
+                                    </p>
+                                </div>
+                            </label>
+
+                            <!-- Cash on Delivery Option -->
+                            <label class="payment-method-label" id="labelCod" style="display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; margin-bottom: 10px; background: #fff; border: 1px solid var(--border-light); border-radius: 4px; cursor: pointer; transition: all 0.2s ease;">
+                                <input type="radio" name="payment_method" id="payMethodCod" value="cod" style="margin-top: 3px; accent-color: #111;" onchange="updatePaymentMethodUI()">
+                                <div style="flex: 1;">
+                                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 6px;">
+                                        <strong style="font-size: 13px; color: #111;">Cash on Delivery (COD)</strong>
+                                        <span style="font-size: 10px; background: #f5f5f5; color: #555; padding: 2px 8px; border-radius: 3px; font-weight: 600;">DOORSTEP CASH</span>
+                                    </div>
+                                    <p style="margin: 4px 0 0; font-size: 11px; color: #666; line-height: 1.4;">
+                                        Pay in cash when your bespoke garment arrives at your doorstep.
+                                    </p>
+                                </div>
+                            </label>
+                        </div>
+
+                        <!-- Processing Notice Alert -->
+                        <div id="checkoutAlertBox" style="display: none; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; border-radius: 4px; background: #fdf0ed; color: #c0392b; border: 1px solid #f5c6cb;"></div>
+
                         <!-- Submit CTA Button -->
-                        <button type="submit" class="btn-bag-checkout" style="font-size: 12px; padding: 20px;">
-                            Proceed to Secure Payment Section →
+                        <button type="submit" id="checkoutSubmitBtn" class="btn-bag-checkout" style="font-size: 12px; padding: 20px;">
+                            Place Order &amp; Pay with Razorpay →
                         </button>
                     </form>
                 </div>
@@ -759,6 +800,183 @@
                 const el = document.getElementById(id);
                 if (el) {
                     el.addEventListener('focus', handleAddressFocusPrompt, { once: true });
+                }
+            });
+        });
+    </script>
+
+    <script>
+        function updatePaymentMethodUI() {
+            const rzpRadio = document.getElementById("payMethodRazorpay");
+            const isRazorpay = rzpRadio ? rzpRadio.checked : true;
+            const labelRzp = document.getElementById("labelRazorpay");
+            const labelCod = document.getElementById("labelCod");
+            const btn = document.getElementById("checkoutSubmitBtn");
+
+            if (isRazorpay) {
+                if (labelRzp) {
+                    labelRzp.style.borderColor = "#111";
+                    labelRzp.style.borderWidth = "1.5px";
+                }
+                if (labelCod) {
+                    labelCod.style.borderColor = "var(--border-light)";
+                    labelCod.style.borderWidth = "1px";
+                }
+                if (btn) btn.innerHTML = "Place Order & Pay with Razorpay →";
+            } else {
+                if (labelRzp) {
+                    labelRzp.style.borderColor = "var(--border-light)";
+                    labelRzp.style.borderWidth = "1px";
+                }
+                if (labelCod) {
+                    labelCod.style.borderColor = "#111";
+                    labelCod.style.borderWidth = "1.5px";
+                }
+                if (btn) btn.innerHTML = "Confirm Order (Cash on Delivery) →";
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            updatePaymentMethodUI();
+            const form = document.getElementById("mainCheckoutForm");
+            if (!form) return;
+
+            form.addEventListener("submit", async function(e) {
+                const rzpRadio = document.getElementById("payMethodRazorpay");
+                const isRazorpay = rzpRadio ? rzpRadio.checked : true;
+                const submitBtn = document.getElementById("checkoutSubmitBtn");
+                const alertBox = document.getElementById("checkoutAlertBox");
+
+                if (!isRazorpay) {
+                    return true;
+                }
+
+                e.preventDefault();
+                if (alertBox) alertBox.style.display = "none";
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = "Opening Secure Razorpay Portal...";
+                }
+
+                try {
+                    const formData = new FormData(form);
+                    formData.append("checkout_mode", "ajax");
+                    const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+                    const csrfToken = csrfMeta ? csrfMeta.content : "";
+
+                    const response = await fetch(form.action, {
+                        method: "POST",
+                        body: formData,
+                        headers: {
+                            "X-Requested-With": "XMLHttpRequest",
+                            "X-CSRF-Token": csrfToken
+                        }
+                    });
+
+                    const resData = await response.json();
+
+                    if (!resData.success) {
+                        if (alertBox) {
+                            alertBox.innerText = resData.message || "Could not process order. Please check required fields.";
+                            alertBox.style.display = "block";
+                        }
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            updatePaymentMethodUI();
+                        }
+                        return;
+                    }
+
+                    if (typeof Razorpay === "undefined") {
+                        window.location.href = "/payment-step/" + resData.order_id;
+                        return;
+                    }
+
+                    const options = {
+                        "key": resData.key_id,
+                        "amount": resData.amount,
+                        "currency": resData.currency || "INR",
+                        "name": "Tulsa Wear Atelier",
+                        "description": "Order #" + resData.order_id + " - " + (resData.product_name || "Bespoke Couture"),
+                        "image": "{{ url_for('static', filename='images/tulsa-brand-logo.png') }}",
+                        "order_id": resData.razorpay_order_id,
+                        "handler": async function (paymentResp) {
+                            if (submitBtn) submitBtn.innerHTML = "Verifying Payment Signature...";
+                            try {
+                                const verifyRes = await fetch("/api/verify-payment", {
+                                    method: "POST",
+                                    headers: {
+                                        "Content-Type": "application/json",
+                                        "X-CSRF-Token": csrfToken
+                                    },
+                                    body: JSON.stringify({
+                                        order_id: resData.order_id,
+                                        razorpay_order_id: paymentResp.razorpay_order_id,
+                                        razorpay_payment_id: paymentResp.razorpay_payment_id,
+                                        razorpay_signature: paymentResp.razorpay_signature
+                                    })
+                                });
+                                const verifyData = await verifyRes.json();
+                                if (verifyData.success) {
+                                    window.location.href = verifyData.redirect_url;
+                                } else {
+                                    if (alertBox) {
+                                        alertBox.innerText = verifyData.message || "Payment verification failed.";
+                                        alertBox.style.display = "block";
+                                    }
+                                    if (submitBtn) {
+                                        submitBtn.disabled = false;
+                                        updatePaymentMethodUI();
+                                    }
+                                }
+                            } catch (verErr) {
+                                window.location.href = "/order-success/" + resData.order_id;
+                            }
+                        },
+                        "prefill": {
+                            "name": resData.customer_name || "",
+                            "email": resData.customer_email || "",
+                            "contact": resData.customer_phone || ""
+                        },
+                        "notes": {
+                            "order_id": String(resData.order_id),
+                            "store": "Tulsa Wear"
+                        },
+                        "theme": {
+                            "color": "#121316"
+                        },
+                        "modal": {
+                            "ondismiss": function() {
+                                if (submitBtn) {
+                                    submitBtn.disabled = false;
+                                    updatePaymentMethodUI();
+                                }
+                                window.location.href = "/payment-step/" + resData.order_id;
+                            }
+                        }
+                    };
+
+                    const rzp = new Razorpay(options);
+                    rzp.on("payment.failed", function (failResp) {
+                        fetch("/payment-failed/" + resData.order_id, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(failResp.error || {})
+                        });
+                        if (alertBox) {
+                            alertBox.innerText = "Payment Failed: " + (failResp.error && failResp.error.description ? failResp.error.description : "Authorization error.");
+                            alertBox.style.display = "block";
+                        }
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            updatePaymentMethodUI();
+                        }
+                    });
+                    rzp.open();
+
+                } catch (err) {
+                    console.error("Checkout submission error:", err);
+                    form.submit();
                 }
             });
         });

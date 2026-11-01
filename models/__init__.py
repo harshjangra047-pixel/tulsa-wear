@@ -17,10 +17,11 @@ from .order_notification import OrderNotification
 from .production_batch import ProductionBatch
 from .production_allocation import ProductionAllocation
 from .production_setting import ProductionSetting
+from .payment_webhook import PaymentWebhookEvent
 
 __all__ = [
     "db", "Product", "ProductCategory", "ProductImage", "Order", "OrderNotification",
-    "ProductionBatch", "ProductionAllocation", "ProductionSetting",
+    "ProductionBatch", "ProductionAllocation", "ProductionSetting", "PaymentWebhookEvent",
     "Feedback", "CustomOrder", "AdminUser", "TrendUpload", "CustomerUser", "TrafficLog",
     "SiteContent", "SiteContentRevision", "CustomerAddress", "EditorPreviewToken"
 ]
