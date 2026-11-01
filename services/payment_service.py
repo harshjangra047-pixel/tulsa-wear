@@ -27,8 +27,8 @@ from models.payment_webhook import PaymentWebhookEvent
 logger = logging.getLogger(__name__)
 
 # Default Fallback Test Credentials (Used if environment variables not explicitly set)
-DEFAULT_TEST_KEY_ID = "rzp_test_TuoHdBTJIyk5sX"
-DEFAULT_TEST_KEY_SECRET = "vwF8gnVoRlqmdn3uFDyXgyQ3"
+DEFAULT_TEST_KEY_ID = "rzp_test_TupSvNE2HfFWIC"
+DEFAULT_TEST_KEY_SECRET = "rL72IfbmF7zGvl1zFOQL7GEz"
 DEFAULT_WEBHOOK_SECRET = "tulsa_rzp_webhook_secret_2026"
 
 
@@ -81,31 +81,47 @@ def get_razorpay_client():
     return None
 
 
-def create_razorpay_order(amount_inr, receipt=None, notes=None):
+def create_razorpay_order(amount_inr=None, amount_in_paise=None, amount=None, currency="INR", receipt=None, notes=None):
     """
     Create an authoritative server-side Razorpay Order.
-    - amount_inr: float or int (e.g. 4999.0)
-    - Converted to integer paise (1 INR = 100 paise)
-    - Minimum amount validation: 100 paise (Rs 1.00)
-    Returns: dict with order_id, amount, currency, key_id
+    - amount_in_paise: integer paise (min 100 paise)
+    - amount_inr: float or int rupees (converted to integer paise)
+    - amount: generic parameter; if >= 100 and integer/no decimals, treated as paise; else rupees
+    - Minimum amount validation: 100 paise (₹1.00)
+    Returns: dict with order_id, id, amount, currency, key_id, receipt
     """
     client = get_razorpay_client()
     if not client:
         raise RuntimeError("Razorpay client is not configured. Set RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.")
 
-    try:
-        amount_float = float(amount_inr)
-    except (ValueError, TypeError) as exc:
-        raise ValueError(f"Invalid payable amount '{amount_inr}'") from exc
+    final_paise = None
+    if amount_in_paise is not None:
+        try:
+            final_paise = int(amount_in_paise)
+        except (ValueError, TypeError) as exc:
+            raise ValueError(f"Invalid paise amount '{amount_in_paise}'") from exc
+    elif amount_inr is not None:
+        try:
+            final_paise = int(round(float(amount_inr) * 100))
+        except (ValueError, TypeError) as exc:
+            raise ValueError(f"Invalid INR amount '{amount_inr}'") from exc
+    elif amount is not None:
+        try:
+            amt_val = float(amount)
+            # If explicit amount >= 100 and passed as integer representation, treat as paise
+            final_paise = int(amt_val)
+        except (ValueError, TypeError) as exc:
+            raise ValueError(f"Invalid amount '{amount}'") from exc
+    else:
+        raise ValueError("Missing payable amount.")
 
-    amount_in_paise = int(round(amount_float * 100))
-    if amount_in_paise < 100:
-        raise ValueError(f"Order amount {amount_in_paise} paise is below Razorpay minimum of 100 paise (₹1.00)")
+    if final_paise < 100:
+        raise ValueError(f"Order amount {final_paise} paise is below Razorpay minimum of 100 paise (₹1.00)")
 
     clean_receipt = str(receipt or f"tulsa_{uuid4().hex[:8]}")[:40]
     payload = {
-        "amount": amount_in_paise,
-        "currency": "INR",
+        "amount": final_paise,
+        "currency": str(currency or "INR").upper(),
         "receipt": clean_receipt,
         "notes": notes or {"store": "Tulsa Wear Atelier"}
     }
@@ -114,9 +130,10 @@ def create_razorpay_order(amount_inr, receipt=None, notes=None):
     creds = get_razorpay_credentials()
 
     return {
+        "id": rzp_order["id"],
         "order_id": rzp_order["id"],
-        "amount": amount_in_paise,
-        "currency": "INR",
+        "amount": final_paise,
+        "currency": payload["currency"],
         "key_id": creds["key_id"],
         "receipt": clean_receipt
     }
@@ -396,3 +413,4 @@ def process_order_refund(order, amount_inr=None, reason=None):
     except Exception as exc:
         logger.exception(f"Refund failed for order #{order.id}: {exc}")
         return False, f"Refund failed: {exc}"
+

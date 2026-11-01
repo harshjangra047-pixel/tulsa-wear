@@ -28,8 +28,8 @@ os.environ["DATABASE_URL"] = "sqlite:///" + str(TEST_DB_DIR / f"{uuid4().hex}.db
 os.environ["FLASK_SECRET_KEY"] = "rzp-test-session-secret"
 os.environ["ADMIN_PASSWORD"] = "Admin-Test-Pass-9944"
 os.environ["ADMIN_USERNAME"] = "test-rzp-admin"
-os.environ["RAZORPAY_KEY_ID"] = "rzp_test_TuoHdBTJIyk5sX"
-os.environ["RAZORPAY_KEY_SECRET"] = "vwF8gnVoRlqmdn3uFDyXgyQ3"
+os.environ["RAZORPAY_KEY_ID"] = "rzp_test_TupSvNE2HfFWIC"
+os.environ["RAZORPAY_KEY_SECRET"] = "rL72IfbmF7zGvl1zFOQL7GEz"
 os.environ["RAZORPAY_WEBHOOK_SECRET"] = "tulsa_rzp_webhook_secret_2026"
 os.environ["FLASK_ENV"] = "testing"
 
@@ -111,8 +111,8 @@ class RazorpayIntegrationTestSuite(unittest.TestCase):
     # -----------------------------------------------------------
     def test_credentials_resolution(self):
         creds = get_razorpay_credentials()
-        self.assertEqual(creds["key_id"], "rzp_test_TuoHdBTJIyk5sX")
-        self.assertEqual(creds["key_secret"], "vwF8gnVoRlqmdn3uFDyXgyQ3")
+        self.assertEqual(creds["key_id"], "rzp_test_TupSvNE2HfFWIC")
+        self.assertEqual(creds["key_secret"], "rL72IfbmF7zGvl1zFOQL7GEz")
         self.assertEqual(creds["webhook_secret"], "tulsa_rzp_webhook_secret_2026")
         self.assertFalse(creds["is_live"])
         self.assertEqual(creds["mode"], "Test")
@@ -152,7 +152,7 @@ class RazorpayIntegrationTestSuite(unittest.TestCase):
     def test_signature_verification_valid_and_tampered(self):
         order_id = "order_rzp_test_1001"
         payment_id = "pay_rzp_test_5001"
-        secret = "vwF8gnVoRlqmdn3uFDyXgyQ3"
+        secret = "rL72IfbmF7zGvl1zFOQL7GEz"
 
         # Valid signature
         msg = f"{order_id}|{payment_id}"
@@ -372,7 +372,7 @@ class RazorpayIntegrationTestSuite(unittest.TestCase):
             db.session.commit()
             order_id = order.id
 
-        secret = "vwF8gnVoRlqmdn3uFDyXgyQ3"
+        secret = "rL72IfbmF7zGvl1zFOQL7GEz"
         msg = "order_http_111|pay_http_222"
         valid_sig = hmac.new(secret.encode("utf-8"), msg.encode("utf-8"), hashlib.sha256).hexdigest()
 
@@ -450,6 +450,43 @@ class RazorpayIntegrationTestSuite(unittest.TestCase):
             chk = db.session.get(Order, order_id)
             self.assertEqual(chk.payment_status, "Captured")
             self.assertEqual(chk.razorpay_payment_id, "pay_hook_444")
+
+    # -----------------------------------------------------------
+    # TEST 12: Error Handling - Minimum Amount (< 100 paise) returns 400
+    # -----------------------------------------------------------
+    def test_create_order_below_minimum_returns_400(self):
+        resp = self.client.post("/api/create-order", json={"amount": 50, "currency": "INR"})
+        self.assertEqual(resp.status_code, 400)
+        data = resp.get_json()
+        self.assertFalse(data["success"])
+        self.assertIn("100 paise", data["message"])
+
+    # -----------------------------------------------------------
+    # TEST 13: Error Handling - Verify Payment Missing Fields returns 400
+    # -----------------------------------------------------------
+    def test_verify_payment_missing_fields_returns_400(self):
+        resp = self.client.post("/api/verify-payment", json={
+            "razorpay_order_id": "order_test_123"
+            # Missing payment_id and signature
+        })
+        self.assertEqual(resp.status_code, 400)
+        data = resp.get_json()
+        self.assertFalse(data["success"])
+        self.assertIn("Missing", data["message"])
+
+    # -----------------------------------------------------------
+    # TEST 14: Error Handling - Verify Signature Mismatch returns 400
+    # -----------------------------------------------------------
+    def test_verify_payment_signature_mismatch_returns_400(self):
+        resp = self.client.post("/api/verify-payment", json={
+            "razorpay_order_id": "order_test_123",
+            "razorpay_payment_id": "pay_test_456",
+            "razorpay_signature": "invalid_tampered_signature_string"
+        })
+        self.assertEqual(resp.status_code, 400)
+        data = resp.get_json()
+        self.assertFalse(data["success"])
+        self.assertIn("signature", data["message"].lower())
 
 
 if __name__ == "__main__":

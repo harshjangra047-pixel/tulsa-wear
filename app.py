@@ -1884,42 +1884,74 @@ def api_create_razorpay_order():
             return jsonify({"success": False, "message": "Order not found."}), 404
         if not _can_access_order(order):
             return jsonify({"success": False, "message": "Unauthorized access to order."}), 403
-        amount_inr = order.price
+        amount_in_paise = int(round(order.price * 100))
+        receipt = f"tulsa_ord_{order.id}"
+        notes = {
+            "order_id": str(order.id),
+            "customer_name": (order.customer_name or "")[:45],
+            "customer_phone": (order.phone or "")[:20]
+        }
     else:
-        amount_inr = data.get("amount")
-        if not amount_inr:
+        req_amount = data.get("amount")
+        if req_amount is None:
             cart = session.get("cart", [])
             applied_coupon = session.get("applied_coupon")
             calc = calculate_bag_and_checkout(cart, applied_coupon)
-            amount_inr = calc["total"]
+            amount_in_paise = int(round(calc["total"] * 100))
+        else:
+            try:
+                amt_val = float(req_amount)
+                amount_in_paise = int(amt_val)
+            except (ValueError, TypeError):
+                return jsonify({"success": False, "message": f"Invalid amount: {req_amount}"}), 400
+
+        receipt = data.get("receipt") or f"tulsa_{uuid.uuid4().hex[:8]}"
+        notes = data.get("notes") or {
+            "customer_name": data.get("name", "")[:45],
+            "customer_phone": data.get("phone", "")[:20]
+        }
+
+    # Minimum amount validation (100 paise / Rs 1.00)
+    if amount_in_paise < 100:
+        return jsonify({"success": False, "message": "Amount must be at least 100 paise."}), 400
+
+    currency = data.get("currency", "INR")
 
     try:
-        receipt = f"tulsa_ord_{order.id}" if order else None
-        notes = {
-            "order_id": str(order.id) if order else "cart_preview",
-            "customer_name": (order.customer_name if order else data.get("name", ""))[:45],
-            "customer_phone": (order.phone if order else data.get("phone", ""))[:20]
-        }
-        rzp_res = create_razorpay_order(amount_inr=amount_inr, receipt=receipt, notes=notes)
+        rzp_res = create_razorpay_order(amount_in_paise=amount_in_paise, currency=currency, receipt=receipt, notes=notes)
         if order:
             order.razorpay_order_id = rzp_res["order_id"]
             db.session.commit()
 
         return jsonify({
             "success": True,
-            "order_id": order.id if order else None,
+            "order_id": rzp_res["order_id"],
             "razorpay_order_id": rzp_res["order_id"],
+            "id": rzp_res["order_id"],
             "amount": rzp_res["amount"],
             "currency": rzp_res["currency"],
             "key_id": rzp_res["key_id"],
+            "receipt": rzp_res.get("receipt"),
             "customer_name": order.customer_name if order else data.get("name", ""),
             "customer_email": order.email if order else data.get("email", ""),
             "customer_phone": order.phone if order else data.get("phone", ""),
             "product_name": order.product_name if order else "Tulsa Wear Couture"
-        })
+        }), 200
+
+    except ValueError as ve:
+        return jsonify({"success": False, "message": str(ve)}), 400
+    except razorpay.errors.BadRequestError as bre:
+        app.logger.error(f"Razorpay Bad Request: {bre}")
+        return jsonify({"success": False, "message": str(bre)}), 400
+    except (razorpay.errors.GatewayError, razorpay.errors.ServerError) as se:
+        app.logger.error(f"Razorpay Gateway/Server Error: {se}")
+        return jsonify({"success": False, "message": "Razorpay service temporarily unavailable."}), 500
     except Exception as exc:
+        err_str = str(exc)
         app.logger.exception("Failed to create Razorpay order")
-        return jsonify({"success": False, "message": str(exc)}), 400
+        if "401" in err_str or "auth" in err_str.lower():
+            return jsonify({"success": False, "message": "Razorpay authentication failed. Verify API credentials."}), 401
+        return jsonify({"success": False, "message": "Failed to create order on payment gateway."}), 500
 
 
 @app.route("/api/verify-payment", methods=["POST"])
@@ -1932,16 +1964,23 @@ def verify_payment_endpoint(order_id=None):
     razorpay_signature = (data.get("razorpay_signature") or "").strip()
     req_order_id = data.get("order_id") or order_id
 
-    if not all([razorpay_order_id, razorpay_payment_id, razorpay_signature]):
-        return jsonify({"success": False, "message": "Incomplete payment verification payload."}), 400
+    # Validation: missing fields
+    if not (razorpay_order_id and razorpay_payment_id and razorpay_signature):
+        return jsonify({
+            "success": False,
+            "message": "Missing required parameters: razorpay_order_id, razorpay_payment_id, and razorpay_signature are required."
+        }), 400
 
     # 1. Cryptographic HMAC-SHA256 signature verification
     is_valid, err_msg = verify_razorpay_signature(razorpay_order_id, razorpay_payment_id, razorpay_signature)
     if not is_valid:
         app.logger.warning(f"Payment signature failed: {err_msg}")
-        return jsonify({"success": False, "message": "Payment signature verification failed. Untrusted response."}), 400
+        return jsonify({
+            "success": False,
+            "message": "Payment signature verification failed. Untrusted response."
+        }), 400
 
-    # 2. Match Order
+    # 2. Match local Order (if present)
     order = None
     if req_order_id:
         try:
@@ -1950,35 +1989,36 @@ def verify_payment_endpoint(order_id=None):
             pass
     if not order and razorpay_order_id:
         order = Order.query.filter_by(razorpay_order_id=razorpay_order_id).first()
-    if not order:
-        return jsonify({"success": False, "message": "Matching order not found."}), 404
 
-    # 3. Fetch authoritative payment status from Razorpay API
-    payment_details = fetch_payment_details(razorpay_payment_id)
+    # 3. If local order exists, atomically capture payment and confirm
+    if order:
+        payment_details = fetch_payment_details(razorpay_payment_id)
+        success, capture_msg = capture_order_payment(
+            order=order,
+            razorpay_payment_id=razorpay_payment_id,
+            razorpay_order_id=razorpay_order_id,
+            razorpay_signature=razorpay_signature,
+            payment_details=payment_details
+        )
+        if not success:
+            return jsonify({"success": False, "message": capture_msg}), 400
 
-    # 4. Atomically capture payment and confirm order
-    success, capture_msg = capture_order_payment(
-        order=order,
-        razorpay_payment_id=razorpay_payment_id,
-        razorpay_order_id=razorpay_order_id,
-        razorpay_signature=razorpay_signature,
-        payment_details=payment_details
-    )
-    if not success:
-        return jsonify({"success": False, "message": capture_msg}), 400
+        accessible_orders = session.get("authorized_order_ids", [])
+        if order.id not in accessible_orders:
+            session["authorized_order_ids"] = (accessible_orders + [order.id])[-20:]
+            session.modified = True
 
-    # 5. Authorize session
-    accessible_orders = session.get("authorized_order_ids", [])
-    if order.id not in accessible_orders:
-        session["authorized_order_ids"] = (accessible_orders + [order.id])[-20:]
-        session.modified = True
+        redirect_url = url_for("order_success", order_id=order.id)
+    else:
+        redirect_url = url_for("home")
 
     return jsonify({
         "success": True,
         "message": "Payment verified and order confirmed.",
-        "order_id": order.id,
-        "redirect_url": url_for("order_success", order_id=order.id)
-    })
+        "order_id": order.id if order else None,
+        "razorpay_payment_id": razorpay_payment_id,
+        "redirect_url": redirect_url
+    }), 200
 
 
 @app.route("/api/webhooks/razorpay", methods=["POST"])

@@ -21,3 +21,4 @@ class PaymentWebhookEvent(db.Model):
 
     def __repr__(self):
         return f"<PaymentWebhookEvent {self.event_id} - {self.event_type} - {self.status}>"
+
