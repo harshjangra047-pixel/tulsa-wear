@@ -293,6 +293,27 @@ class Order(db.Model):
         default=0.0
     )
 
+    # Payment Error Diagnostics
+    payment_error_code = db.Column(
+        db.String(100),
+        nullable=True
+    )
+
+    payment_error_desc = db.Column(
+        db.Text,
+        nullable=True
+    )
+
+    payment_device = db.Column(
+        db.String(50),
+        nullable=True
+    )
+
+    payment_environment = db.Column(
+        db.String(20),
+        nullable=True
+    )
+
     created_at = db.Column(
         db.DateTime,
         server_default=db.func.now()

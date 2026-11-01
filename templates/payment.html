@@ -28,9 +28,9 @@
         .payment-card {
             background: #fff;
             border: 1px solid var(--border);
-            border-radius: 4px;
+            border-radius: 6px;
             padding: 36px 32px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.03);
+            box-shadow: 0 4px 24px rgba(0,0,0,0.04);
         }
 
         @media (max-width: 600px) {
@@ -41,13 +41,13 @@
 
         .payment-header {
             text-align: center;
-            margin-bottom: 28px;
+            margin-bottom: 24px;
         }
 
         .payment-header h1 {
-            font-size: clamp(26px, 4vw, 36px);
+            font-size: clamp(24px, 4vw, 34px);
             font-weight: 500;
-            margin: 8px 0;
+            margin: 6px 0;
         }
 
         .payment-summary-box {
@@ -55,7 +55,7 @@
             border: 1px solid #efe8df;
             padding: 16px 20px;
             border-radius: 4px;
-            margin-bottom: 26px;
+            margin-bottom: 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -63,198 +63,31 @@
             gap: 12px;
         }
 
-        .method-option {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 14px 16px;
-            border: 1px solid var(--border);
+        .payment-tab-btn {
             background: #fff;
-            cursor: pointer;
-            border-radius: 3px;
-            transition: all 0.2s ease;
-            margin-bottom: 12px;
-        }
-
-        .method-option:hover {
-            border-color: #2e7d32;
-        }
-
-        .method-option.selected {
-            border-color: #2e7d32;
-            background: #fbfdfb;
-            box-shadow: 0 0 0 1px #2e7d32;
-        }
-
-        .method-option input[type="radio"] {
-            margin-top: 3px;
-            accent-color: #2e7d32;
-        }
-
-        .qr-display-box {
-            background: #faf8f5;
-            border: 1px solid var(--border);
-            padding: 24px 20px;
-            border-radius: 4px;
+            border: 1.5px solid #e5e5e5;
+            padding: 14px 10px;
+            border-radius: 6px;
             text-align: center;
-            margin-top: 20px;
-            margin-bottom: 24px;
-        }
-
-        .qr-image-wrapper {
-            background: #fff;
-            padding: 12px;
-            display: inline-block;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.04);
-            margin: 14px 0 10px;
-        }
-
-        .qr-image-wrapper img {
-            width: 180px;
-            height: 180px;
-            display: block;
-        }
-
-        .upi-app-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            width: 100%;
-            text-decoration: none;
-            background: #2e7d32;
-            color: #fff;
-            padding: 14px 20px;
-            font-size: 12px;
-            font-weight: 600;
-            letter-spacing: 0.1em;
-            text-transform: uppercase;
-            border-radius: 3px;
-            box-shadow: 0 4px 12px rgba(46,125,50,0.18);
-            transition: opacity 0.25s ease;
-        }
-
-        .upi-app-btn:hover {
-            opacity: 0.9;
-        }
-
-        /* SCREENSHOT UPLOAD SECTION */
-        .upload-section {
-            border: 2px dashed #c8e6c9;
-            background: #fcfdfc;
-            border-radius: 4px;
-            padding: 22px 20px;
-            text-align: center;
-            margin-bottom: 20px;
-            transition: border-color 0.2s ease, background 0.2s ease;
-            position: relative;
-        }
-
-        .upload-section.dragover {
-            border-color: #2e7d32;
-            background: #f1f8f3;
-        }
-
-        .upload-section.has-file {
-            border-color: #2e7d32;
-            background: #f6fbf7;
-        }
-
-        .upload-section-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: #1b5e20;
-            margin-bottom: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-        }
-
-        .upload-section-desc {
-            font-size: 11px;
-            color: var(--muted);
-            margin-bottom: 12px;
-        }
-
-        .upload-btn-label {
-            display: inline-block;
-            background: #fff;
-            border: 1px solid #2e7d32;
-            color: #2e7d32;
-            padding: 8px 18px;
-            font-size: 11px;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            border-radius: 2px;
             cursor: pointer;
             transition: all 0.2s ease;
-        }
-
-        .upload-btn-label:hover {
-            background: #2e7d32;
-            color: #fff;
-        }
-
-        .preview-box {
-            display: none;
-            margin-top: 14px;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            background: #fff;
-            padding: 10px 14px;
-            border: 1px solid #c8e6c9;
-            border-radius: 3px;
+            gap: 4px;
+            user-select: none;
         }
 
-        .preview-box img {
-            width: 52px;
-            height: 52px;
-            object-fit: cover;
-            border-radius: 3px;
-            border: 1px solid var(--border);
+        .payment-tab-btn:hover {
+            border-color: #111;
+            transform: translateY(-1px);
         }
 
-        /* UTR INPUT SECTION */
-        .utr-section {
-            background: #fff;
-            border: 1px solid var(--border);
-            padding: 18px 20px;
-            border-radius: 4px;
-            margin-bottom: 24px;
-        }
-
-        .utr-section-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #111;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .utr-input-field {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1px solid var(--border);
-            border-radius: 2px;
-            font-family: monospace;
-            font-size: 15px;
-            letter-spacing: 0.05em;
-            background: #faf8f5;
-            color: #111;
-            outline: none;
-            transition: border-color 0.2s ease, background 0.2s ease;
-        }
-
-        .utr-input-field:focus {
-            border-color: #2e7d32;
-            background: #fff;
+        .payment-tab-btn.active {
+            border-color: #111;
+            background: #fbfbfb;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
         }
 
         .submit-order-btn {
@@ -263,12 +96,12 @@
             background: #111;
             color: #fff;
             padding: 18px 24px;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
-            letter-spacing: 0.16em;
+            letter-spacing: 0.12em;
             text-transform: uppercase;
             border: none;
-            border-radius: 3px;
+            border-radius: 4px;
             cursor: pointer;
             transition: background 0.25s ease, transform 0.15s ease;
             box-shadow: 0 4px 16px rgba(0,0,0,0.1);
@@ -285,9 +118,41 @@
             border: 1px solid #f5c6cb;
             padding: 12px 16px;
             font-size: 12px;
-            border-radius: 2px;
+            border-radius: 4px;
             margin-bottom: 18px;
             line-height: 1.4;
+        }
+
+        .test-sandbox-card {
+            background: #fff8e1;
+            border: 1px solid #ffe082;
+            color: #5d4037;
+            padding: 14px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 18px;
+            text-align: left;
+            line-height: 1.55;
+        }
+
+        .offline-accordion {
+            margin-top: 28px;
+            border-top: 1px solid #eee;
+            padding-top: 18px;
+        }
+
+        .offline-accordion summary {
+            font-size: 12px;
+            font-weight: 500;
+            color: #777;
+            cursor: pointer;
+            outline: none;
+            user-select: none;
+            padding: 6px 0;
+        }
+
+        .offline-accordion summary:hover {
+            color: #111;
         }
     </style>
 </head>
@@ -296,9 +161,9 @@
 
 <header class="navbar navbar-solid" id="top">
     <a href="{{ url_for('home') }}" class="logo" style="display:inline-flex;align-items:center;gap:10px;">
-            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="logo-img" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;box-shadow:0 2px 10px rgba(0,0,0,0.15);background:#fff;">
-            <span>TULSA <span style="font-size:0.75em;opacity:0.85;font-weight:400;letter-spacing:0.12em;">BY ANJALI</span></span>
-        </a>
+        <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="logo-img" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;box-shadow:0 2px 10px rgba(0,0,0,0.15);background:#fff;">
+        <span>TULSA <span style="font-size:0.75em;opacity:0.85;font-weight:400;letter-spacing:0.12em;">BY ANJALI</span></span>
+    </a>
     <nav class="nav-links">
         <a href="{{ url_for('home') }}">Home</a>
         <a href="{{ url_for('shop') }}">Shop</a>
@@ -314,10 +179,10 @@
     <div class="payment-card">
 
         <div class="payment-header">
-            <p class="eyebrow" style="color: #2e7d32; font-weight: 600;">STEP 2: SECURE PAYMENT</p>
+            <p class="eyebrow" style="color: #2e7d32; font-weight: 600; font-size: 11px; letter-spacing: 0.16em;">STEP 2: INSTANT SECURE PAYMENT</p>
             <h1>Complete Payment</h1>
-            <p style="font-size: 13px; color: var(--muted);">
-                Select your payment method, scan QR to pay, then submit your screenshot and UTR number to place your order.
+            <p style="font-size: 13px; color: var(--muted); margin: 4px 0 0;">
+                Select your payment method below to complete payment via official Razorpay Standard Checkout.
             </p>
         </div>
 
@@ -338,253 +203,205 @@
         <!-- ORDER BRIEF SUMMARY -->
         <div class="payment-summary-box">
             <div>
-                <span style="font-size: 11px; text-transform: uppercase; color: var(--muted); display: block;">Order Reference</span>
+                <span style="font-size: 10px; text-transform: uppercase; color: var(--muted); display: block; letter-spacing: 0.08em;">Order Reference</span>
                 <strong style="font-size: 15px;">#{{ order.id }}</strong>
             </div>
             <div>
-                <span style="font-size: 11px; text-transform: uppercase; color: var(--muted); display: block;">Garment</span>
+                <span style="font-size: 10px; text-transform: uppercase; color: var(--muted); display: block; letter-spacing: 0.08em;">Garment</span>
                 <strong style="font-size: 14px; max-width: 220px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ order.product_name }}</strong>
             </div>
             <div>
-                <span style="font-size: 11px; text-transform: uppercase; color: var(--muted); display: block;">Total Amount</span>
+                <span style="font-size: 10px; text-transform: uppercase; color: var(--muted); display: block; letter-spacing: 0.08em;">Total Payable</span>
                 <strong style="font-size: 18px; color: #2e7d32;">₹{{ "{:,.0f}".format(order.price) }}</strong>
             </div>
         </div>
 
-        <!-- PAYMENT FORM -->
-        <form
-            id="paymentProofForm"
-            action="{{ url_for('submit_payment_proof', order_id=order.id) }}"
-            method="POST"
-            enctype="multipart/form-data"
-            onsubmit="return validatePaymentSubmission(event)"
-        >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-            <input type="hidden" id="selectedPaymentMethod" name="payment_method" value="Razorpay Online">
-
-            <!-- 1. CHOOSE PAYMENT METHOD (TABS) -->
-            <div style="margin-bottom: 22px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <p style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: #333; margin: 0;">
-                        1. Select Payment Method
-                    </p>
-                    <span id="qrTimerBadge" style="font-size: 11px; background: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 3px; font-weight: 600;">
-                        ⏱️ Active Session • <span id="countdownText">14:59</span>
-                    </span>
-                </div>
-
-                <div class="payment-tabs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px;">
-                    <!-- Razorpay Online Tab (Primary & Recommended) -->
-                    <div class="payment-tab-btn active tab-razorpay" id="tab-razorpay" onclick="selectPaymentChannel('Razorpay Online')">
-                        <span style="font-size: 20px;">⚡</span>
-                        <strong style="font-size: 13px; color: #111;">Razorpay Online</strong>
-                        <span style="font-size: 10px; color: #2e7d32; font-weight: 600;">Cards, UPI, NetBanking</span>
-                    </div>
-
-                    <!-- Google Pay Tab -->
-                    <div class="payment-tab-btn tab-gpay" id="tab-gpay" onclick="selectPaymentChannel('Google Pay')">
-                        <span style="font-size: 20px;">🟢</span>
-                        <strong style="font-size: 13px; color: #111;">Google Pay</strong>
-                        <span style="font-size: 10px; color: #4285F4; font-weight: 600;">GPay QR &amp; App</span>
-                    </div>
-
-                    <!-- PhonePe Tab -->
-                    <div class="payment-tab-btn tab-phonepe" id="tab-phonepe" onclick="selectPaymentChannel('PhonePe')">
-                        <span style="font-size: 20px;">🟣</span>
-                        <strong style="font-size: 13px; color: #111;">PhonePe</strong>
-                        <span style="font-size: 10px; color: #5f259f; font-weight: 600;">PhonePe QR &amp; App</span>
-                    </div>
-
-                    <!-- Paytm / Any UPI Tab -->
-                    <div class="payment-tab-btn tab-upi" id="tab-upi" onclick="selectPaymentChannel('Paytm / UPI')">
-                        <span style="font-size: 20px;">🔵</span>
-                        <strong style="font-size: 13px; color: #111;">Paytm / UPI</strong>
-                        <span style="font-size: 10px; color: #002e6e; font-weight: 600;">All UPI Apps</span>
-                    </div>
-
-                    <!-- COD Tab -->
-                    <div class="payment-tab-btn tab-cod" id="tab-cod" onclick="selectPaymentChannel('Cash on Delivery')">
-                        <span style="font-size: 20px;">💵</span>
-                        <strong style="font-size: 13px; color: #111;">Cash on Delivery</strong>
-                        <span style="font-size: 10px; color: #888; font-weight: 500;">Pay at Doorstep</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- RAZORPAY 1-CLICK INSTANT PAYMENT CARD -->
-            <div class="qr-display-box" id="razorpayDisplayBox" style="background: #ffffff; border: 1.5px solid #111; padding: 28px 22px; border-radius: 6px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
-                <div style="display: inline-flex; align-items: center; gap: 8px; background: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 14px;">
-                    <span>🛡️</span>
-                    <span>100% Secure Official Razorpay Standard Checkout</span>
-                </div>
-
-                <div style="font-size: 26px; font-weight: 600; color: #111; margin: 4px 0 8px;">
-                    Total Payable: <span style="color: #2e7d32;">₹{{ "{:,.0f}".format(order.price) }}</span>
-                </div>
-                <p style="font-size: 13px; color: #666; max-width: 440px; margin: 0 auto 18px; line-height: 1.5;">
-                    Instant confirmation via UPI (Google Pay, PhonePe, Paytm, BHIM), Credit/Debit Cards, NetBanking, and Wallets.
+        <!-- 1. CHOOSE PAYMENT METHOD (TABS) -->
+        <div style="margin-bottom: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <p style="font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700; color: #333; margin: 0;">
+                    1. Select Payment Channel
                 </p>
-
-                <!-- 1-Click Razorpay Checkout Button -->
-                <button type="button" id="payRazorpayDirectBtn" onclick="launchRazorpayModal()" class="submit-order-btn" style="background: #111; max-width: 440px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; padding: 18px; cursor: pointer;">
-                    <span>⚡</span>
-                    <span>Pay ₹{{ "{:,.0f}".format(order.price) }} with Razorpay Now</span>
-                </button>
-
-                <div style="margin-top: 16px; font-size: 11px; color: #888; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
-                    <span>✓ Zero convenience fee</span>
-                    <span>✓ Instant digital receipt &amp; tracking</span>
-                    <span>✓ 256-bit SSL encryption</span>
-                </div>
+                <span id="qrTimerBadge" style="font-size: 11px; background: #e8f5e9; color: #2e7d32; padding: 3px 8px; border-radius: 3px; font-weight: 600;">
+                    ⏱️ Active Session • <span id="countdownText">14:59</span>
+                </span>
             </div>
 
-            <!-- 2. DYNAMIC QR CODE DISPLAY BOX -->
-            <div class="qr-display-box" id="qrDisplayBox" style="background: #faf8f5; border: 1px solid var(--border); padding: 24px 20px; border-radius: 4px; text-align: center; margin-bottom: 24px;">
-                
-                <!-- Channel Header Banner -->
-                <div id="channelBanner" style="display: inline-flex; align-items: center; gap: 8px; background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 12px;">
-                    <span id="channelIcon">🟢</span>
-                    <span id="channelTitle">Google Pay — Instant Verified Transfer</span>
+            <div class="payment-tabs-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 10px; margin-bottom: 16px;">
+                <!-- Razorpay Online Tab (Primary & Recommended) -->
+                <div class="payment-tab-btn active" id="tab-razorpay" onclick="selectPaymentChannel('Razorpay Online')">
+                    <span style="font-size: 20px;">⚡</span>
+                    <strong style="font-size: 12.5px; color: #111;">Razorpay</strong>
+                    <span style="font-size: 10px; color: #2e7d32; font-weight: 600;">All Methods</span>
                 </div>
 
-                <div style="font-size: 26px; font-weight: 600; color: #111; margin: 4px 0 12px;">
-                    Payable Amount: <span id="displayAmount" style="color: #2e7d32;">₹{{ "{:,.0f}".format(order.price) }}</span>
+                <!-- Google Pay Tab -->
+                <div class="payment-tab-btn" id="tab-gpay" onclick="selectPaymentChannel('Google Pay')">
+                    <span style="font-size: 20px;">🟢</span>
+                    <strong style="font-size: 12.5px; color: #111;">Google Pay</strong>
+                    <span style="font-size: 10px; color: #4285F4; font-weight: 600;">GPay UPI</span>
                 </div>
 
-                <!-- Dynamic Server-Generated QR Image -->
-                <div class="qr-image-wrapper" id="qrWrapper" style="background: #fff; padding: 14px; display: inline-block; border: 1.5px solid #e0e0e0; border-radius: 6px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); margin: 6px 0 12px;">
-                    <img id="upiQrImage"
-                         src="{{ url_for('get_order_upi_qr', order_id=order.id) }}"
-                         onerror="handleQrFallback(this)"
-                         alt="Order {{ order.id }} UPI QR Code"
-                         width="220"
-                         height="220"
-                         style="display: block; width: 220px; height: 220px; object-fit: contain;">
-                    <div id="qrFallbackCanvas" style="display: none;"></div>
+                <!-- PhonePe Tab -->
+                <div class="payment-tab-btn" id="tab-phonepe" onclick="selectPaymentChannel('PhonePe')">
+                    <span style="font-size: 20px;">🟣</span>
+                    <strong style="font-size: 12.5px; color: #111;">PhonePe</strong>
+                    <span style="font-size: 10px; color: #5f259f; font-weight: 600;">PhonePe UPI</span>
                 </div>
 
-                <!-- Step-by-Step Channel Specific Instructions -->
-                <div id="channelInstructions" style="background: #ffffff; border: 1px solid #ececec; border-radius: 6px; padding: 14px 16px; margin: 12px auto 16px; max-width: 460px; text-align: left; font-size: 12.5px; line-height: 1.55; color: #444;">
-                    <strong style="color: #111; display: block; margin-bottom: 6px;" id="instructionHeader">📲 Scan with Google Pay:</strong>
-                    <ol style="margin: 0; padding-left: 18px;" id="instructionList">
-                        <li>Open the <strong>Google Pay</strong> app on your mobile phone.</li>
-                        <li>Tap <strong>Scan any QR code</strong> on your home screen.</li>
-                        <li>Point your phone camera at the QR code above.</li>
-                        <li>Verify payee <strong>{{ upi_payee_name }}</strong> and confirm payment of <strong>₹{{ "{:,.0f}".format(order.price) }}</strong>.</li>
-                    </ol>
+                <!-- Paytm / Any UPI Tab -->
+                <div class="payment-tab-btn" id="tab-upi" onclick="selectPaymentChannel('Paytm / UPI')">
+                    <span style="font-size: 20px;">🔵</span>
+                    <strong style="font-size: 12.5px; color: #111;">Paytm / UPI</strong>
+                    <span style="font-size: 10px; color: #002e6e; font-weight: 600;">BHIM &amp; Apps</span>
                 </div>
 
-                <!-- 1-Tap App Launch for Mobile Browsers -->
-                <div style="max-width: 460px; margin: 0 auto 16px;">
-                    <a id="mobileAppHandoffBtn"
-                       href="upi://pay?pa={{ upi_id }}&pn={{ upi_payee_name|urlencode }}&am={{ order.price }}&cu=INR&tr={{ order.id }}&tn=Order_{{ order.id }}_Tulsa"
-                       onclick="trackPaymentLaunch('Mobile UPI App')"
-                       class="upi-app-btn"
-                       style="background: #4285F4;">
-                        <span id="handoffIcon">⚡</span>
-                        <span id="handoffText">Tap to Open Google Pay App Directly</span>
-                    </a>
-                    <small style="display: block; font-size: 11px; color: #888; margin-top: 5px;">
-                        On mobile? Tap above to launch your installed app automatically.
-                    </small>
-                </div>
-
-                <!-- Payee Details & Copy UPI -->
-                <div style="font-size: 12px; color: #555; border-top: 1px solid #eee; padding-top: 12px; max-width: 460px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-                    <div>
-                        Payee: <strong>{{ upi_payee_name }}</strong> &bull;
-                        UPI ID: <strong id="upiIdText" style="font-family: monospace; font-size: 12.5px; color: #111;">{{ upi_id }}</strong>
-                    </div>
-                    <button type="button" onclick="copyUpiId()" style="background: #fff; border: 1px solid #ccc; padding: 4px 10px; font-size: 11px; cursor: pointer; border-radius: 4px; font-weight: 500;">
-                        📋 Copy UPI ID
-                    </button>
+                <!-- COD Tab -->
+                <div class="payment-tab-btn" id="tab-cod" onclick="selectPaymentChannel('Cash on Delivery')">
+                    <span style="font-size: 20px;">💵</span>
+                    <strong style="font-size: 12.5px; color: #111;">COD</strong>
+                    <span style="font-size: 10px; color: #888; font-weight: 500;">Doorstep</span>
                 </div>
             </div>
+        </div>
 
-            <!-- COD NOTICE BOX (When COD is selected) -->
-            <div id="codNoticeBox" style="display: none; background: #faf8f5; border: 1px solid #efe8df; border-radius: 6px; padding: 24px 20px; text-align: center; margin-bottom: 24px;">
-                <span style="font-size: 32px; display: block; margin-bottom: 8px;">📦</span>
-                <h3 style="font-size: 18px; margin: 0 0 8px; font-weight: 600;">Cash on Delivery (COD) Selected</h3>
-                <p style="font-size: 13px; color: #666; max-width: 460px; margin: 0 auto 14px; line-height: 1.5;">
-                    Your bespoke Tulsa Wears garment will be tailored to your measurements and dispatched to your address. The full amount of <strong>₹{{ "{:,.0f}".format(order.price) }}</strong> will be collected in cash upon doorstep delivery.
+        <!-- RAZORPAY / UPI INSTANT PAYMENT CARD -->
+        <div id="razorpayDisplayBox" style="background: #ffffff; border: 1.5px solid #111; padding: 26px 20px; border-radius: 6px; text-align: center; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
+            
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: #e8f5e9; border: 1px solid #c8e6c9; color: #2e7d32; padding: 6px 14px; border-radius: 20px; font-size: 11.5px; font-weight: 600; margin-bottom: 14px;">
+                <span>🛡️</span>
+                <span>Official Razorpay Standard Checkout — 100% Encrypted</span>
+            </div>
+
+            <!-- Dynamic Channel Badge -->
+            <div id="channelBadge" style="margin-bottom: 12px;">
+                <span id="channelBadgeText" style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: #3730a3; background: #eef2ff; border: 1px solid #c7d2fe; padding: 4px 12px; border-radius: 14px;">
+                    ⚡ All Online Payment Methods Supported
+                </span>
+            </div>
+
+            <div style="font-size: 28px; font-weight: 600; color: #111; margin: 4px 0 8px;">
+                Total: <span style="color: #2e7d32;">₹{{ "{:,.0f}".format(order.price) }}</span>
+            </div>
+
+            <p id="channelDescription" style="font-size: 13px; color: #666; max-width: 440px; margin: 0 auto 16px; line-height: 1.5;">
+                Instant payment via UPI (Google Pay, PhonePe, Paytm, BHIM), Credit/Debit Cards, NetBanking, and Wallets.
+            </p>
+
+            <!-- Test Mode Sandbox Guidance Banner -->
+            {% if is_test_mode or (razorpay_key_id and razorpay_key_id.startswith('rzp_test_')) %}
+            <div class="test-sandbox-card">
+                <strong style="color: #d84315; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                    <span>🧪</span> Razorpay Sandbox Test Mode Active
+                </strong>
+                <p style="margin: 0 0 6px;">
+                    Real banking apps (such as Google Pay) will reject simulated QR codes on live NPCI networks with <em>"Cannot pay with this QR code – UPI ID is invalid"</em> because test orders cannot debit real bank funds.
                 </p>
-                <div style="font-size: 12px; color: #2e7d32; background: #e8f5e9; padding: 8px 14px; border-radius: 4px; display: inline-block;">
-                    ✓ No advance deposit required • Doorstep verification
+                <div style="background: rgba(255,255,255,0.7); padding: 8px 10px; border-radius: 4px; border-left: 3px solid #d84315;">
+                    👉 <strong>To test UPI successfully:</strong> Click the button below, select <strong>UPI</strong>, and enter <code style="background:#fff; padding:2px 6px; border-radius:3px; font-weight:600; color:#111;">success@razorpay</code>.<br>
+                    👉 <strong>For live customer payments:</strong> Update your environment with your live API keys (<code style="background:#fff; padding:2px 6px; border-radius:3px; font-weight:600; color:#111;">rzp_live_...</code>).
                 </div>
             </div>
+            {% endif %}
 
-            <!-- 3. PAYMENT SCREENSHOT UPLOAD SECTION (USER REQUIRED) -->
-            <div class="upload-section" id="uploadDropzone">
-                <div class="upload-section-title">
-                    <span>📸</span> 2. Upload Payment Screenshot <span style="color: #888; font-weight: 400;">(Optional)</span>
-                </div>
-                <div class="upload-section-desc">
-                    Take a screenshot of the successful transfer in Google Pay, PhonePe, or Paytm and attach it below.
-                </div>
-
-                <label for="paymentScreenshotInput" class="upload-btn-label">
-                    📁 Choose Screenshot File
-                </label>
-                <input
-                    type="file"
-                    name="payment_screenshot"
-                    id="paymentScreenshotInput"
-                    accept="image/*"
-                    style="display: none;"
-                    onchange="handleProofPreview(this)"
-                >
-
-                <!-- Live Preview of Screenshot -->
-                <div id="previewContainer" class="preview-box">
-                    <img id="screenshotPreviewImg" src="" alt="Proof Preview">
-                    <div style="text-align: left; flex: 1;">
-                        <strong id="previewFileName" style="font-size: 12px; color: #111; display: block; word-break: break-all;"></strong>
-                        <span id="previewFileSize" style="font-size: 11px; color: var(--muted);"></span>
-                    </div>
-                    <button type="button" onclick="clearSelectedScreenshot()" style="background: none; border: none; color: #c0392b; font-size: 16px; cursor: pointer; padding: 4px;">
-                        &times;
-                    </button>
-                </div>
+            <!-- Device Guidance -->
+            <div id="deviceNotice" style="font-size: 11.5px; color: #555; background: #fbfbfb; border: 1px solid #eee; padding: 10px 14px; border-radius: 4px; margin-bottom: 18px; line-height: 1.45;">
+                📲 <strong>Mobile:</strong> Tap below to pay directly in your installed Google Pay / PhonePe app.<br>
+                💻 <strong>Desktop:</strong> Click below to open Razorpay's official dynamic gateway QR code.
             </div>
 
-            <!-- 4. PAYMENT UTR / REF NUMBER SECTION (USER REQUIRED) -->
-            <div class="utr-section">
-                <label for="upiUtrInput" class="utr-section-label">
-                    <span>🔢</span> 3. Enter Payment UTR / UPI Ref Number <span style="color: #c0392b;">*</span>
-                </label>
-                <input
-                    type="text"
-                    name="upi_utr"
-                    id="upiUtrInput"
-                    placeholder="Enter 12-digit UTR / UPI Ref ID (e.g. 423456789012)"
-                    class="utr-input-field"
-                    minlength="6"
-                    maxlength="35"
-                >
-                <div style="font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.4;">
-                    📌 <strong>Where to find UTR?</strong> Check your Google Pay, PhonePe, or Paytm transaction details for the <strong>12-digit UPI Transaction ID / UTR</strong>.
-                </div>
-            </div>
-
-            <!-- CLIENT-SIDE VALIDATION NOTICE -->
-            <div id="validationAlert" class="validation-alert"></div>
-
-            <!-- 5. PLACE ORDER SUBMIT BUTTON -->
-            <button
-                type="submit"
-                id="placeOrderBtn"
-                class="submit-order-btn"
-            >
-                Submit Payment Proof & Place Order →
+            <!-- Primary 1-Click Razorpay Checkout Button -->
+            <button type="button" id="payRazorpayDirectBtn" onclick="launchRazorpayModal()" class="submit-order-btn" style="background: #111; max-width: 440px; margin: 0 auto; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 13px; padding: 18px; cursor: pointer;">
+                <span>⚡</span>
+                <span id="payBtnLabel">Pay ₹{{ "{:,.0f}".format(order.price) }} via Razorpay Now</span>
             </button>
 
-            <!-- TRUST & SPEED BADGE -->
-            <div style="margin-top: 20px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.6;">
-                ⏳ <strong>Approval Window:</strong> Orders are verified and approved within <strong>1–2 hours</strong> of payment proof receipt.<br>
-                Need priority 10-minute approval? <a href="https://wa.me/919350439667?text=Namaste%20Tulsa%20Wears!%20I%20have%20placed%20Order%20%23{{ order.id }}%20and%20submitted%20my%20payment%20proof.%20Please%20verify%20and%20approve%20promptly." target="_blank" style="color: #2e7d32; font-weight: 600;">Message on WhatsApp (+91 93504 39667)</a>.
+            <div style="margin-top: 16px; font-size: 11px; color: #888; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+                <span>✓ Zero convenience fee</span>
+                <span>✓ Instant digital receipt &amp; tracking</span>
+                <span>✓ 256-bit bank encryption</span>
             </div>
+        </div>
 
-        </form>
+        <!-- COD CONFIRMATION BOX (When COD is selected) -->
+        <div id="codNoticeBox" style="display: none; background: #faf8f5; border: 1.5px solid #efe8df; border-radius: 6px; padding: 28px 22px; text-align: center; margin-bottom: 24px;">
+            <span style="font-size: 36px; display: block; margin-bottom: 8px;">📦</span>
+            <h3 style="font-size: 19px; margin: 0 0 8px; font-weight: 600;">Cash on Delivery (COD)</h3>
+            <p style="font-size: 13px; color: #666; max-width: 460px; margin: 0 auto 16px; line-height: 1.55;">
+                Your bespoke Tulsa Wear garment will be handcrafted and dispatched to your delivery address. The full amount of <strong>₹{{ "{:,.0f}".format(order.price) }}</strong> will be collected in cash upon doorstep delivery.
+            </p>
+            <form action="{{ url_for('submit_payment_proof', order_id=order.id) }}" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                <input type="hidden" name="payment_method" value="Cash on Delivery">
+                <button type="submit" class="submit-order-btn" style="max-width: 440px; margin: 0 auto; background: #251b18;">
+                    Confirm Cash on Delivery Order (₹{{ "{:,.0f}".format(order.price) }}) →
+                </button>
+            </form>
+            <div style="font-size: 11.5px; color: #2e7d32; margin-top: 12px;">
+                ✓ No advance deposit required • Doorstep verification
+            </div>
+        </div>
+
+        <!-- CLIENT-SIDE VALIDATION NOTICE -->
+        <div id="validationAlert" class="validation-alert"></div>
+
+        <!-- OPTIONAL OFFLINE FALLBACK ACCORDION (For Manual NEFT / IMPS Transfer) -->
+        <details class="offline-accordion">
+            <summary>
+                + Alternative Manual Offline Transfer (Bank IMPS / NEFT fallback)
+            </summary>
+            <div style="padding-top: 16px;">
+                <p style="font-size: 12px; color: #666; line-height: 1.5; margin-bottom: 14px;">
+                    If you cannot pay using Razorpay online, you can submit your offline transaction reference (UTR) below for manual administrative verification.
+                </p>
+                <form
+                    id="paymentProofForm"
+                    action="{{ url_for('submit_payment_proof', order_id=order.id) }}"
+                    method="POST"
+                    enctype="multipart/form-data"
+                    onsubmit="return validateManualSubmission(event)"
+                >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <input type="hidden" name="payment_method" value="UPI">
+
+                    <div style="margin-bottom: 14px;">
+                        <label for="upiUtrInput" style="display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 6px;">
+                            UPI Reference Number / UTR (12 digits) *
+                        </label>
+                        <input
+                            type="text"
+                            name="upi_utr"
+                            id="upiUtrInput"
+                            placeholder="e.g. 423456789012"
+                            style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; font-size: 14px;"
+                            maxlength="35"
+                        >
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; font-size: 11.5px; font-weight: 600; margin-bottom: 6px;">
+                            Payment Screenshot (Optional)
+                        </label>
+                        <input
+                            type="file"
+                            name="payment_screenshot"
+                            id="paymentScreenshotInput"
+                            accept="image/*"
+                            style="font-size: 12px;"
+                        >
+                    </div>
+
+                    <button type="submit" style="background: #555; color: #fff; padding: 12px 18px; border: none; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                        Submit Manual Proof for Verification →
+                    </button>
+                </form>
+            </div>
+        </details>
+
+        <!-- TRUST & SPEED BADGE -->
+        <div style="margin-top: 24px; text-align: center; font-size: 12px; color: var(--muted); line-height: 1.6;">
+            Need concierge assistance? <a href="https://wa.me/919350439667?text=Namaste%20Tulsa%20Wears!%20I%20have%20an%20inquiry%20regarding%20Order%20%23{{ order.id }}." target="_blank" style="color: #2e7d32; font-weight: 600;">Message on WhatsApp (+91 93504 39667)</a>.
+        </div>
 
     </div>
 
@@ -594,8 +411,7 @@
 <script>
 const basePrice = {{ order.price }};
 const orderId = {{ order.id }};
-const upiId = "{{ upi_id or '' }}";
-const upiName = "{{ upi_payee_name or 'Tulsa Wears' }}";
+let currentChannel = 'Razorpay Online';
 
 // 15-Minute QR Session Timer
 let timeLeft = 15 * 60;
@@ -620,16 +436,103 @@ if (timerEl) {
     }, 1000);
 }
 
-function launchRazorpayModal() {
+function selectPaymentChannel(channel) {
+    currentChannel = channel;
+
+    // Update tab classes
+    document.querySelectorAll('.payment-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+    const rzpBox = document.getElementById('razorpayDisplayBox');
+    const codBox = document.getElementById('codNoticeBox');
+    const btnLabel = document.getElementById('payBtnLabel');
+    const badgeText = document.getElementById('channelBadgeText');
+    const channelDesc = document.getElementById('channelDescription');
+
+    if (channel === 'Cash on Delivery') {
+        document.getElementById('tab-cod')?.classList.add('active');
+        if (rzpBox) rzpBox.style.display = 'none';
+        if (codBox) codBox.style.display = 'block';
+        return;
+    }
+
+    if (codBox) codBox.style.display = 'none';
+    if (rzpBox) rzpBox.style.display = 'block';
+
+    if (channel === 'Google Pay') {
+        document.getElementById('tab-gpay')?.classList.add('active');
+        if (badgeText) {
+            badgeText.innerHTML = '🟢 Google Pay — Instant UPI Intent &amp; Gateway QR';
+            badgeText.style.color = '#1e40af';
+            badgeText.style.background = '#eef2ff';
+            badgeText.style.borderColor = '#c7d2fe';
+        }
+        if (channelDesc) {
+            channelDesc.innerText = 'Pay instantly using Google Pay on mobile or scan the dynamic gateway QR on desktop.';
+        }
+        if (btnLabel) {
+            btnLabel.innerText = 'Pay ₹' + Math.round(basePrice).toLocaleString() + ' with Google Pay';
+        }
+    } else if (channel === 'PhonePe') {
+        document.getElementById('tab-phonepe')?.classList.add('active');
+        if (badgeText) {
+            badgeText.innerHTML = '🟣 PhonePe — Instant UPI Intent &amp; Gateway QR';
+            badgeText.style.color = '#5b21b6';
+            badgeText.style.background = '#f5f3ff';
+            badgeText.style.borderColor = '#ddd6fe';
+        }
+        if (channelDesc) {
+            channelDesc.innerText = 'Pay instantly using PhonePe on mobile or scan the dynamic gateway QR on desktop.';
+        }
+        if (btnLabel) {
+            btnLabel.innerText = 'Pay ₹' + Math.round(basePrice).toLocaleString() + ' with PhonePe';
+        }
+    } else if (channel === 'Paytm / UPI') {
+        document.getElementById('tab-upi')?.classList.add('active');
+        if (badgeText) {
+            badgeText.innerHTML = '🔵 Paytm &amp; Universal UPI Apps';
+            badgeText.style.color = '#166534';
+            badgeText.style.background = '#f0fdf4';
+            badgeText.style.borderColor = '#bbf7d0';
+        }
+        if (channelDesc) {
+            channelDesc.innerText = 'Pay via Paytm, BHIM, CRED, Amazon Pay, or any bank UPI app.';
+        }
+        if (btnLabel) {
+            btnLabel.innerText = 'Pay ₹' + Math.round(basePrice).toLocaleString() + ' with UPI';
+        }
+    } else {
+        document.getElementById('tab-razorpay')?.classList.add('active');
+        if (badgeText) {
+            badgeText.innerHTML = '⚡ Razorpay Standard Checkout — All Methods';
+            badgeText.style.color = '#3730a3';
+            badgeText.style.background = '#eef2ff';
+            badgeText.style.borderColor = '#c7d2fe';
+        }
+        if (channelDesc) {
+            channelDesc.innerText = 'Instant confirmation via UPI (Google Pay, PhonePe, Paytm), Cards, NetBanking, and Wallets.';
+        }
+        if (btnLabel) {
+            btnLabel.innerText = 'Pay ₹' + Math.round(basePrice).toLocaleString() + ' with Razorpay Now';
+        }
+    }
+}
+
+function launchRazorpayModal(explicitMethod) {
     const btn = document.getElementById('payRazorpayDirectBtn');
     if (typeof Razorpay === 'undefined') {
         alert('Razorpay Checkout SDK is still loading. Please check your internet connection and refresh.');
         return;
     }
 
+    const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    let preferredMethod = explicitMethod || '';
+    if (!preferredMethod && currentChannel !== 'Razorpay Online') {
+        preferredMethod = 'upi';
+    }
+
     if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '<span>⚡</span><span>Launching Razorpay Checkout...</span>';
+        btn.innerHTML = '<span>⚡</span><span>Opening Secure Payment Gateway...</span>';
     }
 
     const options = {
@@ -662,7 +565,7 @@ function launchRazorpayModal() {
                     alert(data.message || "Payment verification failed. Please contact Tulsa concierge.");
                     if (btn) {
                         btn.disabled = false;
-                        btn.innerHTML = '<span>⚡</span><span>Retry Razorpay Payment</span>';
+                        btn.innerHTML = '<span>⚡</span><span>Retry Payment</span>';
                     }
                 }
             } catch (err) {
@@ -673,11 +576,14 @@ function launchRazorpayModal() {
         "prefill": {
             "name": "{{ order.customer_name }}",
             "email": "{{ order.email }}",
-            "contact": "{{ order.phone }}"
+            "contact": "{{ order.phone }}",
+            "method": preferredMethod
         },
         "notes": {
             "order_id": "{{ order.id }}",
-            "store": "Tulsa Wear"
+            "store": "Tulsa Wear",
+            "device": isMobile ? "Mobile" : "Desktop",
+            "channel": currentChannel
         },
         "theme": {
             "color": "#121316"
@@ -686,7 +592,7 @@ function launchRazorpayModal() {
             "ondismiss": function () {
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = '<span>⚡</span><span>Pay ₹{{ "{:,.0f}".format(order.price) }} with Razorpay Now</span>';
+                    selectPaymentChannel(currentChannel);
                 }
             }
         }
@@ -694,331 +600,41 @@ function launchRazorpayModal() {
 
     const rzp = new Razorpay(options);
     rzp.on("payment.failed", function (failResp) {
+        const errorData = failResp.error || {};
         fetch("/payment-failed/{{ order.id }}", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(failResp.error || {})
+            body: JSON.stringify({
+                code: errorData.code || "PAYMENT_FAILED",
+                description: errorData.description || errorData.reason || "Payment declined or cancelled",
+                source: errorData.source,
+                step: errorData.step,
+                reason: errorData.reason,
+                device: isMobile ? "Mobile" : "Desktop"
+            })
         });
-        alert("Payment was not completed: " + (failResp.error && failResp.error.description ? failResp.error.description : "Declined by bank"));
+
+        alert("Payment was not completed: " + (errorData.description || "Declined by bank or cancelled."));
         if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<span>⚡</span><span>Retry Razorpay Payment</span>';
+            selectPaymentChannel(currentChannel);
         }
     });
+
     rzp.open();
 }
 
-function selectPaymentChannel(channel) {
-    const selectedInput = document.getElementById('selectedPaymentMethod');
-    if (selectedInput) selectedInput.value = channel;
-
-    // Update Tab Styles
-    document.querySelectorAll('.payment-tab-btn').forEach(btn => btn.classList.remove('active'));
-
-    const rzpBox = document.getElementById('razorpayDisplayBox');
-    const qrBox = document.getElementById('qrDisplayBox');
-    const uploadBox = document.getElementById('uploadDropzone');
-    const utrSection = document.querySelector('.utr-section');
-    const codBox = document.getElementById('codNoticeBox');
-    const submitBtn = document.getElementById('placeOrderBtn');
-
-    if (channel === 'Razorpay Online') {
-        const tabRzp = document.getElementById('tab-razorpay');
-        if (tabRzp) tabRzp.classList.add('active');
-        if (rzpBox) rzpBox.style.display = 'block';
-        if (qrBox) qrBox.style.display = 'none';
-        if (uploadBox) uploadBox.style.display = 'none';
-        if (utrSection) utrSection.style.display = 'none';
-        if (codBox) codBox.style.display = 'none';
-        if (submitBtn) submitBtn.style.display = 'none';
-        return;
-    }
-
-    if (channel === 'Cash on Delivery') {
-        const tabCod = document.getElementById('tab-cod');
-        if (tabCod) tabCod.classList.add('active');
-        if (rzpBox) rzpBox.style.display = 'none';
-        if (qrBox) qrBox.style.display = 'none';
-        if (uploadBox) uploadBox.style.display = 'none';
-        if (utrSection) utrSection.style.display = 'none';
-        if (codBox) codBox.style.display = 'block';
-        if (submitBtn) {
-            submitBtn.style.display = 'block';
-            submitBtn.innerText = 'Confirm Cash on Delivery Order →';
-        }
-        return;
-    }
-
-    // Show QR & UTR sections for digital payment
-    if (rzpBox) rzpBox.style.display = 'none';
-    if (qrBox) qrBox.style.display = 'block';
-    if (uploadBox) uploadBox.style.display = 'block';
-    if (utrSection) utrSection.style.display = 'block';
-    if (codBox) codBox.style.display = 'none';
-    if (submitBtn) {
-        submitBtn.style.display = 'block';
-        submitBtn.innerText = 'Confirm Payment & Place Order →';
-    }
-
-    const banner = document.getElementById('channelBanner');
-    const icon = document.getElementById('channelIcon');
-    const title = document.getElementById('channelTitle');
-    const instrHeader = document.getElementById('instructionHeader');
-    const instrList = document.getElementById('instructionList');
-    const handoffBtn = document.getElementById('mobileAppHandoffBtn');
-    const handoffText = document.getElementById('handoffText');
-
-    const note = encodeURIComponent('Order #' + orderId);
-    const standardUpiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + basePrice + '&cu=INR&tr=' + orderId + '&tn=' + note;
-
-    if (channel === 'Google Pay') {
-        document.getElementById('tab-gpay')?.classList.add('active');
-        if (banner) { banner.style.background = '#eef2ff'; banner.style.borderColor = '#c7d2fe'; banner.style.color = '#1e40af'; }
-        if (icon) icon.innerText = '🟢';
-        if (title) title.innerText = 'Google Pay — Instant Verified Transfer';
-        if (instrHeader) instrHeader.innerText = '📲 Scan with Google Pay:';
-        if (instrList) {
-            instrList.innerHTML = `
-                <li>Open the <strong>Google Pay</strong> app on your mobile device.</li>
-                <li>Tap <strong>Scan any QR code</strong> on your screen.</li>
-                <li>Point your camera at the QR code above.</li>
-                <li>Confirm payment of <strong>₹${Math.round(basePrice).toLocaleString()}</strong> to <strong>${upiName}</strong>.</li>
-                <li>Copy the 12-digit UPI Transaction ID (UTR) and paste it below.</li>
-            `;
-        }
-        if (handoffBtn) {
-            handoffBtn.href = standardUpiUrl;
-            handoffBtn.style.background = '#4285F4';
-        }
-        if (handoffText) handoffText.innerText = 'Tap to Open Google Pay App Directly';
-    } else if (channel === 'PhonePe') {
-        document.getElementById('tab-phonepe')?.classList.add('active');
-        if (banner) { banner.style.background = '#f5f3ff'; banner.style.borderColor = '#ddd6fe'; banner.style.color = '#5b21b6'; }
-        if (icon) icon.innerText = '🟣';
-        if (title) title.innerText = 'PhonePe — Instant Verified Transfer';
-        if (instrHeader) instrHeader.innerText = '📲 Scan with PhonePe:';
-        if (instrList) {
-            instrList.innerHTML = `
-                <li>Open the <strong>PhonePe</strong> app on your mobile device.</li>
-                <li>Tap the <strong>QR Scanner icon</strong> at the top right of your home screen.</li>
-                <li>Point your camera at the QR code above.</li>
-                <li>Confirm payment of <strong>₹${Math.round(basePrice).toLocaleString()}</strong> to <strong>${upiName}</strong>.</li>
-                <li>Copy the 12-digit UTR from your payment receipt and paste it below.</li>
-            `;
-        }
-        if (handoffBtn) {
-            handoffBtn.href = standardUpiUrl;
-            handoffBtn.style.background = '#5f259f';
-        }
-        if (handoffText) handoffText.innerText = 'Tap to Open PhonePe App Directly';
-    } else {
-        document.getElementById('tab-upi')?.classList.add('active');
-        if (banner) { banner.style.background = '#f0fdf4'; banner.style.borderColor = '#bbf7d0'; banner.style.color = '#166534'; }
-        if (icon) icon.innerText = '🔵';
-        if (title) title.innerText = 'Paytm / Any UPI App — Universal Transfer';
-        if (instrHeader) instrHeader.innerText = '📲 Scan with Any UPI App:';
-        if (instrList) {
-            instrList.innerHTML = `
-                <li>Open <strong>Paytm, BHIM, CRED, Amazon Pay</strong> or your bank's UPI app.</li>
-                <li>Select <strong>Scan & Pay</strong>.</li>
-                <li>Scan the QR code above and verify payee <strong>${upiName}</strong>.</li>
-                <li>Complete payment of <strong>₹${Math.round(basePrice).toLocaleString()}</strong>.</li>
-                <li>Enter the reference / UTR number in the box below.</li>
-            `;
-        }
-        if (handoffBtn) {
-            handoffBtn.href = standardUpiUrl;
-            handoffBtn.style.background = '#002e6e';
-        }
-        if (handoffText) handoffText.innerText = 'Tap to Open Installed UPI App';
-    }
-
-    // Refresh QR Code image to ensure fresh display
-    const qrImg = document.getElementById('upiQrImage');
-    if (qrImg) {
-        qrImg.style.display = 'block';
-        qrImg.src = `/api/order/${orderId}/upi-qr.png?v=${Date.now()}`;
-    }
-}
-
-// Legacy alias for compatibility
-const switchPaymentMethod = selectPaymentChannel;
-
-function handleQrFallback(imgEl) {
-    const attempt = parseInt(imgEl.dataset.attempt || "0", 10);
-    const note = encodeURIComponent('Order #' + orderId);
-    const upiUrl = 'upi://pay?pa=' + encodeURIComponent(upiId) + '&pn=' + encodeURIComponent(upiName) + '&am=' + basePrice + '&cu=INR&tr=' + orderId + '&tn=' + note;
-
-    if (attempt === 0) {
-        imgEl.dataset.attempt = "1";
-        imgEl.src = 'https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=' + encodeURIComponent(upiUrl);
-    } else if (attempt === 1) {
-        imgEl.dataset.attempt = "2";
-        imgEl.src = 'https://quickchart.io/qr?size=220&text=' + encodeURIComponent(upiUrl);
-    } else {
-        imgEl.style.display = 'none';
-        const fallbackBox = document.getElementById('qrFallbackCanvas');
-        if (fallbackBox) {
-            fallbackBox.style.display = 'block';
-            fallbackBox.innerHTML = `
-                <div style="padding: 16px; background: #fff8e1; border: 1px dashed #f57f17; border-radius: 4px; font-size: 12px; color: #555;">
-                    <p style="margin: 0 0 8px; font-weight: 600; color: #e65100;">📲 Use Direct UPI App Button Above</p>
-                    <p style="margin: 0;">Tap the direct app launch button above or copy the UPI ID below.</p>
-                </div>
-            `;
-        }
-    }
-}
-
-function trackPaymentLaunch(appName) {
-    const utrSection = document.querySelector('.utr-section');
-    if (utrSection) {
-        utrSection.scrollIntoView({ behavior: 'smooth' });
-        setTimeout(() => {
-            const utrInput = document.getElementById('upiUtrInput');
-            if (utrInput) utrInput.focus();
-        }, 800);
-    }
-}
-
-        function copyUpiId() {
-    if (upiId) {
-        navigator.clipboard.writeText(upiId).then(() => {
-            alert('✓ Copied UPI ID: ' + upiId);
-        }).catch(() => {
-            alert('UPI ID: ' + upiId);
-        });
-    }
-}
-
-// Screenshot preview handler
-function handleProofPreview(input) {
-    const file = input.files[0];
-    const previewContainer = document.getElementById('previewContainer');
-    const previewImg = document.getElementById('screenshotPreviewImg');
-    const nameEl = document.getElementById('previewFileName');
-    const sizeEl = document.getElementById('previewFileSize');
-    const dropzone = document.getElementById('uploadDropzone');
-
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            previewImg.src = e.target.result;
-            nameEl.innerText = file.name;
-            sizeEl.innerText = (file.size / 1024).toFixed(1) + ' KB';
-            previewContainer.style.display = 'flex';
-            dropzone.classList.add('has-file');
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-function clearSelectedScreenshot() {
-    const input = document.getElementById('paymentScreenshotInput');
-    input.value = '';
-    document.getElementById('previewContainer').style.display = 'none';
-    document.getElementById('uploadDropzone').classList.remove('has-file');
-}
-
-async function compressProofForServer(form, file) {
-    const targetBytes = 3 * 1024 * 1024;
-    if (file.size <= targetBytes) return file;
-    const url = URL.createObjectURL(file);
-    try {
-        const image = new Image();
-        image.src = url;
-        await image.decode();
-        const scale = Math.min(1, 1800 / Math.max(image.naturalWidth, image.naturalHeight));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
-        canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
-        const context = canvas.getContext('2d');
-        if (!context) throw new Error('Your browser cannot optimize this screenshot. Choose an image under 3 MB.');
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        let quality = 0.86;
-        let blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
-        while (blob && blob.size > targetBytes && quality > 0.48) {
-            quality -= 0.08;
-            blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/webp', quality));
-        }
-        if (!blob || blob.size > targetBytes) throw new Error('Screenshot could not be reduced below 3 MB. Choose a smaller image.');
-        return new File([blob], 'payment-proof.webp', {type:'image/webp', lastModified:Date.now()});
-    } finally { URL.revokeObjectURL(url); }
-}
-
-// Form validation: customer can only place order after providing UTR and screenshot
-function validatePaymentSubmission(event) {
-    const form = event.currentTarget;
-    const fileInput = document.getElementById('paymentScreenshotInput');
+function validateManualSubmission(event) {
     const utrInput = document.getElementById('upiUtrInput');
     const alertBox = document.getElementById('validationAlert');
-    const submitBtn = document.getElementById('placeOrderBtn');
-
-    const utrVal = utrInput.value.trim().toUpperCase();
-    const isCod = document.querySelector('input[name="payment_method"]:checked')?.value === 'Cash on Delivery';
-    const hasFile = fileInput.files && fileInput.files.length > 0;
-
-    let errors = [];
-
-    if (isCod) {
-        alertBox.style.display = 'none';
-        submitBtn.disabled = true;
-        submitBtn.innerText = 'Placing COD Order...';
-        return true;
-    }
-
-    if (!hasFile) {
-        errors.push("Please upload your payment confirmation screenshot.");
-    } else {
-        const file = fileInput.files[0];
-        const validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
-        const ext = file.name.split('.').pop().toLowerCase();
-        if (!validExtensions.includes(ext) && !file.type.startsWith('image/')) {
-            errors.push("Invalid file format. Please upload an image file (JPG, PNG, WebP).");
-        }
-    }
+    const utrVal = utrInput ? utrInput.value.trim().toUpperCase() : '';
 
     if (!utrVal || utrVal.length < 8) {
-        errors.push("Please enter the genuine UPI UTR / Transaction Reference Number (min 8 characters).");
-    } else if (!/^[A-Z0-9]+$/.test(utrVal)) {
-        errors.push("UTR reference number must contain only letters and numbers (no special characters).");
-    }
-
-    const dummyList = ["TEST", "DUMMY", "FAKE", "12345678", "00000000", "SAMPLE", "NULL", "NONE"];
-    if (dummyList.some(d => utrVal === d || utrVal.startsWith("TEST"))) {
-        errors.push("Please enter your actual UPI transaction reference number from Google Pay, PhonePe, or Paytm.");
-    }
-
-    if (errors.length > 0) {
         event.preventDefault();
-        alertBox.innerHTML = '⚠️ ' + errors.join('<br>⚠️ ');
+        alertBox.innerHTML = '⚠️ Please enter the genuine UPI UTR / Transaction Reference Number (min 8 characters).';
         alertBox.style.display = 'block';
-        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return false;
     }
-
-    if (hasFile && fileInput.files[0].size > 3 * 1024 * 1024) {
-        event.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.innerText = 'Optimizing private screenshot…';
-        compressProofForServer(form, fileInput.files[0]).then(file => {
-            const transfer = new DataTransfer();
-            transfer.items.add(file);
-            fileInput.files = transfer.files;
-            document.getElementById('previewFileSize').innerText = (file.size / 1024).toFixed(1) + ' KB after optimization';
-            form.submit();
-        }).catch(error => {
-            alertBox.textContent = error.message;
-            alertBox.style.display = 'block';
-            submitBtn.disabled = false;
-            submitBtn.innerText = 'Submit Payment Details';
-        });
-        return false;
-    }
-
-    alertBox.style.display = 'none';
-    submitBtn.disabled = true;
-    submitBtn.innerText = "Submitting Order for Approval...";
     return true;
 }
 

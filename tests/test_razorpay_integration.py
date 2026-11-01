@@ -488,6 +488,59 @@ class RazorpayIntegrationTestSuite(unittest.TestCase):
         self.assertFalse(data["success"])
         self.assertIn("signature", data["message"].lower())
 
+    # -----------------------------------------------------------
+    # TEST 15: Payment Failure Diagnostic Capture
+    # -----------------------------------------------------------
+    def test_payment_failed_records_diagnostics(self):
+        with site.app.app_context():
+            o = make_test_order(customer_name="Failure Test User")
+            db.session.add(o)
+            db.session.commit()
+            order_id = o.id
+
+        with self.client.session_transaction() as sess:
+            sess["authorized_order_ids"] = [order_id]
+
+        fail_payload = {
+            "code": "BAD_REQUEST_ERROR",
+            "description": "Payment was cancelled by the customer",
+            "reason": "payment_cancelled",
+            "source": "customer",
+            "step": "payment_authentication",
+            "device": "Mobile"
+        }
+        resp = self.client.post(f"/payment-failed/{order_id}", json=fail_payload)
+        self.assertEqual(resp.status_code, 200)
+
+        with site.app.app_context():
+            chk = db.session.get(Order, order_id)
+            self.assertEqual(chk.status, "Payment Failed")
+            self.assertEqual(chk.payment_error_code, "BAD_REQUEST_ERROR")
+            self.assertIn("cancelled", chk.payment_error_desc.lower())
+            self.assertEqual(chk.payment_device, "Mobile")
+            self.assertEqual(chk.payment_environment, "test")
+
+    # -----------------------------------------------------------
+    # TEST 16: Payment Step View Renders Official Razorpay Checkout & Test Guidance
+    # -----------------------------------------------------------
+    def test_payment_step_renders_razorpay_checkout(self):
+        with site.app.app_context():
+            o = make_test_order(customer_name="Checkout Render Test")
+            db.session.add(o)
+            db.session.commit()
+            order_id = o.id
+
+        with self.client.session_transaction() as sess:
+            sess["authorized_order_ids"] = [order_id]
+
+        resp = self.client.get(f"/payment-step/{order_id}")
+        self.assertEqual(resp.status_code, 200)
+        body = resp.get_data(as_text=True)
+        self.assertIn("checkout.razorpay.com/v1/checkout.js", body)
+        self.assertIn("launchRazorpayModal", body)
+        self.assertIn("Test Mode Active", body)
+        self.assertIn("success@razorpay", body)
+
 
 if __name__ == "__main__":
     unittest.main()

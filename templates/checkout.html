@@ -958,10 +958,12 @@
 
                     const rzp = new Razorpay(options);
                     rzp.on("payment.failed", function (failResp) {
+                        const isMobile = /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+                        const errPayload = Object.assign({}, failResp.error || {}, { device: isMobile ? "Mobile" : "Desktop" });
                         fetch("/payment-failed/" + resData.order_id, {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(failResp.error || {})
+                            body: JSON.stringify(errPayload)
                         });
                         if (alertBox) {
                             alertBox.innerText = "Payment Failed: " + (failResp.error && failResp.error.description ? failResp.error.description : "Authorization error.");

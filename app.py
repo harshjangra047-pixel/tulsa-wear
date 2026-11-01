@@ -427,7 +427,11 @@ def ensure_schema_migrations():
             "refund_id": "VARCHAR(100)",
             "refund_status": "VARCHAR(50)",
             "refund_amount": "FLOAT DEFAULT 0.0",
-            "webhook_event_id": "VARCHAR(100)"
+            "webhook_event_id": "VARCHAR(100)",
+            "payment_error_code": "VARCHAR(100)",
+            "payment_error_desc": "TEXT",
+            "payment_device": "VARCHAR(50)",
+            "payment_environment": "VARCHAR(20)"
         }
 
         with db.engine.begin() as connection:
@@ -1688,12 +1692,14 @@ def view_payment_step(order_id):
     creds = get_razorpay_credentials()
     active_razorpay_key = creds["key_id"]
     active_upi_id, active_upi_name = get_merchant_upi_config()
+    is_test_mode = str(active_razorpay_key).startswith("rzp_test_")
     return render_template(
         "payment.html",
         order=order,
         product=product,
         razorpay_key_id=active_razorpay_key,
         razorpay_order_id=order.razorpay_order_id,
+        is_test_mode=is_test_mode,
         upi_id=active_upi_id,
         upi_payee_name=active_upi_name
     )
@@ -2035,8 +2041,21 @@ def payment_failed(order_id):
     order = Order.query.get_or_404(order_id)
     if not _can_access_order(order):
         return jsonify({"success": False}), 404
+    data = request.get_json(silent=True) or {}
+    error_code = data.get("code") or data.get("error_code")
+    error_desc = data.get("description") or data.get("reason") or data.get("error_description")
+    device = data.get("device")
+    env = "test" if os.environ.get("RAZORPAY_KEY_ID", "").startswith("rzp_test_") else "live"
+
     if order.status != "Confirmed" and not order.razorpay_payment_id:
         order.status = "Payment Failed"
+        if error_code:
+            order.payment_error_code = str(error_code)[:100]
+        if error_desc:
+            order.payment_error_desc = str(error_desc)
+        if device:
+            order.payment_device = str(device)[:50]
+        order.payment_environment = env
         db.session.commit()
     return jsonify({"success": True})
 
