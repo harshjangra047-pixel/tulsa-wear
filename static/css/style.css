@@ -72,11 +72,28 @@ ul, ol {
     --bg-brown:     #261C18;
     --bg-wine:      #1A0F12;
 
-    /* Accent */
+    /* Royal Emerald & Forest Heritage Palette */
+    --emerald-dark:    #061611;
+    --emerald-deep:    #0C251D;
+    --emerald-forest:  #14352B;
+    --emerald-tint:    #1C483B;
+    --emerald-glow:    rgba(20, 53, 43, 0.6);
+
+    /* Antique Gold & Imperial Radiance */
     --accent-burgundy: #681F2E;
     --accent-wine:     #7D3040;
     --accent-rose:     #9B4A5A;
     --accent-gold:     #C9A96E;
+    --gold-antique:    #C9A96E;
+    --gold-bright:     #DFC187;
+    --gold-shimmer:    #F5E8D2;
+    --gold-dark:       #96723B;
+    --gold-glow:       rgba(201, 169, 110, 0.45);
+
+    /* Heritage Crimson & Sindoor Accents */
+    --crimson-heritage:#7A162B;
+    --crimson-velvet:  #4A0D1A;
+    --sindoor-red:     #981C2D;
 
     /* Text */
     --text-primary:  #171614;

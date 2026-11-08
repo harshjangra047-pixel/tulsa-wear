@@ -6,6 +6,40 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
+    /* =========================================
+       HERITAGE CURTAIN ENTRANCE ANIMATION (Video 4)
+    ========================================== */
+    const curtain = document.getElementById("heritageOpeningCurtain");
+    const enterBtn = document.getElementById("btnEnterCurtain");
+
+    if (curtain) {
+        const dismissCurtain = () => {
+            curtain.classList.add("curtain-opened");
+            setTimeout(() => {
+                curtain.classList.add("curtain-dismissed");
+            }, 1300);
+            sessionStorage.setItem("tulsa_curtain_viewed", "true");
+        };
+
+        if (enterBtn) {
+            enterBtn.addEventListener("click", dismissCurtain);
+        }
+
+        curtain.addEventListener("click", (e) => {
+            if (e.target !== enterBtn) {
+                dismissCurtain();
+            }
+        });
+
+        // Auto dismiss after 2.6s for seamless immersion
+        const autoTimer = setTimeout(dismissCurtain, 2600);
+
+        // Cancel timer if user clicked early
+        if (enterBtn) {
+            enterBtn.addEventListener("click", () => clearTimeout(autoTimer));
+        }
+    }
+
 
     /* =========================================
        STICKY NAVBAR — transparent → solid

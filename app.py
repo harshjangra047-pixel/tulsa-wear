@@ -147,7 +147,7 @@ app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 
 # 3. Secure cookies when running under HTTPS in production
-app.config["SESSION_COOKIE_SECURE"] = os.getenv("FLASK_ENV") == "production"
+app.config["SESSION_COOKIE_SECURE"] = PRODUCTION_RUNTIME
 app.config["TEMPLATES_AUTO_RELOAD"] = True
 
 # Media upload configuration
@@ -675,6 +675,81 @@ def protect_account_and_checkout_posts():
 
 
 # =========================================
+# PRODUCTION ERROR HANDLERS
+# =========================================
+
+@app.errorhandler(404)
+def handle_not_found_error(e):
+    return render_template("404.html"), 404
+
+
+@app.errorhandler(500)
+def handle_internal_error(e):
+    db.session.rollback()
+    app.logger.error(f"Internal server error: {e}")
+    return render_template("500.html"), 500
+
+
+# =========================================
+# SEO: ROBOTS.TXT & SITEMAP.XML
+# =========================================
+
+@app.route("/robots.txt")
+def robots_txt():
+    rules = [
+        "User-agent: *",
+        "Allow: /",
+        "Disallow: /admin/",
+        "Disallow: /checkout",
+        "Disallow: /payment/",
+        "Disallow: /payment-step/",
+        "Disallow: /customer/",
+        "Disallow: /api/",
+        "",
+        f"Sitemap: {request.url_root.rstrip('/')}/sitemap.xml"
+    ]
+    return Response("\n".join(rules), mimetype="text/plain")
+
+
+@app.route("/sitemap.xml")
+def sitemap_xml():
+    base_url = request.url_root.rstrip("/")
+    pages = [
+        {"loc": f"{base_url}/", "changefreq": "daily", "priority": "1.0"},
+        {"loc": f"{base_url}/fitting-room", "changefreq": "weekly", "priority": "0.9"},
+        {"loc": f"{base_url}/shop", "changefreq": "daily", "priority": "0.9"},
+        {"loc": f"{base_url}/#pick-your-silk", "changefreq": "weekly", "priority": "0.8"},
+        {"loc": f"{base_url}/#the-rack", "changefreq": "weekly", "priority": "0.8"},
+        {"loc": f"{base_url}/#cinematic-lookbook", "changefreq": "weekly", "priority": "0.8"},
+        {"loc": f"{base_url}/#weaving-studio", "changefreq": "weekly", "priority": "0.8"},
+    ]
+    try:
+        products = Product.query.filter(Product.stock > 0).all()
+        for p in products:
+            pages.append({
+                "loc": f"{base_url}/product/{p.id}",
+                "changefreq": "weekly",
+                "priority": "0.8"
+            })
+    except Exception:
+        pass
+
+    xml_lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+    ]
+    for page in pages:
+        xml_lines.append("  <url>")
+        xml_lines.append(f"    <loc>{page['loc']}</loc>")
+        xml_lines.append(f"    <changefreq>{page['changefreq']}</changefreq>")
+        xml_lines.append(f"    <priority>{page['priority']}</priority>")
+        xml_lines.append("  </url>")
+    xml_lines.append("</urlset>")
+
+    return Response("\n".join(xml_lines), mimetype="application/xml")
+
+
+# =========================================
 # HOME PAGE
 # =========================================
 
@@ -700,6 +775,27 @@ def home():
         products=products,
         best_sellers=best_sellers,
         approved_feedback=approved_feedback
+    )
+
+
+# =========================================
+# VIRTUAL FITTING ROOM (Stage 3 Enhanced)
+# =========================================
+
+@app.route("/fitting-room")
+def fitting_room():
+    products = Product.query.order_by(
+        Product.created_at.desc()
+    ).all()
+
+    best_sellers = Product.query.filter_by(
+        best_seller=True
+    ).all()
+
+    return render_template(
+        "fitting_room.html",
+        products=products,
+        best_sellers=best_sellers
     )
 
 
@@ -2145,8 +2241,13 @@ def _establish_customer_session(customer):
     session["customer_name"] = customer.name
     session["customer_phone"] = customer.phone
 
-@app.route("/customer/register", methods=["POST"])
+@app.route("/customer/register", methods=["GET", "POST"])
 def customer_register():
+    if request.method == "GET":
+        if session.get("customer_id"):
+            return redirect(url_for("customer_dashboard"))
+        return redirect(url_for("checkout"))
+
     data = request.get_json() if request.is_json else request.form
     name = (data.get("name") or "").strip()
     phone = (data.get("phone") or "").strip()
@@ -2207,8 +2308,13 @@ def customer_register():
     return redirect(request.referrer or url_for("checkout"))
 
 
-@app.route("/customer/login", methods=["POST"])
+@app.route("/customer/login", methods=["GET", "POST"])
 def customer_login():
+    if request.method == "GET":
+        if session.get("customer_id"):
+            return redirect(url_for("customer_dashboard"))
+        return redirect(url_for("checkout"))
+
     data = request.get_json() if request.is_json else request.form
     phone = (data.get("phone") or "").strip()
     password = (data.get("password") or "").strip()
