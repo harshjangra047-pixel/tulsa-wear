@@ -15,7 +15,8 @@ DEFAULT_SITE_CONTENT = {
     "editor_sections": [
         {"id": section_id, "visible": True} for section_id in (
             "hero-section", "mood-portals", "curved-carousel", "look-builder",
-            "best-sellers", "collections", "bridal", "seasonal", "campaign-gallery",
+            "best-sellers", "collections", "bridal", "pick-your-silk", "the-rack",
+            "cinematic-lookbook", "weaving-studio", "seasonal", "campaign-gallery",
             "trends", "categories", "shop-price", "process", "about", "contact",
             "ai-studio", "feedback", "faq-section", "contact-us", "instagram-section",
             "newsletter-section"
