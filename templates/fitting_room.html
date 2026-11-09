@@ -33,46 +33,67 @@
          FLOATING LUXURY NAVBAR
     ========================================== -->
     <header class="navbar floating-frosted-nav" id="top">
+        <button
+            id="menuButton"
+            class="menu-button mobile-menu-toggle"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+        >
+            ☰
+        </button>
+
         <div class="nav-group-left">
             <a href="{{ url_for('home') }}" class="nav-link-item">← Boutique Home</a>
             <a href="{{ url_for('home') }}#curved-carousel" class="nav-link-item">3D Runway</a>
-            <a href="{{ url_for('fitting_room') }}" class="nav-link-item nav-link-virtual-tryon">
+            <a href="{{ url_for('fitting_room') }}" class="nav-link-item nav-link-virtual-tryon" style="color:var(--gold-bright, #F2D08C); font-weight:600;">
                 <span class="tryon-sparkle">✦</span> VIRTUAL TRY-ON
             </a>
             <a href="{{ url_for('shop') }}" class="nav-link-item">Catalogue</a>
         </div>
 
-        <a href="{{ url_for('home') }}" class="nav-brand-center">
-            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;">
-            <span class="brand-text-luxury">TULSA <em>by Anjali</em></span>
+        <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
+            <span class="brand-text-luxury">TULSA <em class="brand-sub-luxury">by Anjali</em></span>
         </a>
 
         <div class="nav-group-right">
-            <a href="{{ url_for('fitting_room') }}" class="nav-tryon-mobile-pill">✦ Try-On</a>
+            <a href="{{ url_for('shop') }}" class="nav-tryon-mobile-pill" title="Shop Collection">✦ Shop</a>
             <a href="{{ url_for('home') }}#trends" class="nav-link-item">Weaving Studio</a>
             <a href="{{ url_for('home') }}#campaign-gallery" class="nav-link-item">Reels</a>
-            <a href="{{ url_for('bag') }}" class="btn-nav-bag">
-                <span>Bag</span>
+            {% if current_customer %}
+            <a href="{{ url_for('customer_dashboard') }}" class="nav-link-account-icon" title="My Account">👤</a>
+            {% else %}
+            <a href="{{ url_for('customer_login') }}" class="nav-link-account-icon" title="Sign In">👤</a>
+            {% endif %}
+            <a href="{{ url_for('bag') }}" class="btn-nav-bag" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
+                <span class="bag-label-text">Bag</span>
                 <span class="bag-badge-pill">{{ session.get('cart', [])|length }}</span>
             </a>
-            {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}" class="nav-link-item" style="color:var(--gold-bright);">Account</a>{% endif %}
-            <button
-                id="menuButton"
-                class="menu-button"
-                type="button"
-                aria-label="Open navigation"
-                aria-expanded="false"
-            >
-                ☰
-            </button>
         </div>
 
-        <nav class="nav-links" id="navLinks" style="display:none;">
-            <a href="{{ url_for('fitting_room') }}" class="mobile-tryon-btn">✦ VIRTUAL TRY-ON</a>
+        <nav class="nav-links mobile-navigation-drawer" id="navLinks" role="navigation" aria-label="Mobile Navigation">
+            <div class="mobile-drawer-header">
+                <span class="mobile-drawer-brand">✦ TULSA ATELIER</span>
+            </div>
+            <a href="{{ url_for('fitting_room') }}" class="mobile-tryon-btn" style="color:#DFC187;">✦ VIRTUAL TRY-ON (Active)</a>
             <a href="{{ url_for('home') }}">Boutique Home</a>
+            <a href="{{ url_for('shop') }}">Catalogue</a>
             <a href="{{ url_for('home') }}#curved-carousel">3D Runway</a>
             <a href="{{ url_for('home') }}#seasonal">Pick a Silk</a>
-            <a href="{{ url_for('shop') }}">Catalogue</a>
+            <a href="{{ url_for('home') }}#trends">Weaving Studio</a>
+            <a href="{{ url_for('bag') }}">Shopping Bag ({{ session.get('cart', [])|length }})</a>
+            {% if current_customer %}
+            <a href="{{ url_for('customer_dashboard') }}" style="color:#DFC187;">👤 My Account ({{ current_customer.name }})</a>
+            <a href="{{ url_for('customer_logout') }}" style="color:#f87171;">Sign Out</a>
+            {% else %}
+            <a href="{{ url_for('customer_login') }}" style="color:#DFC187;">👤 Sign In / Register</a>
+            {% endif %}
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa%20Wears!%20I%20have%20an%20inquiry." target="_blank" style="color:#25d366;">
+                💬 WhatsApp Concierge
+            </a>
+        </nav>
+    </header>
             <a href="{{ url_for('home') }}#trends">Weaving Studio</a>
             <a href="{{ url_for('home') }}#campaign-gallery">Lookbook</a>
             <a href="{{ url_for('bag') }}">Bag ({{ session.get('cart', [])|length }})</a>

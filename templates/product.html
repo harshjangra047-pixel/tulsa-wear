@@ -32,6 +32,16 @@
          FLOATING LUXURY FROSTED NAVBAR
     ========================================== -->
     <header class="navbar floating-frosted-nav" id="top">
+        <button
+            id="menuButton"
+            class="menu-button mobile-menu-toggle"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+        >
+            ☰
+        </button>
+
         <div class="nav-group-left">
             <a href="{{ url_for('home') }}" class="nav-link-item">← Boutique Home</a>
             <a href="{{ url_for('home') }}#curved-carousel" class="nav-link-item">3D Runway</a>
@@ -42,19 +52,48 @@
             <a href="{{ url_for('home') }}#pick-your-silk" class="nav-link-item">Pick a Silk</a>
         </div>
 
-        <a href="{{ url_for('home') }}" class="nav-brand-center">
-            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;">
-            <span class="brand-text-luxury">TULSA <em>by Anjali</em></span>
+        <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
+            <span class="brand-text-luxury">TULSA <em class="brand-sub-luxury">by Anjali</em></span>
         </a>
 
         <div class="nav-group-right">
-            <a href="{{ url_for('fitting_room') }}?select={{ product.id }}" class="nav-tryon-mobile-pill">✦ Try-On</a>
+            <a href="{{ url_for('fitting_room') }}?select={{ product.id }}" class="nav-tryon-mobile-pill" title="Virtual Try-On">✦ Try-On</a>
             <a href="{{ url_for('home') }}#weaving-studio" class="nav-link-item">Weaving Studio</a>
-            <a href="{{ url_for('bag') }}" class="btn-nav-bag">
-                <span>Bag</span>
+            {% if current_customer %}
+            <a href="{{ url_for('customer_dashboard') }}" class="nav-link-account-icon" title="My Account">👤</a>
+            {% else %}
+            <a href="{{ url_for('customer_login') }}" class="nav-link-account-icon" title="Sign In">👤</a>
+            {% endif %}
+            <a href="{{ url_for('bag') }}" class="btn-nav-bag" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
+                <span class="bag-label-text">Bag</span>
                 <span class="bag-count-pill">{{ session.get('cart', [])|length }}</span>
             </a>
         </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <nav class="nav-links mobile-navigation-drawer" id="navLinks" role="navigation" aria-label="Mobile Navigation">
+            <div class="mobile-drawer-header">
+                <span class="mobile-drawer-brand">✦ TULSA ATELIER</span>
+            </div>
+            <a href="{{ url_for('fitting_room') }}?select={{ product.id }}" class="mobile-tryon-btn">✦ VIRTUAL TRY-ON</a>
+            <a href="{{ url_for('home') }}">Boutique Home</a>
+            <a href="{{ url_for('shop') }}">The Collection</a>
+            <a href="{{ url_for('home') }}#curved-carousel">3D Runway</a>
+            <a href="{{ url_for('home') }}#pick-your-silk">Pick a Silk</a>
+            <a href="{{ url_for('home') }}#weaving-studio">Weaving Studio</a>
+            <a href="{{ url_for('home') }}#cinematic-lookbook">Lookbook & Reels</a>
+            <a href="{{ url_for('bag') }}">Shopping Bag ({{ session.get('cart', [])|length }})</a>
+            {% if current_customer %}
+            <a href="{{ url_for('customer_dashboard') }}" style="color:#DFC187;">👤 My Account ({{ current_customer.name }})</a>
+            <a href="{{ url_for('customer_logout') }}" style="color:#f87171;">Sign Out</a>
+            {% else %}
+            <a href="{{ url_for('customer_login') }}" style="color:#DFC187;">👤 Sign In / Register</a>
+            {% endif %}
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa%20Wears!%20I%20have%20an%20inquiry%20regarding%20{{ product.name }}." target="_blank" style="color:#25d366;">
+                💬 WhatsApp Concierge
+            </a>
+        </nav>
     </header>
 
     <main class="inner-page-main">
@@ -359,9 +398,8 @@
        target="_blank" 
        rel="noopener noreferrer" 
        id="floatingWhatsAppBtn"
-       style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #25d366; color: #fff; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 18px rgba(37,211,102,0.45); text-decoration: none; transition: transform 0.2s;"
-       onmouseover="this.style.transform='scale(1.1)'" 
-       onmouseout="this.style.transform='scale(1)'"
+       class="floating-whatsapp-btn"
+       aria-label="Chat with Tulsa on WhatsApp"
        title="Chat with Tulsa Wears on WhatsApp">
         💬
     </a>

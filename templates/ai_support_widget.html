@@ -503,19 +503,23 @@
     }
 
     /* Mobile Responsive Docking */
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
         .btn-floating-ai-help {
-            bottom: 74px;
+            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
             left: 14px;
-            padding: 8px 12px;
+            padding: 8px 14px;
+            z-index: 996;
+        }
+        /* Elevate above sticky purchase / checkout bar if active */
+        body.has-pdp-sticky-bar .btn-floating-ai-help,
+        .has-sticky-bar .btn-floating-ai-help {
+            bottom: calc(78px + env(safe-area-inset-bottom, 12px)) !important;
         }
         .ai-help-label {
             font-size: 10.5px;
         }
         .chatgpt-profile-pill {
-            bottom: 18px;
-            left: 14px;
-            padding: 4px 10px 4px 4px;
+            display: none !important; /* Account shortcut is conveniently located in header and mobile drawer */
         }
         .profile-pill-avatar {
             width: 28px;
@@ -525,15 +529,20 @@
         .ai-chat-drawer {
             left: 10px;
             right: 10px;
-            bottom: 130px;
+            bottom: calc(80px + env(safe-area-inset-bottom, 12px));
             width: auto;
             max-width: none;
-            height: 480px;
+            height: min(480px, 75vh);
+            z-index: 9998;
         }
     }
 </style>
 
 <script>
+    // Detect sticky bars on mobile to prevent control collisions
+    if (document.querySelector('.pdp-mobile-sticky-bar, .sticky-checkout-bar, #pdpMobileStickyBar')) {
+        document.body.classList.add('has-pdp-sticky-bar');
+    }
     // Tulsa AI Concierge Client Logic
     let aiConversationLog = [];
     const studioPhone = "{{ studio_phone }}";

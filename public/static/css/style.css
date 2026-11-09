@@ -4407,14 +4407,43 @@ html {
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .pdp-main-bounding-box {
-        height: 60vh;
-        max-height: 60vh;
-        min-height: 320px;
+        aspect-ratio: 4 / 5;
+        max-height: 58vh;
+        min-height: 330px;
+        height: auto;
     }
     .pdp-thumb-card-item {
         flex: 0 0 64px;
         width: 64px;
         height: 80px;
+    }
+
+    .size-selector-row {
+        width: 100%;
+        overflow: hidden;
+    }
+    .size-pill-group {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
+        gap: 8px;
+        padding-bottom: 8px;
+        scrollbar-width: none;
+    }
+    .size-pill-group::-webkit-scrollbar {
+        display: none;
+    }
+    .pdp-size-radio {
+        flex: 0 0 auto;
+    }
+    .pdp-size-tag {
+        min-width: 48px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
     }
 
     /* Mobile horizontally scrollable filter strip */
@@ -4484,7 +4513,7 @@ html {
         bottom: 0;
         left: 0;
         right: 0;
-        z-index: 998;
+        z-index: 1002;
         background: rgba(255, 255, 255, 0.97);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);

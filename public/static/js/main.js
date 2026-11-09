@@ -502,4 +502,30 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    /* =========================================
+       STAGE 9: MOBILE SIZE SELECTOR & STICKY BAR ENHANCEMENTS
+    ========================================== */
+    const sizeRadios = document.querySelectorAll(".pdp-size-radio input[type='radio']");
+    sizeRadios.forEach((radio) => {
+        radio.addEventListener("change", function () {
+            const label = this.closest(".pdp-size-radio");
+            if (label && label.scrollIntoView) {
+                label.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+            }
+        });
+    });
+
+    const pdpStickyBar = document.getElementById("pdpMobileStickyBar");
+    if (pdpStickyBar) {
+        document.body.classList.add("has-pdp-sticky-bar");
+        const checkStickyOverlap = () => {
+            const rect = pdpStickyBar.getBoundingClientRect();
+            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+            document.body.classList.toggle("has-pdp-sticky-bar", isVisible);
+        };
+        window.addEventListener("scroll", checkStickyOverlap, { passive: true });
+        window.addEventListener("resize", checkStickyOverlap, { passive: true });
+        checkStickyOverlap();
+    }
+
 });
