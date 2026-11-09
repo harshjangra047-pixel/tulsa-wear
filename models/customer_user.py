@@ -12,6 +12,12 @@ class CustomerUser(db.Model):
     address = db.Column(db.Text, nullable=True)
     city = db.Column(db.String(100), nullable=True)
     pincode = db.Column(db.String(20), nullable=True)
+    is_verified = db.Column(db.Boolean, default=False)
+    otp_code = db.Column(db.String(10), nullable=True)
+    otp_expiry = db.Column(db.DateTime, nullable=True)
+    otp_attempts = db.Column(db.Integer, default=0)
+    otp_last_sent = db.Column(db.DateTime, nullable=True)
+    saved_cart_json = db.Column(db.Text, nullable=True)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     last_login = db.Column(db.DateTime, server_default=db.func.now(), onupdate=db.func.now())
 

@@ -102,6 +102,15 @@
         </div>
     </div>
 
+    <!-- Storefront Customer Gate (Active only when Mandatory Customer Login is configured) -->
+    {% if cms.get('mandatory_customer_login') == 'true' and not current_customer %}
+    <div id="mandatoryLoginGateModal" style="position:fixed;inset:0;background:rgba(8,26,20,0.92);backdrop-filter:blur(16px);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;">
+        <div style="width:100%;max-width:460px;position:relative;">
+            <iframe src="{{ url_for('customer_login') }}" style="width:100%;height:590px;border:none;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.6);" title="Tulsa Customer Sign In Required"></iframe>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- 3D WebGL Background Canvas Container -->
     <div id="three-canvas-container"></div>
 
@@ -140,7 +149,11 @@
                 <span>Bag</span>
                 <span class="bag-badge-pill">{{ session.get('cart', [])|length }}</span>
             </a>
-            {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}" class="nav-link-item" style="color:var(--gold-bright);">Account</a>{% endif %}
+            {% if current_customer %}
+            <a href="{{ url_for('customer_account_dashboard') }}" class="nav-link-item" style="color:var(--accent-gold); font-weight:600;">👤 {{ current_customer.name.split()[0] }}</a>
+            {% else %}
+            <a href="{{ url_for('customer_login') }}" class="nav-link-item" style="color:var(--accent-gold); font-weight:600;">👤 Sign In</a>
+            {% endif %}
             <button
                 id="menuButton"
                 class="menu-button"
@@ -163,7 +176,12 @@
             <a href="#cinematic-lookbook">Lookbook</a>
             <a href="#ai-studio">AI Stylist</a>
             <a href="{{ url_for('bag') }}">Bag ({{ session.get('cart', [])|length }})</a>
-            {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}">My account</a>{% endif %}
+            {% if current_customer %}
+            <a href="{{ url_for('customer_account_dashboard') }}">👤 My Account ({{ current_customer.name }})</a>
+            <a href="{{ url_for('customer_logout') }}" style="color:#f87171;">Sign Out</a>
+            {% else %}
+            <a href="{{ url_for('customer_login') }}">👤 Sign In / Register</a>
+            {% endif %}
         </nav>
     </header>
 
@@ -219,6 +237,9 @@
                             <img src="{{ url_for('static', filename='images/bridal-wedding-collection.jpg') }}?v={{ cache_id }}" 
                                  alt="Tulsa Royal Bridal Couture" 
                                  class="arch-hero-image"
+                                 fetchpriority="high"
+                                 loading="eager"
+                                 decoding="async"
                                  onerror="this.onerror=null; this.src='{{ product_image_url(cms.get('hero_image'), 'festive-atelier-collection.jpg') }}?v={{ cache_id }}';">
                             <div class="arch-light-shaft"></div>
                         </div>
@@ -258,6 +279,7 @@
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'editorial-category-1.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat1_title', 'Palazzo Set') }}" 
+                             loading="lazy"
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
@@ -273,6 +295,7 @@
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'editorial-category-2.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}" 
+                             loading="lazy"
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
@@ -288,6 +311,7 @@
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-category-3.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat3_title', 'Casual Wear') }}" 
+                             loading="lazy"
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
@@ -303,6 +327,7 @@
                     <div class="arched-media">
                         <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'editorial-category-4.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat4_title', 'Party / Wedding Regalia') }}" 
+                             loading="lazy"
                              decoding="async"
                              onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
@@ -2352,6 +2377,9 @@
        title="Chat on WhatsApp">
         💬
     </a>
+
+    <!-- AI Customer Support & Desktop Profile Control -->
+    {% include 'ai_support_widget.html' %}
 
     <!-- =========================================
          JAVASCRIPT & 3D ENGINE

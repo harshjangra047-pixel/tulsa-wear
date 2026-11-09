@@ -227,3 +227,103 @@ def ask_ai_about_product(product, question):
         return "Every single stitch and embroidered accent on this piece is executed by master handcraft artisans in our slow-fashion studio."
     else:
         return f"{product.name} is available for ₹{product.price:,.0f}. {product.description or 'A signature piece from our atelier.'}"
+
+def answer_customer_support(query: str, current_customer=None):
+    """
+    Unified AI Customer Support Concierge answering questions using verified
+    catalog, size charts, store policies, and customer order records.
+    """
+    q = (query or "").lower().strip()
+    show_human_handoff = False
+    products = []
+
+    # 1. Size and Fit Assistance
+    if any(k in q for k in ["size", "sizing", "measurement", "fit", "chart", "bust", "waist"]):
+        msg = (
+            "✦ Tulsa Size & Fit Guide ✦\n\n"
+            "Our garments follow authentic Indian artisanal sizing across 9 sizes (XXS to 4XL):\n"
+            "• XXS: Bust 30\" | Waist 26\" | Hip 34\" | Kurti Length 28\"\n"
+            "• XS: Bust 32\" | Waist 28\" | Hip 36\" | Kurti Length 28\"\n"
+            "• S: Bust 34\" | Waist 30\" | Hip 38\" | Kurti Length 28\"\n"
+            "• M: Bust 36\" | Waist 32\" | Hip 40\" | Kurti Length 28\"\n"
+            "• L: Bust 38\" | Waist 34\" | Hip 42\" | Kurti Length 30\"\n"
+            "• XL: Bust 40\" | Waist 36\" | Hip 44\" | Kurti Length 30\"\n"
+            "• XXL: Bust 42\" | Waist 38\" | Hip 46\" | Kurti Length 30\"\n"
+            "• 3XL: Bust 44\" | Waist 40\" | Hip 48\" | Kurti Length 30\"\n"
+            "• 4XL: Bust 48\" | Waist 45\" | Hip 52\" | Kurti Length 30\"\n\n"
+            "Bottom Pants have a standard length of 40\". If you wish to customize the length or sleeve fit, you can DM our Hansi studio on WhatsApp for complimentary alterations."
+        )
+
+    # 2. Order Status
+    elif any(k in q for k in ["order", "track", "delivery status", "where is my", "dispatch"]):
+        if current_customer:
+            from models.order import Order
+            recent_orders = Order.query.filter_by(customer_id=current_customer.id).order_by(Order.created_at.desc()).limit(3).all()
+            if recent_orders:
+                lines = [f"Namaste {current_customer.name}, here are your recent order coordinates:"]
+                for o in recent_orders:
+                    status_line = f"• Order #{o.id}: {o.product_name} (₹{o.price:,.0f}) — Status: {o.status} ({o.payment_status})"
+                    if o.tracking_id:
+                        status_line += f" | Tracking: {o.tracking_id}"
+                    lines.append(status_line)
+                lines.append("\nYou can track live milestones on your Account Orders hub or message our studio desk.")
+                msg = "\n".join(lines)
+            else:
+                msg = f"Namaste {current_customer.name}, we do not see any active orders registered under your account yet. You can explore our collection in the shop!"
+        else:
+            msg = (
+                "To check your active order status, please sign in to your Tulsa account, or provide your Order Number and registered phone number. "
+                "You can also use our self-service order lookup portal at /track-order."
+            )
+
+    # 3. Shipping & Delivery Information
+    elif any(k in q for k in ["ship", "delivery", "dispatch time", "courier", "how long"]):
+        msg = (
+            "✦ Shipping & Delivery Policy ✦\n\n"
+            "Every Tulsa ensemble is tailored thoughtfully by hand in our Hansi, Haryana atelier.\n"
+            "• Standard Slow-Fashion Delivery: 7 to 10 business days across India.\n"
+            "• Complimentary insured shipping on all bespoke and bridal pre-orders.\n"
+            "• Real-time courier tracking updates sent via SMS & WhatsApp upon dispatch."
+        )
+
+    # 4. Payment & Checkout Assistance
+    elif any(k in q for k in ["payment", "pay", "upi", "google pay", "razorpay", "card", "cod"]):
+        msg = (
+            "✦ Payment & Security ✦\n\n"
+            "We accept all secure digital payment methods powered by 256-bit SSL encrypted Razorpay:\n"
+            "• Instant UPI (Google Pay, PhonePe, Paytm, BHIM)\n"
+            "• Credit & Debit Cards (Visa, Mastercard, RuPay, Amex)\n"
+            "• Netbanking across all major Indian banks\n"
+            "• For bespoke bridal regalia, partial advance payment is supported via direct atelier UPI."
+        )
+
+    # 5. Return & Exchange Policy
+    elif any(k in q for k in ["return", "exchange", "refund", "cancel"]):
+        msg = (
+            "✦ Return & Alteration Policy ✦\n\n"
+            "Because each garment is handcrafted specifically for you in our slow-fashion atelier, we do not mass-produce inventory.\n"
+            "• Size Alterations: We provide complimentary bespoke alteration support if the fit requires subtle adjustments.\n"
+            "• Exchange Window: Eligible within 7 days of delivery for unworn pieces with artisanal tags intact.\n"
+            "• To initiate an alteration or exchange, connect with our client care team on WhatsApp."
+        )
+        show_human_handoff = True
+
+    # 6. Human Support Escalation
+    elif any(k in q for k in ["human", "talk to", "agent", "call", "whatsapp", "phone", "contact", "person"]):
+        msg = (
+            "Our master artisans and client care team in Hansi are available Monday through Saturday (10:00 AM – 7:00 PM IST). "
+            "You can continue this conversation directly on WhatsApp or call our studio hotline below."
+        )
+        show_human_handoff = True
+
+    # 7. Default: Product recommendation & Style Studio
+    else:
+        stylist_res = ask_ai_stylist(query)
+        msg = stylist_res.get("message", "Here are curated pieces from our slow-fashion repertory:")
+        products = stylist_res.get("products", [])
+
+    return {
+        "message": msg,
+        "products": products,
+        "show_human_handoff": show_human_handoff
+    }

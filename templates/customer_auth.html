@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Customer Access — {{ brand_name }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/atelier-3d.css') }}?v={{ cache_id }}">
+    <style>
+        body {
+            background: #081A14;
+            color: #f7f4ef;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .auth-bg-ornament {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 50% 20%, rgba(12, 69, 51, 0.45) 0%, rgba(8, 26, 20, 0.95) 75%),
+                        radial-gradient(circle at 80% 80%, rgba(197, 160, 89, 0.08) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .auth-card-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
+            background: rgba(14, 38, 30, 0.92);
+            border: 1px solid rgba(197, 160, 89, 0.35);
+            border-radius: 16px;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(197, 160, 89, 0.08);
+            backdrop-filter: blur(16px);
+            padding: 36px 32px;
+        }
+
+        .auth-brand-crest {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .auth-brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1.5px solid #c5a059;
+            margin-bottom: 12px;
+            object-fit: cover;
+            background: #fff;
+        }
+
+        .auth-eyebrow {
+            font-size: 10px;
+            letter-spacing: 0.28em;
+            text-transform: uppercase;
+            color: #c5a059;
+            margin-bottom: 4px;
+        }
+
+        .auth-heading {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 32px;
+            font-weight: 500;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: 0.04em;
+        }
+
+        .auth-subtext {
+            font-size: 13px;
+            color: rgba(247, 244, 239, 0.75);
+            line-height: 1.5;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .auth-tab-switch {
+            display: flex;
+            background: rgba(8, 26, 20, 0.6);
+            border-radius: 8px;
+            padding: 4px;
+            margin-bottom: 24px;
+            border: 1px solid rgba(197, 160, 89, 0.2);
+        }
+
+        .auth-tab-btn {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: rgba(247, 244, 239, 0.7);
+            font-size: 11.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 10px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .auth-tab-btn.active {
+            background: rgba(197, 160, 89, 0.2);
+            color: #fff;
+            border: 1px solid rgba(197, 160, 89, 0.4);
+        }
+
+        .auth-form-group {
+            margin-bottom: 18px;
+        }
+
+        .auth-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #c5a059;
+            margin-bottom: 6px;
+        }
+
+        .auth-input, .auth-select {
+            width: 100%;
+            background: rgba(8, 26, 20, 0.85);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 6px;
+            padding: 12px 14px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            box-sizing: border-box;
+        }
+
+        .auth-input:focus, .auth-select:focus {
+            border-color: #c5a059;
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.25);
+        }
+
+        .phone-input-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .phone-prefix {
+            flex: 0 0 90px;
+        }
+
+        .captcha-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(8, 26, 20, 0.9);
+            border: 1px solid rgba(197, 160, 89, 0.25);
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-bottom: 18px;
+        }
+
+        .captcha-badge {
+            background: rgba(197, 160, 89, 0.15);
+            color: #c5a059;
+            border: 1px dashed #c5a059;
+            border-radius: 4px;
+            padding: 6px 12px;
+            font-family: monospace;
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: 0.15em;
+            user-select: none;
+        }
+
+        .captcha-input {
+            flex: 1;
+        }
+
+        .btn-auth-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #c5a059 0%, #9e7d3b 100%);
+            border: 1px solid #c5a059;
+            color: #081A14;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.16em;
+            padding: 14px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            margin-top: 8px;
+        }
+
+        .btn-auth-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 24px rgba(197, 160, 89, 0.35);
+            background: linear-gradient(135deg, #d4b069 0%, #ad8c47 100%);
+        }
+
+        .auth-footer-nav {
+            margin-top: 24px;
+            text-align: center;
+            font-size: 12px;
+            color: rgba(247, 244, 239, 0.65);
+        }
+
+        .auth-footer-nav a {
+            color: #c5a059;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-footer-nav a:hover {
+            text-decoration: underline;
+        }
+
+        /* OTP Verification Step Overlay */
+        .otp-step-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .otp-digits-wrap {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .otp-digit-input {
+            width: 46px;
+            height: 52px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #fff;
+            background: rgba(8, 26, 20, 0.95);
+            border: 1px solid rgba(197, 160, 89, 0.4);
+            border-radius: 6px;
+            outline: none;
+        }
+
+        .otp-digit-input:focus {
+            border-color: #c5a059;
+            box-shadow: 0 0 12px rgba(197, 160, 89, 0.35);
+        }
+
+        .otp-resend-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: rgba(247, 244, 239, 0.7);
+            margin-bottom: 20px;
+        }
+
+        .otp-resend-btn {
+            background: none;
+            border: none;
+            color: #c5a059;
+            cursor: pointer;
+            text-decoration: underline;
+            font-size: 12px;
+            padding: 0;
+        }
+
+        .otp-resend-btn[disabled] {
+            color: rgba(247, 244, 239, 0.35);
+            cursor: not-allowed;
+            text-decoration: none;
+        }
+
+        .auth-alert-message {
+            background: rgba(185, 28, 28, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 18px;
+            display: none;
+        }
+
+        .auth-alert-success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(52, 211, 153, 0.4);
+            color: #6ee7b7;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-bg-ornament"></div>
+
+    <div class="auth-card-container">
+        <div class="auth-brand-crest">
+            <img src="{{ url_for('static', filename='images/' + brand_logo) }}" alt="{{ brand_name }}" class="auth-brand-logo" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/tulsa-brand-logo.png') }}';">
+            <p class="auth-eyebrow">HAUTE COUTURE DIGITAL ATELIER</p>
+            <h1 class="auth-heading" id="authTitle">WELCOME TO TULSA</h1>
+            <p class="auth-subtext" id="authSubtext">Create your personal Tulsa account and discover a more personalised fashion experience.</p>
+        </div>
+
+        <div class="auth-tab-switch" id="authTabSwitcher">
+            <button type="button" class="auth-tab-btn active" id="tabRegisterBtn" onclick="switchAuthMode('register')">Register</button>
+            <button type="button" class="auth-tab-btn" id="tabLoginBtn" onclick="switchAuthMode('login')">Sign In</button>
+        </div>
+
+        <div class="auth-alert-message" id="authAlert"></div>
+
+        <!-- =========================================
+             FORM 1: REGISTRATION (WELCOME TO TULSA)
+        ========================================== -->
+        <form id="registerForm" onsubmit="handleRegisterSubmit(event)">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="auth-form-group">
+                <label class="auth-label">Full Name *</label>
+                <input type="text" class="auth-input" name="name" id="regName" placeholder="e.g. Anjali Sharma" required autocomplete="name">
+            </div>
+
+            <div class="auth-form-group">
+                <label class="auth-label">Mobile Number (with Country Code) *</label>
+                <div class="phone-input-row">
+                    <select class="auth-select phone-prefix" name="country_code" id="regCountryCode">
+                        <option value="+91" selected>🇮🇳 +91</option>
+                        <option value="+1">🇺🇸 +1</option>
+                        <option value="+44">🇬🇧 +44</option>
+                        <option value="+971">🇦🇪 +971</option>
+                    </select>
+                    <input type="tel" class="auth-input" name="phone" id="regPhone" placeholder="10-digit mobile number" required pattern="[0-9]{10}" autocomplete="tel">
+                </div>
+            </div>
+
+            <div class="auth-form-group">
+                <label class="auth-label">Email Address (Optional)</label>
+                <input type="email" class="auth-input" name="email" id="regEmail" placeholder="e.g. anjali@example.com" autocomplete="email">
+            </div>
+
+            <!-- CAPTCHA Human Verification -->
+            <div class="auth-form-group">
+                <label class="auth-label">Human Verification Challenge *</label>
+                <div class="captcha-box">
+                    <span class="captcha-badge" id="captchaQuestion">7 + 5 = ?</span>
+                    <input type="text" class="auth-input captcha-input" name="captcha_answer" id="captchaAnswer" placeholder="Enter answer" required>
+                    <input type="hidden" name="captcha_token" id="captchaToken" value="">
+                </div>
+            </div>
+
+            <button type="submit" class="btn-auth-primary" id="btnVerifyContinue">
+                ✦ VERIFY & CONTINUE ✦
+            </button>
+        </form>
+
+        <!-- =========================================
+             FORM 2: RETURNING CUSTOMER SIGN IN
+        ========================================== -->
+        <form id="loginForm" style="display:none;" onsubmit="handleLoginSubmit(event)">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+            <div class="auth-form-group">
+                <label class="auth-label">Mobile Number or Verified Email *</label>
+                <input type="text" class="auth-input" name="login_identifier" id="loginIdentifier" placeholder="10-digit mobile number or email" required autocomplete="username">
+            </div>
+
+            <div class="auth-form-group" id="loginPasswordGroup">
+                <label class="auth-label">Password *</label>
+                <input type="password" class="auth-input" name="password" id="loginPassword" placeholder="Enter password" autocomplete="current-password">
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; font-size:12px;">
+                <label style="color:rgba(247,244,239,0.7); cursor:pointer;">
+                    <input type="checkbox" id="loginViaOtpToggle" onchange="toggleLoginViaOtp(this.checked)"> Sign in with One-Time Password (OTP)
+                </label>
+            </div>
+
+            <button type="submit" class="btn-auth-primary" id="btnLoginSubmit">
+                ✦ SIGN IN TO ATELIER ✦
+            </button>
+        </form>
+
+        <!-- =========================================
+             STEP 3: 6-DIGIT OTP VERIFICATION
+        ========================================== -->
+        <div class="otp-step-panel" id="otpPanel">
+            <p style="text-align:center; font-size:13px; color:rgba(247,244,239,0.8); margin-bottom:12px;">
+                We sent a 6-digit verification code to <strong id="otpRecipientPhone" style="color:#c5a059;"></strong>.
+            </p>
+
+            <div class="otp-digits-wrap" id="otpDigitsContainer">
+                <input type="text" maxlength="1" class="otp-digit-input" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit-input" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit-input" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit-input" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit-input" pattern="[0-9]" inputmode="numeric">
+                <input type="text" maxlength="1" class="otp-digit-input" pattern="[0-9]" inputmode="numeric">
+            </div>
+
+            <div class="otp-resend-row">
+                <span id="otpCountdown">Resend in 60s</span>
+                <button type="button" class="otp-resend-btn" id="btnResendOtp" disabled onclick="resendOtpCode()">Resend Code</button>
+            </div>
+
+            <button type="button" class="btn-auth-primary" id="btnConfirmOtp" onclick="confirmOtpSubmission()">
+                ✦ CONFIRM & ENTER ATELIER ✦
+            </button>
+
+            <button type="button" style="width:100%;background:none;border:none;color:rgba(247,244,239,0.5);font-size:11px;margin-top:12px;cursor:pointer;" onclick="cancelOtpStep()">
+                ← Change Number
+            </button>
+        </div>
+
+        <div class="auth-footer-nav">
+            <a href="{{ url_for('home') }}">← Return to Tulsa Storefront</a>
+            <span style="margin: 0 8px; color:rgba(247,244,239,0.3);">•</span>
+            <a href="{{ url_for('admin_login') }}">Admin Login</a>
+        </div>
+    </div>
+
+    <script>
+        let pendingPhone = "";
+        let resendTimer = null;
+        let cooldownSeconds = 60;
+        const nextUrl = "{{ request.args.get('next', '') }}";
+
+        // Load cryptographic CAPTCHA challenge from server
+        async function loadCaptcha() {
+            try {
+                const res = await fetch('/api/captcha/generate');
+                const data = await res.json();
+                if (data.question && data.token) {
+                    document.getElementById('captchaQuestion').textContent = data.question;
+                    document.getElementById('captchaToken').value = data.token;
+                    document.getElementById('captchaAnswer').value = '';
+                }
+            } catch (err) {
+                console.error("Captcha load error:", err);
+            }
+        }
+        loadCaptcha();
+
+        function showAlert(msg, isSuccess = false) {
+            const el = document.getElementById('authAlert');
+            el.textContent = msg;
+            el.className = 'auth-alert-message' + (isSuccess ? ' auth-alert-success' : '');
+            el.style.display = 'block';
+        }
+
+        function hideAlert() {
+            document.getElementById('authAlert').style.display = 'none';
+        }
+
+        function switchAuthMode(mode) {
+            hideAlert();
+            const isReg = (mode === 'register');
+            document.getElementById('tabRegisterBtn').classList.toggle('active', isReg);
+            document.getElementById('tabLoginBtn').classList.toggle('active', !isReg);
+            document.getElementById('registerForm').style.display = isReg ? 'block' : 'none';
+            document.getElementById('loginForm').style.display = isReg ? 'none' : 'block';
+            document.getElementById('otpPanel').style.display = 'none';
+            document.getElementById('authTabSwitcher').style.display = 'flex';
+
+            if (isReg) {
+                document.getElementById('authTitle').textContent = 'WELCOME TO TULSA';
+                document.getElementById('authSubtext').textContent = 'Create your personal Tulsa account and discover a more personalised fashion experience.';
+                loadCaptcha();
+            } else {
+                document.getElementById('authTitle').textContent = 'WELCOME BACK';
+                document.getElementById('authSubtext').textContent = 'Sign in to access your orders, saved silhouettes, and personalized atelier styling.';
+            }
+        }
+
+        function toggleLoginViaOtp(useOtp) {
+            const pwdGroup = document.getElementById('loginPasswordGroup');
+            pwdGroup.style.display = useOtp ? 'none' : 'block';
+            document.getElementById('btnLoginSubmit').textContent = useOtp ? '✦ SEND OTP CODE ✦' : '✦ SIGN IN TO ATELIER ✦';
+        }
+
+        // Registration Submission
+        async function handleRegisterSubmit(e) {
+            e.preventDefault();
+            hideAlert();
+
+            const name = document.getElementById('regName').value.trim();
+            const prefix = document.getElementById('regCountryCode').value;
+            const rawPhone = document.getElementById('regPhone').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const captchaAnswer = document.getElementById('captchaAnswer').value.trim();
+            const captchaToken = document.getElementById('captchaToken').value;
+
+            if (!name || !rawPhone || !captchaAnswer) {
+                showAlert("Please complete all required fields.");
+                return;
+            }
+
+            const phone = prefix + rawPhone;
+            const btn = document.getElementById('btnVerifyContinue');
+            btn.disabled = true;
+            btn.textContent = "Verifying...";
+
+            try {
+                const res = await fetch('/api/customer/register-initiate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        phone: phone,
+                        email: email,
+                        captcha_answer: captchaAnswer,
+                        captcha_token: captchaToken
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    pendingPhone = phone;
+                    startOtpStep(phone);
+                } else {
+                    showAlert(data.message || "Registration failed.");
+                    loadCaptcha();
+                }
+            } catch (err) {
+                showAlert("Connection error. Please try again.");
+                loadCaptcha();
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "✦ VERIFY & CONTINUE ✦";
+            }
+        }
+
+        // Login Submission
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            hideAlert();
+
+            const identifier = document.getElementById('loginIdentifier').value.trim();
+            const useOtp = document.getElementById('loginViaOtpToggle').checked;
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!identifier) {
+                showAlert("Please enter your mobile number or email.");
+                return;
+            }
+
+            const btn = document.getElementById('btnLoginSubmit');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/customer/login-initiate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        identifier: identifier,
+                        password: password,
+                        use_otp: useOtp
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (data.requires_otp) {
+                        pendingPhone = data.phone;
+                        startOtpStep(data.phone);
+                    } else {
+                        // Instant authenticated session
+                        showAlert("Authentication successful! Entering Tulsa...", true);
+                        setTimeout(() => {
+                            window.location.href = nextUrl || '/account';
+                        }, 600);
+                    }
+                } else {
+                    showAlert(data.message || "Sign in failed.");
+                }
+            } catch (err) {
+                showAlert("Connection error. Please try again.");
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        // OTP Step Handling
+        function startOtpStep(phone) {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('authTabSwitcher').style.display = 'none';
+            document.getElementById('otpRecipientPhone').textContent = phone;
+            document.getElementById('otpPanel').style.display = 'block';
+            document.getElementById('authTitle').textContent = 'VERIFY SECURITY CODE';
+            document.getElementById('authSubtext').textContent = 'Enter the 6-digit verification code to complete authentication.';
+
+            startCooldown();
+            setupOtpInputs();
+        }
+
+        function cancelOtpStep() {
+            switchAuthMode('register');
+        }
+
+        function setupOtpInputs() {
+            const inputs = document.querySelectorAll('.otp-digit-input');
+            inputs.forEach((inp, idx) => {
+                inp.value = '';
+                inp.oninput = (e) => {
+                    if (inp.value.length === 1 && idx < inputs.length - 1) {
+                        inputs[idx + 1].focus();
+                    }
+                };
+                inp.onkeydown = (e) => {
+                    if (e.key === 'Backspace' && !inp.value && idx > 0) {
+                        inputs[idx - 1].focus();
+                    }
+                };
+            });
+            if (inputs[0]) inputs[0].focus();
+        }
+
+        function startCooldown() {
+            cooldownSeconds = 60;
+            const btn = document.getElementById('btnResendOtp');
+            const countdown = document.getElementById('otpCountdown');
+            btn.disabled = true;
+
+            clearInterval(resendTimer);
+            resendTimer = setInterval(() => {
+                cooldownSeconds--;
+                if (cooldownSeconds > 0) {
+                    countdown.textContent = `Resend in ${cooldownSeconds}s`;
+                } else {
+                    clearInterval(resendTimer);
+                    countdown.textContent = 'Code expired or ready to resend.';
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        async function resendOtpCode() {
+            const btn = document.getElementById('btnResendOtp');
+            btn.disabled = true;
+            try {
+                const res = await fetch('/api/customer/resend-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: pendingPhone })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showAlert("A new 6-digit code has been dispatched.", true);
+                    startCooldown();
+                } else {
+                    showAlert(data.message || "Could not resend code.");
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                showAlert("Network error resending code.");
+                btn.disabled = false;
+            }
+        }
+
+        async function confirmOtpSubmission() {
+            hideAlert();
+            const inputs = document.querySelectorAll('.otp-digit-input');
+            let code = "";
+            inputs.forEach(i => code += i.value.trim());
+
+            if (code.length !== 6) {
+                showAlert("Please enter all 6 digits of the verification code.");
+                return;
+            }
+
+            const btn = document.getElementById('btnConfirmOtp');
+            btn.disabled = true;
+            btn.textContent = "Verifying...";
+
+            try {
+                const res = await fetch('/api/customer/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: pendingPhone,
+                        otp_code: code
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showAlert("Authentication confirmed! Welcome to Tulsa.", true);
+                    setTimeout(() => {
+                        window.location.href = nextUrl || '/account';
+                    }, 500);
+                } else {
+                    showAlert(data.message || "Invalid or expired code.");
+                }
+            } catch (err) {
+                showAlert("Network error during verification.");
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "✦ CONFIRM & ENTER ATELIER ✦";
+            }
+        }
+    </script>
+</body>
+</html>
+

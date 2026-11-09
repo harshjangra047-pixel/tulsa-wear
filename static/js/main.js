@@ -17,6 +17,10 @@ document.addEventListener("DOMContentLoaded", () => {
             curtain.classList.add("curtain-opened");
             setTimeout(() => {
                 curtain.classList.add("curtain-dismissed");
+                const gate = document.getElementById("mandatoryLoginGateModal");
+                if (gate) {
+                    gate.style.display = "flex";
+                }
             }, 1300);
             sessionStorage.setItem("tulsa_curtain_viewed", "true");
         };

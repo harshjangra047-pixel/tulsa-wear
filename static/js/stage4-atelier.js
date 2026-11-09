@@ -439,9 +439,17 @@
             const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
             camera.position.set(0, 0, 14);
 
-            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: window.innerWidth >= 768, alpha: true });
             renderer.setSize(width, height);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.0 : 1.5));
+
+            let isStudioInView = true;
+            if ('IntersectionObserver' in window) {
+                const obs = new IntersectionObserver((entries) => {
+                    entries.forEach(e => { isStudioInView = e.isIntersecting; });
+                }, { threshold: 0.05 });
+                obs.observe(canvas);
+            }
 
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
             scene.add(ambientLight);
@@ -499,6 +507,7 @@
             let clock = new THREE.Clock();
             function animate() {
                 requestAnimationFrame(animate);
+                if (!isStudioInView || document.hidden) return;
                 if (state.isPlaying) {
                     const delta = clock.getDelta();
                     const rotSpeed = 0.55 * state.speedMultiplier;
@@ -525,9 +534,18 @@
             canvas.width = width;
             canvas.height = height;
 
+            let is2DInView = true;
+            if ('IntersectionObserver' in window) {
+                const obs = new IntersectionObserver((entries) => {
+                    entries.forEach(e => { is2DInView = e.isIntersecting; });
+                }, { threshold: 0.05 });
+                obs.observe(canvas);
+            }
+
             let time = 0;
             function render2D() {
                 requestAnimationFrame(render2D);
+                if (!is2DInView || document.hidden) return;
                 if (state.isPlaying) {
                     time += 0.025 * state.speedMultiplier;
                 }
@@ -579,3 +597,4 @@
         }
     });
 })();
+

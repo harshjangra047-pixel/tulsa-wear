@@ -7,6 +7,8 @@ import re
 import io
 import csv
 import json
+import hmac
+import hashlib
 
 import razorpay
 
@@ -240,17 +242,25 @@ def get_merchant_upi_config():
 
 # Admin Anti-Brute-Force Rate Limiting Store
 FAILED_ADMIN_LOGINS = {}  # ip -> {"count": int, "lockout_until": float}
+_STUDIO_CACHE = {"data": None, "ts": 0.0}
+ASSET_VERSION = os.environ.get("ASSET_VERSION", "2026.8.1")
 
-# Production HTTP Security Headers
+# Production HTTP Security & Caching Headers
 @app.after_request
 def add_security_headers(response):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    if getattr(g, "editor_preview", False):
+
+    if request.path.startswith("/static/"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    elif getattr(g, "editor_preview", False):
         response.headers.pop("X-Frame-Options", None)
         response.headers["Cache-Control"] = "no-store"
+    elif request.method == "GET" and not session.get("customer_id") and not session.get("admin_authenticated"):
+        if request.path in ["/", "/shop", "/fitting-room", "/robots.txt", "/sitemap.xml"]:
+            response.headers["Cache-Control"] = "public, max-age=120, s-maxage=600, stale-while-revalidate=120"
     return response
 
 @app.context_processor
@@ -272,21 +282,29 @@ def inject_global_vars():
     layout = validate_editor_layout(json.dumps(cms.get("editor_sections", [])), json.dumps(cms.get("custom_sections", [])))
     if layout:
         cms["editor_sections"], cms["custom_sections"] = layout
-    try:
-        admin_user = AdminUser.query.first()
-        delivery_days = admin_user.default_delivery_days if admin_user else 10
-        phone = (admin_user.studio_phone if admin_user and getattr(admin_user, 'studio_phone', None) else cms.get("studio_phone", "+91 93504 39667"))
-        whatsapp = (admin_user.studio_whatsapp if admin_user and getattr(admin_user, 'studio_whatsapp', None) else cms.get("studio_whatsapp", "919350439667"))
-        email = (admin_user.studio_email if admin_user and getattr(admin_user, 'studio_email', None) else cms.get("studio_email", "contact@tulsawear.com"))
-        address = (admin_user.studio_address if admin_user and getattr(admin_user, 'studio_address', None) else cms.get("studio_address", "Tulsa Wears Atelier, Hansi, Haryana, India - 125033"))
-        hours = (admin_user.studio_hours if admin_user and getattr(admin_user, 'studio_hours', None) else cms.get("studio_hours", "Mon – Sat: 10:00 AM – 7:00 PM IST"))
-    except Exception:
-        delivery_days = 10
-        phone = cms.get("studio_phone", "+91 93504 39667")
-        whatsapp = cms.get("studio_whatsapp", "919350439667")
-        email = cms.get("studio_email", "contact@tulsawear.com")
-        address = cms.get("studio_address", "Tulsa Wears Atelier, Hansi, Haryana, India - 125033")
-        hours = cms.get("studio_hours", "Mon – Sat: 10:00 AM – 7:00 PM IST")
+
+    now_ts = time.time()
+    if not is_admin_draft_preview and _STUDIO_CACHE["data"] and (now_ts - _STUDIO_CACHE["ts"] < 30.0):
+        delivery_days, phone, whatsapp, email, address, hours = _STUDIO_CACHE["data"]
+    else:
+        try:
+            admin_user = AdminUser.query.first()
+            delivery_days = admin_user.default_delivery_days if admin_user else 10
+            phone = (admin_user.studio_phone if admin_user and getattr(admin_user, 'studio_phone', None) else cms.get("studio_phone", "+91 93504 39667"))
+            whatsapp = (admin_user.studio_whatsapp if admin_user and getattr(admin_user, 'studio_whatsapp', None) else cms.get("studio_whatsapp", "919350439667"))
+            email = (admin_user.studio_email if admin_user and getattr(admin_user, 'studio_email', None) else cms.get("studio_email", "contact@tulsawear.com"))
+            address = (admin_user.studio_address if admin_user and getattr(admin_user, 'studio_address', None) else cms.get("studio_address", "Tulsa Wears Atelier, Hansi, Haryana, India - 125033"))
+            hours = (admin_user.studio_hours if admin_user and getattr(admin_user, 'studio_hours', None) else cms.get("studio_hours", "Mon – Sat: 10:00 AM – 7:00 PM IST"))
+        except Exception:
+            delivery_days = 10
+            phone = cms.get("studio_phone", "+91 93504 39667")
+            whatsapp = cms.get("studio_whatsapp", "919350439667")
+            email = cms.get("studio_email", "contact@tulsawear.com")
+            address = cms.get("studio_address", "Tulsa Wears Atelier, Hansi, Haryana, India - 125033")
+            hours = cms.get("studio_hours", "Mon – Sat: 10:00 AM – 7:00 PM IST")
+        if not is_admin_draft_preview:
+            _STUDIO_CACHE["data"] = (delivery_days, phone, whatsapp, email, address, hours)
+            _STUDIO_CACHE["ts"] = now_ts
 
     current_customer = None
     customer_id = session.get("customer_id")
@@ -297,7 +315,7 @@ def inject_global_vars():
             current_customer = None
 
     return dict(
-        cache_id=int(time.time()),
+        cache_id=ASSET_VERSION,
         cms=cms,
         brand_name=cms.get("brand_name", "Tulsa by Anjali"),
         brand_tagline=cms.get("brand_tagline", "Handcrafted Slow Fashion • By Anjali"),
@@ -519,12 +537,48 @@ def ensure_schema_migrations():
                         text(f"ALTER TABLE admin_users ADD COLUMN {col_name} {col_type}")
                     )
 
+    if "customer_users" in tables:
+        existing_cust_cols = {
+            column["name"]
+            for column in inspector.get_columns("customer_users")
+        }
+        cust_cols = {
+            "is_verified": "BOOLEAN DEFAULT 0",
+            "otp_code": "VARCHAR(10)",
+            "otp_expiry": "DATETIME",
+            "otp_attempts": "INTEGER DEFAULT 0",
+            "otp_last_sent": "DATETIME",
+            "saved_cart_json": "TEXT"
+        }
+        with db.engine.begin() as connection:
+            for col_name, col_type in cust_cols.items():
+                if col_name not in existing_cust_cols:
+                    connection.execute(
+                        text(f"ALTER TABLE customer_users ADD COLUMN {col_name} {col_type}")
+                    )
+
+    if "customer_addresses" in tables:
+        existing_addr_cols = {
+            column["name"]
+            for column in inspector.get_columns("customer_addresses")
+        }
+        if "is_default" not in existing_addr_cols:
+            with db.engine.begin() as connection:
+                connection.execute(
+                    text("ALTER TABLE customer_addresses ADD COLUMN is_default BOOLEAN DEFAULT 0")
+                )
+
     # Ensure tables exist
     # Additive shared-content tables; existing catalog/order tables are untouched.
     SiteContent.__table__.create(bind=db.engine, checkfirst=True)
     SiteContentRevision.__table__.create(bind=db.engine, checkfirst=True)
     CustomerAddress.__table__.create(bind=db.engine, checkfirst=True)
     EditorPreviewToken.__table__.create(bind=db.engine, checkfirst=True)
+    try:
+        from models.customer_wishlist import CustomerWishlist
+        CustomerWishlist.__table__.create(bind=db.engine, checkfirst=True)
+    except Exception:
+        pass
     try:
         from models.order_notification import OrderNotification
         OrderNotification.__table__.create(bind=db.engine, checkfirst=True)
@@ -674,6 +728,23 @@ def protect_account_and_checkout_posts():
             return jsonify({"success": False, "message": "Session expired. Refresh the page and try again."}), 400
 
 
+@app.before_request
+def enforce_mandatory_customer_login():
+    if request.path.startswith("/static") or request.path.startswith("/favicon.ico") or request.path.startswith("/admin"):
+        return
+    if request.path.startswith("/customer/") or request.path.startswith("/api/"):
+        return
+
+    try:
+        from services.site_content import get_site_content
+        content = get_site_content()
+        if content.get("mandatory_customer_login") == "true":
+            if not session.get("customer_id"):
+                return redirect(url_for("customer_login", next=request.full_path if request.query_string else request.path))
+    except Exception:
+        pass
+
+
 # =========================================
 # PRODUCTION ERROR HANDLERS
 # =========================================
@@ -760,9 +831,7 @@ def home():
         Product.created_at.desc()
     ).all()
 
-    best_sellers = Product.query.filter_by(
-        best_seller=True
-    ).all()
+    best_sellers = [p for p in products if p.best_seller]
 
     approved_feedback = Feedback.query.filter_by(
         is_approved=True
@@ -1214,7 +1283,6 @@ def checkout():
         delivery_window_end = delivery_window["end_str"]
 
         # Itemized snapshot for persistent receipt & notification accuracy
-        import json
         order_items_payload = []
         for it in raw_items:
             order_items_payload.append({
@@ -1562,7 +1630,6 @@ def buy_now(product_id):
         delivery_window_end = delivery_window["end_str"]
 
         # Itemized snapshot for persistent receipt & notification accuracy
-        import json
         order_items_data = json.dumps([{
             "product_id": product.id,
             "name": product.name,
@@ -2217,211 +2284,494 @@ def return_policy():
 # CUSTOMER AUTHENTICATION (REGISTER / LOGIN / LOGOUT)
 # =========================================
 
+# =========================================
+# CUSTOMER AUTHENTICATION & AMAZON-LIKE ACCOUNT
+# =========================================
+
+CUSTOMER_RATE_LIMITS = {}  # key -> [timestamps]
+
+def check_customer_rate_limit(key: str, max_requests: int = 6, window_seconds: int = 300) -> bool:
+    now = time.time()
+    timestamps = CUSTOMER_RATE_LIMITS.setdefault(key, [])
+    CUSTOMER_RATE_LIMITS[key] = [t for t in timestamps if now - t < window_seconds]
+    if len(CUSTOMER_RATE_LIMITS[key]) >= max_requests:
+        return False
+    CUSTOMER_RATE_LIMITS[key].append(now)
+    return True
+
+def generate_captcha_challenge():
+    n1 = random.randint(3, 11)
+    n2 = random.randint(2, 9)
+    ans = str(n1 + n2)
+    expiry = str(int(time.time()) + 600)
+    salt = secrets.token_hex(4)
+    raw = f"{ans}:{expiry}:{salt}".encode("utf-8")
+    sig = hmac.new(app.config["SECRET_KEY"].encode("utf-8"), raw, hashlib.sha256).hexdigest()
+    return f"{n1} + {n2} = ?", f"{sig}:{expiry}:{salt}"
+
+def verify_captcha_challenge(answer: str, token: str) -> bool:
+    try:
+        parts = token.split(":")
+        if len(parts) != 3:
+            return False
+        sig, expiry, salt = parts
+        if time.time() > int(expiry):
+            return False
+        raw = f"{answer.strip()}:{expiry}:{salt}".encode("utf-8")
+        expected_sig = hmac.new(app.config["SECRET_KEY"].encode("utf-8"), raw, hashlib.sha256).hexdigest()
+        return hmac.compare_digest(sig, expected_sig)
+    except Exception:
+        return False
+
 def customer_required(view):
     @functools.wraps(view)
     def wrapped(*args, **kwargs):
         if not session.get("customer_id"):
-            return redirect(url_for("checkout"))
+            if request.is_json:
+                return jsonify({"success": False, "message": "Please sign in to access your account.", "redirect": url_for("customer_login")}), 401
+            return redirect(url_for("customer_login", next=request.url))
         customer = db.session.get(CustomerUser, session["customer_id"])
         if not customer:
             session.pop("customer_id", None)
             session.pop("customer_name", None)
             session.pop("customer_phone", None)
-            return redirect(url_for("checkout"))
+            if request.is_json:
+                return jsonify({"success": False, "message": "Session expired.", "redirect": url_for("customer_login")}), 401
+            return redirect(url_for("customer_login", next=request.url))
         return view(customer, *args, **kwargs)
     return wrapped
 
-
 def _establish_customer_session(customer):
-    cart = session.get("cart", [])
-    session.clear()
-    session["cart"] = cart
-    session["csrf_token"] = secrets.token_urlsafe(32)
+    guest_cart = session.get("cart", [])
+    saved_cart = []
+    if getattr(customer, "saved_cart_json", None):
+        try:
+            saved_cart = json.loads(customer.saved_cart_json)
+        except Exception:
+            saved_cart = []
+
+    merged_cart = list(saved_cart)
+    seen_keys = {(item.get("product_id") or item.get("id"), item.get("size")) for item in merged_cart}
+    for g_item in guest_cart:
+        k = (g_item.get("product_id") or g_item.get("id"), g_item.get("size"))
+        if k not in seen_keys:
+            merged_cart.append(g_item)
+            seen_keys.add(k)
+
+    session["cart"] = merged_cart
     session["customer_id"] = customer.id
     session["customer_name"] = customer.name
     session["customer_phone"] = customer.phone
+    session["customer_email"] = customer.email
+    session["csrf_token"] = session.get("csrf_token") or secrets.token_urlsafe(32)
+
+    try:
+        customer.saved_cart_json = json.dumps(merged_cart)
+        customer.last_login = datetime.utcnow()
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
+@app.route("/api/captcha/generate")
+def api_captcha_generate():
+    q, token = generate_captcha_challenge()
+    return jsonify({"question": q, "token": token})
 
 @app.route("/customer/register", methods=["GET", "POST"])
 def customer_register():
     if request.method == "GET":
         if session.get("customer_id"):
-            return redirect(url_for("customer_dashboard"))
-        return redirect(url_for("checkout"))
+            return redirect(url_for("customer_account_dashboard"))
+        return render_template("customer_auth.html", initial_tab="register")
 
-    data = request.get_json() if request.is_json else request.form
+    data = request.get_json(silent=True) or request.form.to_dict()
     name = (data.get("name") or "").strip()
     phone = (data.get("phone") or "").strip()
     email = (data.get("email") or "").strip()
     password = (data.get("password") or "").strip()
-    address = (data.get("address") or "").strip()
-    city = (data.get("city") or "").strip()
-    pincode = (data.get("pincode") or "").strip()
 
-    if not name or not phone or len(password) < 6:
+    if not name or not phone:
         if request.is_json:
-            return jsonify({"success": False, "message": "Name, mobile number, and a password of at least 6 characters are required."}), 400
-        flash("Name, mobile number, and a password of at least 6 characters are required.", "danger")
-        return redirect(request.referrer or url_for("checkout"))
-
-    is_valid_phone, clean_phone = validate_indian_phone(phone)
-    if not is_valid_phone:
-        if request.is_json:
-            return jsonify({"success": False, "message": "Please enter a valid 10-digit Indian mobile number."}), 400
-        flash("Please enter a valid 10-digit Indian mobile number.", "danger")
-        return redirect(request.referrer or url_for("checkout"))
-
-    phone = clean_phone
-    if pincode:
-        pincode = re.sub(r"\D", "", pincode)
-
-    existing = CustomerUser.query.filter_by(phone=phone).first()
-    if existing:
-        if request.is_json:
-            return jsonify({"success": False, "message": "An account already uses this mobile number. Sign in with its password."}), 409
-        flash("An account already uses this mobile number. Sign in with its password.", "danger")
-        return redirect(request.referrer or url_for("checkout"))
-
-    new_cust = CustomerUser(
-        name=name,
-        phone=phone,
-        email=email,
-        address=address,
-        city=city,
-        pincode=pincode
-    )
-    new_cust.set_password(password)
-    db.session.add(new_cust)
-    db.session.commit()
-
-    _establish_customer_session(new_cust)
-
-    try:
-        t = TrafficLog(event_type="register", ip_address=request.remote_addr, page_url="/customer/register", customer_id=new_cust.id)
-        db.session.add(t)
-        db.session.commit()
-    except Exception:
-        pass
-
-    if request.is_json:
-        return jsonify({"success": True, "message": "Account created successfully.", "customer_id": new_cust.id, "name": new_cust.name, "csrf_token": session["csrf_token"]})
-    flash("Account created successfully!", "success")
-    return redirect(request.referrer or url_for("checkout"))
-
-
-@app.route("/customer/login", methods=["GET", "POST"])
-def customer_login():
-    if request.method == "GET":
-        if session.get("customer_id"):
-            return redirect(url_for("customer_dashboard"))
-        return redirect(url_for("checkout"))
-
-    data = request.get_json() if request.is_json else request.form
-    phone = (data.get("phone") or "").strip()
-    password = (data.get("password") or "").strip()
-
-    if not phone or not password:
-        if request.is_json:
-            return jsonify({"success": False, "message": "Mobile number and password are required."}), 400
-        flash("Mobile number and password are required.", "danger")
-        return redirect(request.referrer or url_for("checkout"))
+            return jsonify({"success": False, "message": "Name and mobile number are required."}), 400
+        flash("Name and mobile number are required.", "danger")
+        return redirect(url_for("customer_register"))
 
     is_valid_phone, clean_phone = validate_indian_phone(phone)
     if is_valid_phone:
         phone = clean_phone
 
-    customer = CustomerUser.query.filter((CustomerUser.phone == phone) | (CustomerUser.email == phone)).first()
-    if not customer:
-        is_valid_phone, clean_phone = validate_indian_phone(phone)
-        if is_valid_phone:
-            customer = CustomerUser.query.filter_by(phone=clean_phone).first()
-    if not customer:
+    existing = CustomerUser.query.filter_by(phone=phone).first()
+    if existing:
         if request.is_json:
-            return jsonify({"success": False, "message": "No account found with this phone number. Please register."}), 404
-        flash("No account found with this phone number. Please register.", "danger")
-        return redirect(request.referrer or url_for("checkout"))
+            return jsonify({"success": False, "message": "An account already exists with this phone number. Please sign in."}), 409
+        flash("An account already exists with this phone number. Please sign in.", "danger")
+        return redirect(url_for("customer_login"))
 
-    if not customer.check_password(password):
-        if request.is_json:
-            return jsonify({"success": False, "message": "Incorrect password."}), 401
-        flash("Incorrect password.", "danger")
-        return redirect(request.referrer or url_for("checkout"))
+    new_cust = CustomerUser(name=name, phone=phone, email=email or None, is_verified=True)
+    if password:
+        new_cust.set_password(password)
+    db.session.add(new_cust)
+    db.session.commit()
 
-    _establish_customer_session(customer)
-
-    try:
-        t = TrafficLog(event_type="login", ip_address=request.remote_addr, page_url="/customer/login", customer_id=customer.id)
-        db.session.add(t)
-        db.session.commit()
-    except Exception:
-        pass
+    _establish_customer_session(new_cust)
 
     if request.is_json:
-        return jsonify({
-            "success": True,
-            "message": f"Welcome back, {customer.name}!",
-            "customer_id": customer.id,
-            "name": customer.name,
-            "phone": customer.phone,
-            "email": customer.email or "",
-            "address": customer.address or "",
-            "city": customer.city or "",
-            "pincode": customer.pincode or "",
-            "csrf_token": session["csrf_token"]
-        })
-    flash(f"Welcome back, {customer.name}!", "success")
-    return redirect(request.referrer or url_for("checkout"))
+        return jsonify({"success": True, "message": "Account created successfully.", "redirect": url_for("customer_account_dashboard")})
+    flash("Welcome to Tulsa! Your account has been created.", "success")
+    return redirect(url_for("customer_account_dashboard"))
 
+@app.route("/api/customer/register-initiate", methods=["POST"])
+def api_customer_register_initiate():
+    data = request.get_json(silent=True) or {}
+    name = data.get("name", "").strip()
+    phone = data.get("phone", "").strip()
+    email = data.get("email", "").strip()
+    captcha_answer = data.get("captcha_answer", "").strip()
+    captcha_token = data.get("captcha_token", "").strip()
+
+    ip = request.remote_addr or "unknown"
+    if not check_customer_rate_limit(f"reg_init:{ip}", max_requests=8, window_seconds=300):
+        return jsonify({"success": False, "message": "Too many attempts. Please try again in 5 minutes."}), 429
+
+    if not verify_captcha_challenge(captcha_answer, captcha_token):
+        return jsonify({"success": False, "message": "Incorrect human verification answer. Please try again."}), 400
+
+    if not name or not phone:
+        return jsonify({"success": False, "message": "Name and phone number are required."}), 400
+
+    is_valid, clean_phone = validate_indian_phone(phone)
+    if is_valid:
+        phone = clean_phone
+
+    existing = CustomerUser.query.filter_by(phone=phone).first()
+    if existing and existing.is_verified:
+        return jsonify({"success": False, "message": "An account already exists with this phone number. Please sign in."}), 409
+
+    otp = f"{random.randint(100000, 999999)}"
+    expiry = datetime.utcnow() + timedelta(minutes=5)
+
+    if not existing:
+        user = CustomerUser(name=name, phone=phone, email=email or None, is_verified=False)
+        db.session.add(user)
+    else:
+        user = existing
+        user.name = name
+        if email:
+            user.email = email
+
+    user.otp_code = otp
+    user.otp_expiry = expiry
+    user.otp_attempts = 0
+    user.otp_last_sent = datetime.utcnow()
+    db.session.commit()
+
+    app.logger.info(f"[TULSA_AUTH_OTP] Sent 6-digit OTP {otp} to {phone}")
+    return jsonify({"success": True, "requires_otp": True, "message": "Verification code dispatched.", "phone": phone})
+
+@app.route("/api/customer/login-initiate", methods=["POST"])
+def api_customer_login_initiate():
+    data = request.get_json(silent=True) or {}
+    identifier = data.get("identifier", "").strip()
+    password = data.get("password", "").strip()
+    use_otp = data.get("use_otp", False)
+
+    if not identifier:
+        return jsonify({"success": False, "message": "Phone number or email is required."}), 400
+
+    ip = request.remote_addr or "unknown"
+    if not check_customer_rate_limit(f"login_init:{ip}", max_requests=10, window_seconds=300):
+        return jsonify({"success": False, "message": "Too many login attempts. Please wait a few minutes."}), 429
+
+    customer = CustomerUser.query.filter_by(phone=identifier).first()
+    if not customer:
+        is_valid, clean_phone = validate_indian_phone(identifier)
+        if is_valid:
+            customer = CustomerUser.query.filter_by(phone=clean_phone).first()
+    if not customer and "@" in identifier:
+        customer = CustomerUser.query.filter_by(email=identifier).first()
+
+    if not customer:
+        return jsonify({"success": False, "message": "No registered Tulsa account found. Please register."}), 404
+
+    if use_otp or not password:
+        otp = f"{random.randint(100000, 999999)}"
+        customer.otp_code = otp
+        customer.otp_expiry = datetime.utcnow() + timedelta(minutes=5)
+        customer.otp_attempts = 0
+        customer.otp_last_sent = datetime.utcnow()
+        db.session.commit()
+        app.logger.info(f"[TULSA_AUTH_OTP] Sent OTP {otp} to {customer.phone}")
+        return jsonify({"success": True, "requires_otp": True, "phone": customer.phone})
+    else:
+        if not customer.check_password(password):
+            return jsonify({"success": False, "message": "Incorrect password. You can also sign in with OTP."}), 401
+        _establish_customer_session(customer)
+        return jsonify({"success": True, "requires_otp": False, "message": f"Welcome back, {customer.name}!"})
+
+@app.route("/api/customer/verify-otp", methods=["POST"])
+def api_customer_verify_otp():
+    data = request.get_json(silent=True) or {}
+    phone = data.get("phone", "").strip()
+    code = data.get("otp_code", "").strip()
+
+    if not phone or not code:
+        return jsonify({"success": False, "message": "Phone and 6-digit code are required."}), 400
+
+    customer = CustomerUser.query.filter_by(phone=phone).first()
+    if not customer:
+        is_valid, clean_phone = validate_indian_phone(phone)
+        if is_valid:
+            customer = CustomerUser.query.filter_by(phone=clean_phone).first()
+
+    if not customer:
+        return jsonify({"success": False, "message": "Account not found."}), 404
+
+    customer.otp_attempts = (customer.otp_attempts or 0) + 1
+    if customer.otp_attempts > 6:
+        db.session.commit()
+        return jsonify({"success": False, "message": "Too many incorrect attempts. Please request a new code."}), 429
+
+    if not customer.otp_code or not customer.otp_expiry:
+        return jsonify({"success": False, "message": "No active code. Please request a new code."}), 400
+
+    if datetime.utcnow() > customer.otp_expiry:
+        return jsonify({"success": False, "message": "Verification code expired. Please request a new code."}), 400
+
+    if customer.otp_code != code:
+        db.session.commit()
+        return jsonify({"success": False, "message": "Incorrect verification code. Please try again."}), 400
+
+    customer.is_verified = True
+    customer.otp_code = None
+    customer.otp_expiry = None
+    customer.otp_attempts = 0
+    db.session.commit()
+
+    _establish_customer_session(customer)
+    return jsonify({"success": True, "message": "Authentication successful.", "redirect": url_for("customer_account_dashboard")})
+
+@app.route("/api/customer/resend-otp", methods=["POST"])
+def api_customer_resend_otp():
+    data = request.get_json(silent=True) or {}
+    phone = data.get("phone", "").strip()
+
+    if not phone:
+        return jsonify({"success": False, "message": "Phone number is required."}), 400
+
+    customer = CustomerUser.query.filter_by(phone=phone).first()
+    if not customer:
+        is_valid, clean_phone = validate_indian_phone(phone)
+        if is_valid:
+            customer = CustomerUser.query.filter_by(phone=clean_phone).first()
+
+    if not customer:
+        return jsonify({"success": False, "message": "Account not found."}), 404
+
+    now = datetime.utcnow()
+    if customer.otp_last_sent and (now - customer.otp_last_sent).total_seconds() < 55:
+        remaining = 60 - int((now - customer.otp_last_sent).total_seconds())
+        return jsonify({"success": False, "message": f"Please wait {remaining} seconds before resending."}), 429
+
+    otp = f"{random.randint(100000, 999999)}"
+    customer.otp_code = otp
+    customer.otp_expiry = now + timedelta(minutes=5)
+    customer.otp_attempts = 0
+    customer.otp_last_sent = now
+    db.session.commit()
+
+    app.logger.info(f"[TULSA_AUTH_OTP] Resent OTP {otp} to {customer.phone}")
+    return jsonify({"success": True, "message": "A new verification code has been dispatched."})
+
+@app.route("/customer/login", methods=["GET", "POST"])
+def customer_login():
+    if request.method == "GET":
+        if session.get("customer_id"):
+            return redirect(url_for("customer_account_dashboard"))
+        return render_template("customer_auth.html", initial_tab="login")
+
+    data = request.get_json(silent=True) or request.form.to_dict()
+    identifier = (data.get("phone") or data.get("email") or data.get("login_identifier") or "").strip()
+    password = (data.get("password") or "").strip()
+
+    if not identifier:
+        if request.is_json:
+            return jsonify({"success": False, "message": "Phone number or email is required."}), 400
+        flash("Phone number or email is required.", "danger")
+        return redirect(url_for("customer_login"))
+
+    customer = CustomerUser.query.filter((CustomerUser.phone == identifier) | (CustomerUser.email == identifier)).first()
+    if not customer:
+        is_valid, clean_phone = validate_indian_phone(identifier)
+        if is_valid:
+            customer = CustomerUser.query.filter_by(phone=clean_phone).first()
+
+    if not customer or not customer.check_password(password):
+        if request.is_json:
+            return jsonify({"success": False, "message": "Invalid phone number or password."}), 401
+        flash("Invalid phone number or password.", "danger")
+        return redirect(url_for("customer_login"))
+
+    _establish_customer_session(customer)
+    if request.is_json:
+        return jsonify({"success": True, "message": f"Welcome back, {customer.name}!", "redirect": url_for("customer_account_dashboard")})
+    flash(f"Welcome back, {customer.name}!", "success")
+    return redirect(url_for("customer_account_dashboard"))
 
 @app.route("/customer/logout")
 def customer_logout():
     session.pop("customer_id", None)
     session.pop("customer_name", None)
     session.pop("customer_phone", None)
-    flash("You have been signed out.", "info")
+    flash("You have been signed out of your Tulsa account.", "info")
     return redirect(url_for("home"))
 
-
-@app.route("/customer/dashboard", methods=["GET", "POST"])
+# Amazon-like Customer Account Dashboard
+@app.route("/account")
+@app.route("/customer/dashboard")
 @customer_required
-def customer_dashboard(customer):
-    if request.method == "POST":
-        action = request.form.get("action")
-        if action == "profile":
-            name = request.form.get("name", "").strip()
-            email = request.form.get("email", "").strip()
-            if not name:
-                flash("Name is required.", "danger")
-            else:
-                customer.name = name
-                customer.email = email or None
-                db.session.commit()
-                session["customer_name"] = name
-                flash("Profile updated.", "success")
-        elif action == "address":
-            data = {key: request.form.get(key, "").strip() for key in
-                    ("label", "recipient_name", "phone", "address", "city", "pincode")}
-            valid_phone, cleaned_phone = validate_indian_phone(data["phone"])
-            clean_pin = re.sub(r"\D", "", data["pincode"])
-            if not all(data[key] for key in ("recipient_name", "address", "city")) or not valid_phone or len(clean_pin) != 6:
-                flash("Enter a recipient, valid Indian mobile number, full address, city and six-digit PIN code.", "danger")
-            else:
-                db.session.add(CustomerAddress(
-                    customer_id=customer.id, label=data["label"] or "Home",
-                    recipient_name=data["recipient_name"], phone=cleaned_phone,
-                    address=data["address"], city=data["city"], pincode=clean_pin))
-                db.session.commit()
-                flash("Delivery address saved.", "success")
-        elif action == "delete-address":
-            address = db.session.get(CustomerAddress, request.form.get("address_id", type=int))
-            if address and address.customer_id == customer.id:
-                db.session.delete(address)
-                db.session.commit()
-                flash("Delivery address removed.", "success")
-        return redirect(url_for("customer_dashboard"))
+def customer_account_dashboard(customer):
+    orders = Order.query.filter((Order.customer_id == customer.id) | (Order.phone == customer.phone)).order_by(Order.created_at.desc()).all()
+    addresses = CustomerAddress.query.filter_by(customer_id=customer.id).order_by(CustomerAddress.is_default.desc(), CustomerAddress.created_at.desc()).all()
+    wishlist_items = []
+    try:
+        from models.customer_wishlist import CustomerWishlist
+        wishlist_items = CustomerWishlist.query.filter_by(customer_id=customer.id).order_by(CustomerWishlist.created_at.desc()).all()
+    except Exception:
+        pass
 
-    orders = Order.query.filter_by(customer_id=customer.id).order_by(Order.created_at.desc()).all()
-    addresses = CustomerAddress.query.filter_by(customer_id=customer.id).order_by(CustomerAddress.created_at.desc()).all()
-    return render_template("customer-dashboard.html", customer=customer, orders=orders, addresses=addresses)
+    return render_template(
+        "customer_account.html",
+        customer=customer,
+        orders=orders,
+        addresses=addresses,
+        wishlist_items=wishlist_items
+    )
+
+@app.route("/account/profile", methods=["POST"])
+@customer_required
+def customer_profile_update(customer):
+    name = request.form.get("name", "").strip()
+    email = request.form.get("email", "").strip()
+
+    if not name:
+        flash("Full name is required.", "danger")
+    else:
+        customer.name = name
+        customer.email = email or None
+        db.session.commit()
+        session["customer_name"] = name
+        flash("Your profile details have been saved.", "success")
+    return redirect(url_for("customer_account_dashboard"))
+
+@app.route("/account/address/add", methods=["POST"])
+@customer_required
+def customer_address_add(customer):
+    label = request.form.get("label", "Home").strip()
+    recipient = request.form.get("recipient_name", "").strip()
+    phone = request.form.get("phone", "").strip()
+    address_text = request.form.get("address", "").strip()
+    city = request.form.get("city", "").strip()
+    pincode = request.form.get("pincode", "").strip()
+    is_default = bool(request.form.get("is_default"))
+
+    if not recipient or not phone or not address_text or not city or not pincode:
+        flash("Please complete all required address fields.", "danger")
+        return redirect(url_for("customer_account_dashboard"))
+
+    if is_default:
+        CustomerAddress.query.filter_by(customer_id=customer.id).update({"is_default": False})
+
+    new_addr = CustomerAddress(
+        customer_id=customer.id,
+        label=label or "Home",
+        recipient_name=recipient,
+        phone=phone,
+        address=address_text,
+        city=city,
+        pincode=pincode,
+        is_default=is_default
+    )
+    db.session.add(new_addr)
+    db.session.commit()
+    flash("New delivery address added.", "success")
+    return redirect(url_for("customer_account_dashboard"))
+
+@app.route("/account/address/<int:address_id>/delete", methods=["POST"])
+@customer_required
+def customer_address_delete(customer, address_id):
+    addr = CustomerAddress.query.filter_by(id=address_id, customer_id=customer.id).first_or_404()
+    db.session.delete(addr)
+    db.session.commit()
+    flash("Delivery address removed.", "info")
+    return redirect(url_for("customer_account_dashboard"))
+
+@app.route("/account/address/<int:address_id>/default", methods=["POST"])
+@customer_required
+def customer_address_default(customer, address_id):
+    addr = CustomerAddress.query.filter_by(id=address_id, customer_id=customer.id).first_or_404()
+    CustomerAddress.query.filter_by(customer_id=customer.id).update({"is_default": False})
+    addr.is_default = True
+    db.session.commit()
+    flash(f"Set '{addr.label}' as your default delivery address.", "success")
+    return redirect(url_for("customer_account_dashboard"))
+
+@app.route("/account/wishlist/add/<int:product_id>", methods=["POST"])
+@customer_required
+def customer_wishlist_add(customer, product_id):
+    product = Product.query.get_or_404(product_id)
+    try:
+        from models.customer_wishlist import CustomerWishlist
+        existing = CustomerWishlist.query.filter_by(customer_id=customer.id, product_id=product.id).first()
+        if not existing:
+            db.session.add(CustomerWishlist(customer_id=customer.id, product_id=product.id))
+            db.session.commit()
+        if request.is_json:
+            return jsonify({"success": True, "message": f"{product.name} saved to wishlist."})
+        flash(f"Added '{product.name}' to your saved silhouettes.", "success")
+    except Exception:
+        db.session.rollback()
+    return redirect(request.referrer or url_for("customer_account_dashboard"))
+
+@app.route("/account/wishlist/remove/<int:product_id>", methods=["POST"])
+@customer_required
+def customer_wishlist_remove(customer, product_id):
+    try:
+        from models.customer_wishlist import CustomerWishlist
+        existing = CustomerWishlist.query.filter_by(customer_id=customer.id, product_id=product_id).first()
+        if existing:
+            db.session.delete(existing)
+            db.session.commit()
+        if request.is_json:
+            return jsonify({"success": True, "message": "Removed from wishlist."})
+        flash("Removed from saved silhouettes.", "info")
+    except Exception:
+        db.session.rollback()
+    return redirect(request.referrer or url_for("customer_account_dashboard"))
+
+@app.route("/customer/invoice/<int:order_id>")
+@customer_required
+def customer_invoice(customer, order_id):
+    order = Order.query.filter(Order.id == order_id, (Order.customer_id == customer.id) | (Order.phone == customer.phone)).first_or_404()
+    return render_template("admin-invoice.html", order=order)
+
+# AI Customer Support Concierge API
+@app.route("/api/customer-support", methods=["POST"])
+def api_customer_support():
+    data = request.get_json(silent=True) or {}
+    query = data.get("query", "").strip()
+    if not query:
+        return jsonify({"message": "How may I assist your styling or shopping journey today?", "products": [], "show_human_handoff": False}), 400
+
+    current_customer = None
+    if session.get("customer_id"):
+        try:
+            current_customer = CustomerUser.query.get(session["customer_id"])
+        except Exception:
+            pass
+
+    from services.ai_stylist import answer_customer_support
+    res = answer_customer_support(query, current_customer=current_customer)
+    return jsonify(res)
 
 
 # =========================================
@@ -3692,9 +4042,10 @@ def admin_upload_section_image():
 
 
 # =========================================
-# ADMIN: WEBSITE DESIGNER & CMS (TEXT & IMAGES)
+# ADMIN: WEBSITE MANAGEMENT & CMS STUDIO (10 SECTIONS)
 # =========================================
 
+@app.route("/admin/website-management", methods=["GET", "POST"])
 @app.route("/admin/customizer", methods=["GET", "POST"])
 @admin_required
 def admin_customizer():
@@ -3703,9 +4054,25 @@ def admin_customizer():
     if request.method == "POST":
         data = request.form.to_dict()
 
+        # Handle image removal request if specified
+        remove_image_key = request.form.get("remove_image_key")
+        if remove_image_key and remove_image_key in cms:
+            cms[remove_image_key] = ""
+            save_site_content(cms, publish=False)
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.is_json:
+                return jsonify({"status": "success", "message": f"Image removed from {remove_image_key}.", "cms": cms})
+            flash(f"Image reference removed from section. The shared file was preserved.", "info")
+            return redirect(url_for("admin_customizer"))
+
+        for k in list(data.keys()):
+            if k.startswith("remove_image_") and k != "remove_image_key":
+                target_key = k[len("remove_image_"):]
+                if target_key in cms:
+                    cms[target_key] = ""
+
         # Update text values from form
         for key, value in data.items():
-            if key not in {"action", "editor_sections_json", "custom_sections_json", "editor_accent", "editor_background", "editor_heading_font", "editor_section_spacing"} and not key.endswith("_file"):
+            if key not in {"action", "editor_sections_json", "custom_sections_json", "editor_accent", "editor_background", "editor_heading_font", "editor_section_spacing", "remove_image_key"} and not key.endswith("_file"):
                 cms[key] = value.strip()
 
         if "editor_sections_json" in data:
@@ -3721,7 +4088,7 @@ def admin_customizer():
             data.get("editor_section_spacing", cms.get("editor_theme", {}).get("section_spacing", 96)),
         )
 
-        # Process image file uploads
+        # Process image file uploads across all 10 management sections
         image_fields = {
             "hero_image_file": ("hero_image", "hero"),
             "mood_cat1_image_file": ("mood_cat1_image", "mood_cat1"),
@@ -3735,6 +4102,11 @@ def admin_customizer():
             "seasonal_img3_file": ("seasonal_img3", "seasonal3"),
             "trends_image_file": ("trends_image", "trends"),
             "designer_image_file": ("designer_image", "designer"),
+            "lookbook_slide1_image_file": ("lookbook_slide1_image", "lb1"),
+            "lookbook_slide2_image_file": ("lookbook_slide2_image", "lb2"),
+            "lookbook_slide3_image_file": ("lookbook_slide3_image", "lb3"),
+            "lookbook_slide4_image_file": ("lookbook_slide4_image", "lb4"),
+            "brand_logo_file": ("brand_logo", "logo"),
         }
 
         updated_count = 0
@@ -3769,6 +4141,7 @@ def admin_customizer():
 
 
 @app.route("/admin/customizer/publish", methods=["POST"])
+@app.route("/admin/website-management/publish", methods=["POST"])
 @admin_required
 def admin_customizer_publish():
     if not publish_site_content():
@@ -3792,7 +4165,6 @@ def admin_customizer_publish():
 def admin_customizer_restore(revision):
     snapshot = SiteContentRevision.query.filter_by(revision=revision).first_or_404()
     try:
-        import json
         save_site_content(json.loads(snapshot.content_json), publish=False)
         flash("Revision restored as a draft. Publish it to make it live.", "success")
     except Exception:
