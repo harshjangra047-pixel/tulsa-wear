@@ -46,12 +46,23 @@
         camera.position.set(0, 0, 18);
 
         // Renderer
-        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, powerPreference: 'high-performance' });
+        renderer = new THREE.WebGLRenderer({ alpha: true, antialias: window.innerWidth >= 768, powerPreference: 'high-performance' });
         renderer.setSize(width, height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, window.innerWidth < 768 ? 1.0 : 1.5));
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.1;
         canvasContainer.appendChild(renderer.domElement);
+
+        // IntersectionObserver to pause rendering when off-screen
+        let isHeroInView = true;
+        if ('IntersectionObserver' in window) {
+            const heroObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    isHeroInView = entry.isIntersecting;
+                });
+            }, { threshold: 0.05 });
+            heroObserver.observe(canvasContainer);
+        }
 
         // Lighting
         const ambientLight = new THREE.AmbientLight(0xf5f0e8, 0.7);
@@ -186,7 +197,7 @@
         requestAnimationFrame(animate);
 
         // Pause WebGL rendering when scrolled away from hero or in background to save GPU & eliminate lag
-        if (window.scrollY > window.innerHeight * 1.2 || document.hidden || window.innerWidth < 768) {
+        if (!isHeroInView || window.scrollY > window.innerHeight * 1.1 || document.hidden || window.innerWidth < 768) {
             return;
         }
 

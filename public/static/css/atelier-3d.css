@@ -893,23 +893,48 @@ main {
         padding: 0 12px;
     }
     .arched-card {
-        border-radius: 90px 90px 12px 12px;
+        border-radius: 20px;
+        display: flex;
+        flex-direction: column;
+        background: #081A14;
+        border: 1px solid rgba(197, 160, 89, 0.22);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+    }
+    .arched-media {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 4 / 5;
+        overflow: hidden;
+        border-radius: 18px 18px 0 0;
+    }
+    .arched-overlay {
+        display: none;
     }
     .arched-info {
-        padding: 14px 8px;
+        position: static;
+        padding: 14px 12px 16px;
+        background: #081A14;
+        text-align: center;
+        border-radius: 0 0 18px 18px;
     }
     .arched-title {
         font-size: 16px;
-        margin-bottom: 2px;
+        color: #fff;
+        margin-bottom: 3px;
+        font-family: "Cormorant Garamond", Georgia, serif;
     }
     .arched-number {
-        font-size: 9px;
+        font-size: 10px;
         letter-spacing: 0.15em;
         margin-bottom: 2px;
+        color: var(--accent-gold);
     }
     .arched-link {
-        font-size: 9.5px;
-        letter-spacing: 0.1em;
+        font-size: 10.5px;
+        letter-spacing: 0.08em;
+        color: rgba(197, 160, 89, 0.9);
+        display: inline-block;
     }
     .slat-container {
         flex-direction: column;

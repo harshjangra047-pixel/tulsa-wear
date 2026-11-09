@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>My Tulsa Atelier Account — {{ brand_name }}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/atelier-3d.css') }}?v={{ cache_id }}">
+    <style>
+        :root {
+            --emerald-deep: #081A14;
+            --emerald-card: #0E261E;
+            --emerald-hover: #15382D;
+            --accent-gold: #c5a059;
+            --accent-gold-light: #e6ca85;
+            --text-light: #f7f4ef;
+            --border-gold: rgba(197, 160, 89, 0.28);
+        }
+
+        body {
+            background: var(--emerald-deep);
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        /* Top Luxury Account Header */
+        .account-top-navbar {
+            background: rgba(8, 26, 20, 0.95);
+            border-bottom: 1px solid var(--border-gold);
+            padding: 0 28px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+
+        .account-brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #fff;
+        }
+
+        .account-brand-title {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            color: #fff;
+        }
+
+        .account-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .account-nav-link {
+            color: rgba(247, 244, 239, 0.8);
+            text-decoration: none;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .account-nav-link:hover {
+            color: var(--accent-gold);
+        }
+
+        /* Main Workspace Container */
+        .account-main-layout {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 36px 20px 80px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 32px;
+        }
+
+        /* Left Navigation Sidebar */
+        .account-sidebar-card {
+            background: var(--emerald-card);
+            border: 1px solid var(--border-gold);
+            border-radius: 14px;
+            padding: 28px 20px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .customer-identity-badge {
+            text-align: center;
+            padding-bottom: 22px;
+            border-bottom: 1px solid var(--border-gold);
+            margin-bottom: 20px;
+        }
+
+        .customer-avatar-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-gold), #8a6d3b);
+            color: var(--emerald-deep);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            font-weight: 700;
+            margin: 0 auto 12px;
+            box-shadow: 0 4px 18px rgba(197, 160, 89, 0.3);
+        }
+
+        .customer-display-name {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 22px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .customer-display-phone {
+            font-size: 12px;
+            color: var(--accent-gold);
+            letter-spacing: 0.05em;
+        }
+
+        .customer-verified-pill {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 1px solid rgba(52, 211, 153, 0.4);
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 3px 8px;
+            border-radius: 12px;
+            margin-top: 6px;
+        }
+
+        .account-nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .account-menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 8px;
+            color: rgba(247, 244, 239, 0.85);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+
+        .account-menu-item:hover {
+            background: var(--emerald-hover);
+            color: #fff;
+        }
+
+        .account-menu-item.active {
+            background: rgba(197, 160, 89, 0.18);
+            border-color: rgba(197, 160, 89, 0.4);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .account-menu-badge {
+            margin-left: auto;
+            background: rgba(197, 160, 89, 0.25);
+            color: var(--accent-gold-light);
+            font-size: 11px;
+            padding: 2px 7px;
+            border-radius: 10px;
+            font-weight: 700;
+        }
+
+        /* Right Content Panels */
+        .account-content-pane {
+            display: none;
+            animation: fadeIn 0.25s ease;
+        }
+
+        .account-content-pane.active-pane {
+            display: block;
+        }
+
+        .pane-card {
+            background: var(--emerald-card);
+            border: 1px solid var(--border-gold);
+            border-radius: 14px;
+            padding: 32px 28px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3);
+            margin-bottom: 24px;
+        }
+
+        .pane-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-gold);
+            padding-bottom: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .pane-heading {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 26px;
+            font-weight: 600;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-gold-action {
+            background: linear-gradient(135deg, var(--accent-gold), #9e7d3b);
+            border: 1px solid var(--accent-gold);
+            color: var(--emerald-deep);
+            font-size: 11.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-gold-action:hover {
+            background: linear-gradient(135deg, #d4b069, #ad8c47);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(197, 160, 89, 0.3);
+        }
+
+        /* Order Cards */
+        .orders-list-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .order-history-card {
+            background: rgba(8, 26, 20, 0.7);
+            border: 1px solid var(--border-gold);
+            border-radius: 10px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .order-history-card:hover {
+            border-color: var(--accent-gold);
+        }
+
+        .order-meta-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.15);
+            padding-bottom: 12px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 12px;
+        }
+
+        .order-num {
+            font-weight: 700;
+            color: var(--accent-gold);
+            letter-spacing: 0.05em;
+        }
+
+        .order-status-tag {
+            font-size: 10.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 3px 9px;
+            border-radius: 4px;
+        }
+
+        .status-paid {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .order-product-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .order-prod-thumb {
+            width: 72px;
+            height: 90px;
+            border-radius: 6px;
+            object-fit: cover;
+            border: 1px solid var(--border-gold);
+        }
+
+        .order-prod-details {
+            flex: 1;
+        }
+
+        .order-prod-name {
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .order-prod-specs {
+            font-size: 12px;
+            color: rgba(247, 244, 239, 0.7);
+            margin-bottom: 6px;
+        }
+
+        .order-prod-price {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+
+        /* Address Cards */
+        .address-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 18px;
+        }
+
+        .address-box-card {
+            background: rgba(8, 26, 20, 0.75);
+            border: 1px solid var(--border-gold);
+            border-radius: 10px;
+            padding: 20px;
+            position: relative;
+        }
+
+        .address-box-card.is-default {
+            border-color: var(--accent-gold);
+            background: rgba(14, 45, 34, 0.5);
+        }
+
+        .address-tag-default {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: rgba(197, 160, 89, 0.2);
+            color: var(--accent-gold);
+            border: 1px solid var(--accent-gold);
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .address-actions-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(197, 160, 89, 0.15);
+            font-size: 12px;
+        }
+
+        .address-action-btn {
+            background: none;
+            border: none;
+            color: var(--accent-gold);
+            cursor: pointer;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .address-action-btn.btn-delete {
+            color: #f87171;
+        }
+
+        /* Wishlist Cards */
+        .wishlist-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .wishlist-item-card {
+            background: rgba(8, 26, 20, 0.8);
+            border: 1px solid var(--border-gold);
+            border-radius: 10px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wishlist-item-media {
+            width: 100%;
+            aspect-ratio: 4 / 5;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .wishlist-item-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .wishlist-item-card:hover .wishlist-item-img {
+            transform: scale(1.05);
+        }
+
+        .wishlist-item-info {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Dashboard Overview Grid */
+        .dash-stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .dash-stat-box {
+            background: rgba(8, 26, 20, 0.7);
+            border: 1px solid var(--border-gold);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+        }
+
+        .dash-stat-num {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent-gold);
+            margin-bottom: 4px;
+        }
+
+        .dash-stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: rgba(247, 244, 239, 0.7);
+        }
+
+        /* Form Inputs */
+        .form-input-emerald {
+            width: 100%;
+            background: rgba(8, 26, 20, 0.85);
+            border: 1px solid var(--border-gold);
+            border-radius: 6px;
+            padding: 12px 14px;
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 14px;
+        }
+
+        .form-input-emerald:focus {
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.25);
+        }
+
+        /* Responsive Mobile Layout */
+        @media (max-width: 860px) {
+            .account-main-layout {
+                grid-template-columns: 1fr;
+            }
+            .account-sidebar-card {
+                position: static;
+            }
+            .account-nav-menu {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+            .account-menu-item {
+                flex-direction: column;
+                text-align: center;
+                padding: 10px 4px;
+                font-size: 11px;
+            }
+            .account-menu-badge {
+                margin: 4px auto 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Account Header -->
+    <header class="account-top-navbar">
+        <a href="{{ url_for('home') }}" class="account-brand-logo">
+            <img src="{{ url_for('static', filename='images/' + brand_logo) }}" alt="{{ brand_name }}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:1px solid #c5a059;" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/tulsa-brand-logo.png') }}';">
+            <span class="account-brand-title">{{ brand_name }}</span>
+        </a>
+
+        <nav class="account-nav-actions">
+            <a href="{{ url_for('home') }}" class="account-nav-link">✦ Atelier Home</a>
+            <a href="{{ url_for('shop') }}" class="account-nav-link">Collections</a>
+            <a href="{{ url_for('fitting_room') }}" class="account-nav-link">Fitting Room</a>
+            <a href="{{ url_for('bag') }}" class="account-nav-link">Shopping Bag ({{ session.get('cart', [])|length }})</a>
+            <a href="{{ url_for('customer_logout') }}" class="account-nav-link" style="color:#f87171;">Sign Out</a>
+        </nav>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="account-main-layout">
+
+        <!-- Left Navigation Sidebar -->
+        <aside class="account-sidebar-card">
+            <div class="customer-identity-badge">
+                <div class="customer-avatar-circle">
+                    {{ customer.name[:1]|upper }}
+                </div>
+                <div class="customer-display-name">{{ customer.name }}</div>
+                <div class="customer-display-phone">{{ customer.phone }}</div>
+                <span class="customer-verified-pill">✓ Verified Tulsa Client</span>
+            </div>
+
+            <nav class="account-nav-menu">
+                <div class="account-menu-item active" onclick="showPane('pane-overview')">
+                    📊 Dashboard Overview
+                </div>
+                <div class="account-menu-item" onclick="showPane('pane-orders')">
+                    📦 My Orders
+                    <span class="account-menu-badge">{{ orders|length }}</span>
+                </div>
+                <div class="account-menu-item" onclick="showPane('pane-profile')">
+                    👤 My Profile
+                </div>
+                <div class="account-menu-item" onclick="showPane('pane-addresses')">
+                    📍 My Addresses
+                    <span class="account-menu-badge">{{ addresses|length }}</span>
+                </div>
+                <div class="account-menu-item" onclick="showPane('pane-wishlist')">
+                    ❤️ Wishlist
+                    <span class="account-menu-badge" id="sidebarWishlistCount">{{ wishlist_items|length if wishlist_items else 0 }}</span>
+                </div>
+                <a href="{{ url_for('bag') }}" class="account-menu-item">
+                    🛍️ My Shopping Bag
+                    <span class="account-menu-badge">{{ session.get('cart', [])|length }}</span>
+                </a>
+                <div class="account-menu-item" onclick="openAiSupportModal()">
+                    💬 AI Concierge
+                </div>
+                <a href="{{ url_for('customer_logout') }}" class="account-menu-item" style="color:#f87171; margin-top:14px; border-top:1px solid var(--border-gold); padding-top:14px;">
+                    🚪 Sign Out
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Right Content Section -->
+        <section class="account-content-area">
+
+            <!-- PANE 1: DASHBOARD OVERVIEW -->
+            <div class="account-content-pane active-pane" id="pane-overview">
+                <div class="pane-card">
+                    <div class="pane-header-row">
+                        <h2 class="pane-heading">Namaste, {{ customer.name }} ✦</h2>
+                        <a href="{{ url_for('shop') }}" class="btn-gold-action">Explore New Creations →</a>
+                    </div>
+
+                    <p style="color:rgba(247,244,239,0.8); font-size:14px; line-height:1.6; margin-bottom:24px;">
+                        Welcome to your personal Tulsa client portal. Track your artisanal commissions, manage your delivery coordinates, and explore our slow-fashion couture catalogue.
+                    </p>
+
+                    <div class="dash-stats-row">
+                        <div class="dash-stat-box">
+                            <div class="dash-stat-num">{{ orders|length }}</div>
+                            <div class="dash-stat-label">Total Orders</div>
+                        </div>
+                        <div class="dash-stat-box">
+                            <div class="dash-stat-num">{{ session.get('cart', [])|length }}</div>
+                            <div class="dash-stat-label">Bag Items</div>
+                        </div>
+                        <div class="dash-stat-box">
+                            <div class="dash-stat-num">{{ wishlist_items|length if wishlist_items else 0 }}</div>
+                            <div class="dash-stat-label">Saved Silhouettes</div>
+                        </div>
+                        <div class="dash-stat-box">
+                            <div class="dash-stat-num">{{ addresses|length }}</div>
+                            <div class="dash-stat-label">Saved Addresses</div>
+                        </div>
+                    </div>
+
+                    {% if orders %}
+                    <h3 style="font-family:'Cormorant Garamond',serif; font-size:22px; color:#fff; margin-bottom:14px;">Recent Order Activity</h3>
+                    {% set latest = orders[0] %}
+                    <div class="order-history-card">
+                        <div class="order-meta-header">
+                            <div><span class="order-num">Order #{{ latest.id }}</span> • {{ latest.created_at.strftime('%d %B %Y') if latest.created_at else 'Recent' }}</div>
+                            <span class="order-status-tag {{ 'status-paid' if latest.payment_status == 'Paid' else 'status-pending' }}">{{ latest.status }}</span>
+                        </div>
+                        <div class="order-product-row">
+                            <img src="{{ product_image_url(latest.product.image if latest.product else None, 'garment-01.jpg') }}?v={{ cache_id }}" alt="{{ latest.product_name }}" class="order-prod-thumb" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/bridal-wedding-collection.jpg') }}';">
+                            <div class="order-prod-details">
+                                <div class="order-prod-name">{{ latest.product_name }}</div>
+                                <div class="order-prod-specs">Size: {{ latest.size or 'M' }} • Delivery to {{ latest.city }}</div>
+                                <div class="order-prod-price">₹{{ "{:,.0f}".format(latest.price) }}</div>
+                            </div>
+                            <a href="{{ url_for('customer_invoice', order_id=latest.id) }}" class="btn-gold-action" style="padding:6px 12px; font-size:10px;">View Invoice</a>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- PANE 2: MY ORDERS -->
+            <div class="account-content-pane" id="pane-orders">
+                <div class="pane-card">
+                    <div class="pane-header-row">
+                        <h2 class="pane-heading">📦 Order History ({{ orders|length }})</h2>
+                    </div>
+
+                    {% if orders %}
+                    <div class="orders-list-wrap">
+                        {% for ord in orders %}
+                        <div class="order-history-card">
+                            <div class="order-meta-header">
+                                <div><span class="order-num">Order #{{ ord.id }}</span> • {{ ord.created_at.strftime('%d %B %Y at %I:%M %p') if ord.created_at else 'Placed recently' }}</div>
+                                <div>
+                                    <span class="order-status-tag {{ 'status-paid' if ord.payment_status == 'Paid' else 'status-pending' }}">{{ ord.payment_status or 'Pending' }}</span>
+                                    <span class="order-status-tag" style="background:rgba(197,160,89,0.15);color:var(--accent-gold);margin-left:6px;">{{ ord.status }}</span>
+                                </div>
+                            </div>
+                            <div class="order-product-row">
+                                <img src="{{ product_image_url(ord.product.image if ord.product else None, 'garment-01.jpg') }}?v={{ cache_id }}" alt="{{ ord.product_name }}" class="order-prod-thumb" onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/bridal-wedding-collection.jpg') }}';">
+                                <div class="order-prod-details">
+                                    <div class="order-prod-name">{{ ord.product_name }}</div>
+                                    <div class="order-prod-specs">
+                                        Selected Size: <strong>{{ ord.size or 'Custom / M' }}</strong> • Recipient: {{ ord.customer_name }}
+                                        <br>
+                                        Destination: {{ ord.address }}, {{ ord.city }} - {{ ord.pincode }}
+                                        {% if ord.tracking_id %}
+                                        <br><span style="color:var(--accent-gold);">Tracking ID: {{ ord.tracking_id }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="order-prod-price">₹{{ "{:,.0f}".format(ord.price) }}</div>
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    <a href="{{ url_for('customer_invoice', order_id=ord.id) }}" class="btn-gold-action" style="padding:8px 14px; font-size:10px;">Download Invoice</a>
+                                    <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa!%20Inquiring%20about%20Order%20%23{{ ord.id }}" target="_blank" rel="noopener noreferrer" class="account-nav-link" style="font-size:11px; text-align:center;">WhatsApp Atelier →</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="text-align:center; padding:48px 20px;">
+                        <p style="font-size:16px; color:rgba(247,244,239,0.7); margin-bottom:18px;">You haven't placed any orders with Tulsa yet.</p>
+                        <a href="{{ url_for('shop') }}" class="btn-gold-action">Browse Handmade Collections →</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- PANE 3: MY PROFILE -->
+            <div class="account-content-pane" id="pane-profile">
+                <div class="pane-card">
+                    <div class="pane-header-row">
+                        <h2 class="pane-heading">👤 Client Profile & Security</h2>
+                    </div>
+
+                    <form action="{{ url_for('customer_profile_update') }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                        <div style="margin-bottom:18px;">
+                            <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--accent-gold); display:block; margin-bottom:6px;">Full Name *</label>
+                            <input type="text" class="form-input-emerald" name="name" value="{{ customer.name }}" required>
+                        </div>
+
+                        <div style="margin-bottom:18px;">
+                            <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--accent-gold); display:block; margin-bottom:6px;">Verified Mobile Number</label>
+                            <input type="text" class="form-input-emerald" value="{{ customer.phone }}" disabled style="opacity:0.75; cursor:not-allowed;">
+                            <small style="color:rgba(247,244,239,0.6); font-size:11px;">To change your verified mobile number, contact the Hansi atelier client desk.</small>
+                        </div>
+
+                        <div style="margin-bottom:18px;">
+                            <label style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--accent-gold); display:block; margin-bottom:6px;">Email Address</label>
+                            <input type="email" class="form-input-emerald" name="email" value="{{ customer.email or '' }}" placeholder="e.g. anjali@example.com">
+                        </div>
+
+                        <button type="submit" class="btn-gold-action" style="padding:12px 24px;">Save Profile Changes</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- PANE 4: MY ADDRESSES -->
+            <div class="account-content-pane" id="pane-addresses">
+                <div class="pane-card">
+                    <div class="pane-header-row">
+                        <h2 class="pane-heading">📍 Saved Delivery Addresses ({{ addresses|length }})</h2>
+                        <button type="button" class="btn-gold-action" onclick="toggleAddressForm()">+ Add New Address</button>
+                    </div>
+
+                    <!-- New Address Form (Hidden by Default) -->
+                    <div id="newAddressFormWrap" style="display:none; background:rgba(8,26,20,0.85); border:1px solid var(--border-gold); border-radius:10px; padding:20px; margin-bottom:24px;">
+                        <h3 style="font-family:'Cormorant Garamond',serif; font-size:20px; color:#fff; margin-bottom:16px;">Add New Delivery Address</h3>
+                        <form action="{{ url_for('customer_address_add') }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                                <div>
+                                    <label style="font-size:11px; font-weight:700; color:var(--accent-gold); display:block; margin-bottom:4px;">Address Label</label>
+                                    <input type="text" class="form-input-emerald" name="label" placeholder="Home, Studio, Office" value="Home" required>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px; font-weight:700; color:var(--accent-gold); display:block; margin-bottom:4px;">Recipient Name *</label>
+                                    <input type="text" class="form-input-emerald" name="recipient_name" value="{{ customer.name }}" required>
+                                </div>
+                            </div>
+
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                                <div>
+                                    <label style="font-size:11px; font-weight:700; color:var(--accent-gold); display:block; margin-bottom:4px;">Contact Phone *</label>
+                                    <input type="tel" class="form-input-emerald" name="phone" value="{{ customer.phone }}" required>
+                                </div>
+                                <div>
+                                    <label style="font-size:11px; font-weight:700; color:var(--accent-gold); display:block; margin-bottom:4px;">PIN Code *</label>
+                                    <input type="text" class="form-input-emerald" name="pincode" placeholder="6-digit PIN code" required pattern="[0-9]{6}">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style="font-size:11px; font-weight:700; color:var(--accent-gold); display:block; margin-bottom:4px;">Street Address / Suite / Landmark *</label>
+                                <textarea class="form-input-emerald" name="address" rows="2" placeholder="Full postal address" required></textarea>
+                            </div>
+
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                                <div>
+                                    <label style="font-size:11px; font-weight:700; color:var(--accent-gold); display:block; margin-bottom:4px;">City / Town *</label>
+                                    <input type="text" class="form-input-emerald" name="city" placeholder="e.g. Gurugram" required>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:8px; margin-top:24px;">
+                                    <label style="font-size:12px; color:#fff; cursor:pointer;">
+                                        <input type="checkbox" name="is_default" value="1"> Make this my default address
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; gap:12px; margin-top:14px;">
+                                <button type="submit" class="btn-gold-action">Save Address</button>
+                                <button type="button" class="btn-gold-action" style="background:rgba(255,255,255,0.1);color:#fff;" onclick="toggleAddressForm()">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    {% if addresses %}
+                    <div class="address-grid">
+                        {% for addr in addresses %}
+                        <div class="address-box-card {{ 'is-default' if addr.is_default else '' }}">
+                            {% if addr.is_default %}
+                            <span class="address-tag-default">Default Address</span>
+                            {% endif %}
+                            <div style="font-weight:700; font-size:15px; color:#fff; margin-bottom:4px;">{{ addr.label }} — {{ addr.recipient_name }}</div>
+                            <div style="font-size:13px; color:rgba(247,244,239,0.8); line-height:1.5;">
+                                {{ addr.address }}<br>
+                                {{ addr.city }} - {{ addr.pincode }}<br>
+                                Phone: {{ addr.phone }}
+                            </div>
+                            <div class="address-actions-bar">
+                                {% if not addr.is_default %}
+                                <form action="{{ url_for('customer_address_default', address_id=addr.id) }}" method="POST" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="address-action-btn">Set Default</button>
+                                </form>
+                                {% endif %}
+                                <form action="{{ url_for('customer_address_delete', address_id=addr.id) }}" method="POST" onsubmit="return confirm('Remove this address?');" style="display:inline;">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                    <button type="submit" class="address-action-btn btn-delete">Remove</button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p style="color:rgba(247,244,239,0.7); font-size:14px;">No addresses saved yet. Add a default shipping address for faster one-click checkout.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- PANE 5: WISHLIST -->
+            <div class="account-content-pane" id="pane-wishlist">
+                <div class="pane-card">
+                    <div class="pane-header-row">
+                        <h2 class="pane-heading">❤️ Saved Silhouettes ({{ wishlist_items|length if wishlist_items else 0 }})</h2>
+                    </div>
+
+                    {% if wishlist_items %}
+                    <div class="wishlist-grid">
+                        {% for item in wishlist_items %}
+                        {% set p = item.product %}
+                        {% if p %}
+                        <div class="wishlist-item-card">
+                            <div class="wishlist-item-media">
+                                <img src="{{ product_image_url(p.image) }}?v={{ cache_id }}" alt="{{ p.name }}" class="wishlist-item-img">
+                            </div>
+                            <div class="wishlist-item-info">
+                                <h4 style="font-family:'Cormorant Garamond',serif; font-size:18px; margin:0 0 4px; color:#fff;">{{ p.name }}</h4>
+                                <div style="font-size:13px; font-weight:700; color:var(--accent-gold); margin-bottom:12px;">₹{{ "{:,.0f}".format(p.price) }}</div>
+                                <div style="display:flex; gap:8px; margin-top:auto;">
+                                    <form action="{{ url_for('add_to_bag', product_id=p.id) }}" method="POST" style="flex:1;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <button type="submit" class="btn-gold-action" style="width:100%; justify-content:center; padding:8px 6px; font-size:10px;">Move to Bag</button>
+                                    </form>
+                                    <form action="{{ url_for('customer_wishlist_remove', product_id=p.id) }}" method="POST">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                                        <button type="submit" class="btn-gold-action" style="background:rgba(239,68,68,0.2); border-color:rgba(239,68,68,0.4); color:#fca5a5; padding:8px 10px;" title="Remove">✕</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div style="text-align:center; padding:48px 20px;">
+                        <p style="color:rgba(247,244,239,0.7); font-size:15px; margin-bottom:18px;">Your wishlist is currently empty. Save artisanal pieces you love for special occasions.</p>
+                        <a href="{{ url_for('shop') }}" class="btn-gold-action">Explore Collections →</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script>
+        function showPane(paneId) {
+            document.querySelectorAll('.account-content-pane').forEach(p => p.classList.remove('active-pane'));
+            document.querySelectorAll('.account-menu-item').forEach(m => m.classList.remove('active'));
+
+            const targetPane = document.getElementById(paneId);
+            if (targetPane) {
+                targetPane.classList.add('active-pane');
+            }
+
+            // Find clicked menu item
+            const menuItems = document.querySelectorAll('.account-menu-item');
+            menuItems.forEach(item => {
+                if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(paneId)) {
+                    item.classList.add('active');
+                }
+            });
+        }
+
+        function toggleAddressForm() {
+            const form = document.getElementById('newAddressFormWrap');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function openAiSupportModal() {
+            if (window.tulsaOpenAiSupport) {
+                window.tulsaOpenAiSupport();
+            } else {
+                window.location.href = "{{ url_for('home') }}#contact";
+            }
+        }
+    </script>
+</body>
+</html>
+

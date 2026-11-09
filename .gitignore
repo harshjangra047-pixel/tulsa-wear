@@ -31,13 +31,14 @@ database/*.sqlite3
 *.swp
 *.swo
 
-# Temporary files and logs
+# Temporary files, backups and logs
 *.log
+*.bak
+backups/
+reference-videos/
 session_secret
 .session_secret
 .session_secret*
 .vercel
-.env*
-.env
-session_secret
-venv/
+/tmp/
+tests/*.db
