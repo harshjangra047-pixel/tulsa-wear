@@ -257,7 +257,8 @@ def add_security_headers(response):
         response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     elif getattr(g, "editor_preview", False):
         response.headers.pop("X-Frame-Options", None)
-        response.headers["Cache-Control"] = "no-store"
+        response.headers["Content-Security-Policy"] = "frame-ancestors 'self' *"
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     elif request.method == "GET" and not session.get("customer_id") and not session.get("admin_authenticated"):
         if request.path in ["/", "/shop", "/fitting-room", "/robots.txt", "/sitemap.xml"]:
             response.headers["Cache-Control"] = "public, max-age=120, s-maxage=600, stale-while-revalidate=120"
@@ -268,9 +269,12 @@ def inject_global_vars():
     preview_token = request.args.get("editor_preview", "")
     preview_record = None
     if preview_token:
-        preview_record = EditorPreviewToken.query.filter_by(
-            token_hash=hashlib.sha256(preview_token.encode("utf-8")).hexdigest()
-        ).first()
+        try:
+            preview_record = EditorPreviewToken.query.filter_by(
+                token_hash=hashlib.sha256(preview_token.encode("utf-8")).hexdigest()
+            ).first()
+        except Exception:
+            preview_record = None
     token_preview = bool(preview_record and preview_record.expires_at > datetime.utcnow())
     is_admin_draft_preview = (request.path == "/" and request.args.get("preview") == "1" and session.get("admin_authenticated")) or token_preview
     g.editor_preview = bool(is_admin_draft_preview)
@@ -4140,11 +4144,24 @@ def admin_customizer():
         flash("Draft saved. Preview it and publish when you are ready.", "success")
         return redirect(url_for("admin_customizer"))
 
+    # Generate an editor preview token for iframe embedding
+    preview_token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(preview_token.encode("utf-8")).hexdigest()
+    expires_at = datetime.utcnow() + timedelta(hours=4)
+    try:
+        EditorPreviewToken.query.filter(EditorPreviewToken.expires_at < datetime.utcnow()).delete()
+        db.session.add(EditorPreviewToken(token_hash=token_hash, expires_at=expires_at))
+        db.session.commit()
+    except Exception:
+        db.session.rollback()
+
     return render_template(
         "admin-customizer.html",
         cms=cms,
         total_products=Product.query.count(),
         server_host=request.host_url.rstrip("/"),
+        website_url=request.host_url.rstrip("/"),
+        preview_token=preview_token,
         revisions=SiteContentRevision.query.order_by(SiteContentRevision.id.desc()).limit(20).all()
     )
 

@@ -13,10 +13,23 @@ document.addEventListener("DOMContentLoaded", () => {
     const enterBtn = document.getElementById("btnEnterCurtain");
 
     if (curtain) {
+        const isFrame = window.self !== window.top;
+        const alreadyViewed = sessionStorage.getItem("tulsa_curtain_viewed") === "true";
+        const prefersReduced = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (isFrame || alreadyViewed || prefersReduced) {
+            curtain.classList.add("curtain-opened", "curtain-dismissed");
+            curtain.style.display = "none";
+            const gate = document.getElementById("mandatoryLoginGateModal");
+            if (gate) gate.style.display = "flex";
+            return;
+        }
+
         const dismissCurtain = () => {
             curtain.classList.add("curtain-opened");
             setTimeout(() => {
                 curtain.classList.add("curtain-dismissed");
+                curtain.style.display = "none";
                 const gate = document.getElementById("mandatoryLoginGateModal");
                 if (gate) {
                     gate.style.display = "flex";

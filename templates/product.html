@@ -259,7 +259,7 @@
 
                         <!-- Action Buttons -->
                         <div class="pdp-action-buttons">
-                            <button type="submit" class="btn-luxury-bag">
+                            <button type="submit" class="btn-luxury-bag" id="pdpMainAddBagBtn">
                                 Add to Bag
                             </button>
                             <a href="{{ url_for('fitting_room') }}" class="btn-tryon-pdp">
@@ -579,6 +579,22 @@
             pdpStage.addEventListener('mouseleave', () => {
                 pdpFrame.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px)';
             });
+        }
+
+        // Toggle PDP Mobile Sticky Purchase Bar only when inline button is off-screen
+        const pdpMainBtn = document.getElementById('pdpMainAddBagBtn');
+        const pdpStickyBar = document.getElementById('pdpMobileStickyBar');
+        if (pdpMainBtn && pdpStickyBar && 'IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        pdpStickyBar.classList.add('is-hidden');
+                    } else {
+                        pdpStickyBar.classList.remove('is-hidden');
+                    }
+                });
+            }, { threshold: 0.15 });
+            observer.observe(pdpMainBtn);
         }
     </script>
 </body>

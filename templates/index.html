@@ -77,6 +77,7 @@
     <!-- =========================================
          0. HERITAGE ENTRANCE CURTAIN (Video 4)
     ========================================== -->
+    {% if not editor_preview %}
     <div class="heritage-curtain-overlay" id="heritageOpeningCurtain">
         <div class="curtain-panel curtain-left">
             <div class="curtain-folds"></div>
@@ -101,6 +102,7 @@
             <p class="curtain-skip-hint">Click anywhere or scroll to enter</p>
         </div>
     </div>
+    {% endif %}
 
     <!-- Storefront Customer Gate (Active only when Mandatory Customer Login is configured) -->
     {% if cms.get('mandatory_customer_login') == 'true' and not current_customer %}
@@ -488,15 +490,16 @@
                 <div class="vton-promo-grid">
                     <!-- Left: Avatar & Mannequin Luxury Showcase Preview -->
                     <div class="vton-promo-media">
+                        {% set feat_fitting = best_sellers[0] if best_sellers else (products[0] if products else None) %}
                         <div class="vton-promo-arch-frame">
                             <div class="vton-promo-aura-glow"></div>
                             <img src="{{ url_for('static', filename='images/bridal-wedding-collection.jpg') }}" alt="Tulsa Atelier Mannequin Avatar" class="vton-promo-hero-img" loading="lazy">
                             <div class="vton-promo-garment-inset">
-                                <img src="{{ url_for('static', filename='images/garment-01-anarkali.jpg') }}" alt="Active Drape Preview" class="vton-inset-thumb">
+                                <img src="{{ product_image_url(feat_fitting.image) if feat_fitting else url_for('static', filename='images/garment-01.jpg') }}" alt="{{ feat_fitting.name if feat_fitting else 'Active Drape Preview' }}" class="vton-inset-thumb" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/garment-01.jpg') }}';">
                                 <div class="vton-inset-info">
                                     <span class="vton-inset-badge">✦ Active Drape</span>
-                                    <h4 class="vton-inset-name">Hand-Embroidered Anarkali</h4>
-                                    <span class="vton-inset-price">₹28,500</span>
+                                    <h4 class="vton-inset-name">{{ feat_fitting.name if feat_fitting else 'Handcrafted Silhouette' }}</h4>
+                                    <span class="vton-inset-price">₹{{ "{:,.0f}".format(feat_fitting.price) if feat_fitting else '2,499' }}</span>
                                 </div>
                             </div>
                             <div class="vton-promo-lighting-tag">
@@ -544,11 +547,11 @@
                         </div>
 
                         <div class="vton-promo-cta-row">
-                            <a href="{{ url_for('fitting_room') }}" class="btn-enter-vton">
+                            <a href="{{ url_for('fitting_room', select=feat_fitting.id) if feat_fitting else url_for('fitting_room') }}" class="btn-enter-vton">
                                 <span>ENTER VIRTUAL FITTING ROOM</span>
                                 <span class="btn-arrow-gold">→</span>
                             </a>
-                            <span class="vton-safe-tag">✦ Mannequin Drape Preview • 16 Real Pieces</span>
+                            <span class="vton-safe-tag">✦ Mannequin Drape Preview • {{ products|length if products else '16' }} Real Pieces</span>
                         </div>
                     </div>
                 </div>
@@ -618,6 +621,7 @@
                                      class="avatar-garment-layer"
                                      src="{{ product_image_url(initial_p.image if initial_p else None, 'garment-01.jpg') }}?v={{ cache_id }}"
                                      alt="Active Avatar Fitted Garment"
+                                     onerror="this.onerror=null;this.src='/static/images/garment-01.jpg';"
                                      loading="eager">
                             </div>
                         </div>

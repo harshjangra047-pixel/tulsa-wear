@@ -256,6 +256,12 @@
             if (!targetSrcRaw) return;
             const targetSrc = normalizeImgUrl(targetSrcRaw);
 
+            stageImg.onerror = () => {
+                stageImg.onerror = null;
+                stageImg.src = '/static/images/garment-01.jpg';
+                stageImg.style.opacity = '1';
+            };
+
             if (smooth && stageImg.src && stageImg.getAttribute('src') !== targetSrc) {
                 stageImg.style.opacity = '0.35';
                 stageImg.src = targetSrc;
@@ -455,13 +461,19 @@
             currentGarment = productData;
 
             // Load authentic gallery photoshoot images
-            if (PRODUCT_GALLERIES[pid] && PRODUCT_GALLERIES[pid].length > 0) {
-                currentGallery = [...PRODUCT_GALLERIES[pid]];
-            } else if (productData.img) {
-                currentGallery = [productData.img];
-            } else {
-                currentGallery = ['/static/images/bridal-wedding-collection.jpg'];
+            let gallery = [];
+            if (productData.img) {
+                gallery.push(productData.img);
             }
+            if (PRODUCT_GALLERIES[pid] && PRODUCT_GALLERIES[pid].length > 0) {
+                PRODUCT_GALLERIES[pid].forEach(src => {
+                    if (!gallery.includes(src)) gallery.push(src);
+                });
+            }
+            if (gallery.length === 0) {
+                gallery = ['/static/images/garment-01.jpg'];
+            }
+            currentGallery = gallery;
             currentImgIdx = 0;
 
             // Render gallery image on left preview immediately

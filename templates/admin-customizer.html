@@ -1801,7 +1801,7 @@
                         </div>
 
                         <div class="preview-viewport-box">
-                            <iframe id="livePreviewIframe" class="preview-frame mode-mobile" src="{{ url_for('home') }}?preview=1" title="Live Storefront Preview"></iframe>
+                            <iframe id="livePreviewIframe" class="preview-frame mode-mobile" src="{{ url_for('home') }}?preview=1{% if preview_token %}&editor_preview={{ preview_token }}{% endif %}" title="Live Storefront Preview"></iframe>
                         </div>
                     </div>
                 </div>
@@ -2019,7 +2019,7 @@
         let draggingSectionId = null;
         const sectionWidthControl = document.getElementById('selectedSectionWidth');
         const sectionHeightControl = document.getElementById('selectedSectionHeight');
-        const previewOrigin = new URL('{{ website_url }}').origin;
+        const previewOrigin = window.location.origin;
         function persistEditorLayout() {
             if (!editorSectionInput) return;
             editorSectionInput.value = JSON.stringify(editorSections);

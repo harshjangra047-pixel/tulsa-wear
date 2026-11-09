@@ -159,6 +159,7 @@
                                     src="{{ product_image_url(initial_garment.image) if initial_garment else url_for('static', filename='images/bridal-wedding-collection.jpg') }}?v={{ cache_id }}"
                                     alt="{{ initial_garment.name if initial_garment else 'Tulsa Silhouette' }}"
                                     class="avatar-garment-layer"
+                                    onerror="this.onerror=null;this.src='/static/images/garment-01.jpg';"
                                     loading="eager"
                                 >
                             </div>
