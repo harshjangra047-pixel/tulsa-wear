@@ -515,7 +515,7 @@ def ensure_schema_migrations():
             "permanent_phone": "VARCHAR(50) DEFAULT '9350439667'",
             "additional_emails": "TEXT DEFAULT ''",
             "reset_otp": "VARCHAR(10)",
-            "reset_otp_expiry": "DATETIME",
+            "reset_otp_expiry": "TIMESTAMP",
             "studio_email": "VARCHAR(100) DEFAULT 'contact@tulsawear.com'",
             "studio_address": "VARCHAR(255) DEFAULT 'Tulsa Wears Atelier, Hansi, Haryana, India - 125033'",
             "studio_hours": "VARCHAR(100) DEFAULT 'Mon – Sat: 10:00 AM – 7:00 PM IST'",
@@ -526,16 +526,19 @@ def ensure_schema_migrations():
             "shiprocket_email": "VARCHAR(150) DEFAULT ''",
             "shiprocket_password": "VARCHAR(255) DEFAULT ''",
             "shiprocket_token": "TEXT DEFAULT ''",
-            "shiprocket_token_expiry": "DATETIME",
-            "shipping_fallback_enabled": "BOOLEAN DEFAULT 1",
+            "shiprocket_token_expiry": "TIMESTAMP",
+            "shipping_fallback_enabled": "BOOLEAN DEFAULT TRUE",
             "shipping_flat_fallback": "FLOAT DEFAULT 0.0"
         }
         with db.engine.begin() as connection:
             for col_name, col_type in admin_cols.items():
                 if col_name not in existing_admin_cols:
-                    connection.execute(
-                        text(f"ALTER TABLE admin_users ADD COLUMN {col_name} {col_type}")
-                    )
+                    try:
+                        connection.execute(
+                            text(f"ALTER TABLE admin_users ADD COLUMN {col_name} {col_type}")
+                        )
+                    except Exception:
+                        pass
 
     if "customer_users" in tables:
         existing_cust_cols = {
@@ -543,19 +546,22 @@ def ensure_schema_migrations():
             for column in inspector.get_columns("customer_users")
         }
         cust_cols = {
-            "is_verified": "BOOLEAN DEFAULT 0",
+            "is_verified": "BOOLEAN DEFAULT FALSE",
             "otp_code": "VARCHAR(10)",
-            "otp_expiry": "DATETIME",
+            "otp_expiry": "TIMESTAMP",
             "otp_attempts": "INTEGER DEFAULT 0",
-            "otp_last_sent": "DATETIME",
+            "otp_last_sent": "TIMESTAMP",
             "saved_cart_json": "TEXT"
         }
         with db.engine.begin() as connection:
             for col_name, col_type in cust_cols.items():
                 if col_name not in existing_cust_cols:
-                    connection.execute(
-                        text(f"ALTER TABLE customer_users ADD COLUMN {col_name} {col_type}")
-                    )
+                    try:
+                        connection.execute(
+                            text(f"ALTER TABLE customer_users ADD COLUMN {col_name} {col_type}")
+                        )
+                    except Exception:
+                        pass
 
     if "customer_addresses" in tables:
         existing_addr_cols = {
@@ -564,9 +570,12 @@ def ensure_schema_migrations():
         }
         if "is_default" not in existing_addr_cols:
             with db.engine.begin() as connection:
-                connection.execute(
-                    text("ALTER TABLE customer_addresses ADD COLUMN is_default BOOLEAN DEFAULT 0")
-                )
+                try:
+                    connection.execute(
+                        text("ALTER TABLE customer_addresses ADD COLUMN is_default BOOLEAN DEFAULT FALSE")
+                    )
+                except Exception:
+                    pass
 
     # Ensure tables exist
     # Additive shared-content tables; existing catalog/order tables are untouched.
@@ -4650,7 +4659,10 @@ with app.app_context():
     except Exception:
         pass
 
-    ensure_schema_migrations()
+    try:
+        ensure_schema_migrations()
+    except Exception as e:
+        app.logger.warning(f"Schema migration warning: {e}")
 
 
 # =========================================
