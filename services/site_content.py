@@ -145,6 +145,7 @@ DEFAULT_SITE_CONTENT = {
     "fitting_room_eyebrow": "03 / VIRTUAL SILHOUETTE STUDIO",
     "fitting_room_title": "Interactive Atelier Fitting Room",
     "fitting_room_desc": "Select from 16 artisanal silhouettes. Inspect delicate zardozi, handwoven mulberry silk and custom tailoring drapes in real time.",
+    "vton_showcase_image": "bridal-wedding-collection.jpg",
     "silk_atelier_eyebrow": "04 / TEXTILE REPERTORY",
     "silk_atelier_title": "Pick Your Silk",
     "silk_atelier_desc": "Eight signature slow-woven weaves from Hansi, Varanasi, Chanderi, and Bengal.",

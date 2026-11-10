@@ -149,8 +149,11 @@
         </div>
 
         <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
-            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
-            <span class="brand-text-luxury">TULSA <em class="brand-sub-luxury">by Anjali</em></span>
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
+            <div class="brand-title-group">
+                <span class="brand-text-luxury">TULSA</span>
+                <span class="brand-sub-luxury">by Anjali</span>
+            </div>
         </a>
 
         <div class="nav-group-right">
@@ -493,15 +496,18 @@
                         {% set feat_fitting = best_sellers[0] if best_sellers else (products[0] if products else None) %}
                         <div class="vton-promo-arch-frame">
                             <div class="vton-promo-aura-glow"></div>
-                            <img src="{{ url_for('static', filename='images/bridal-wedding-collection.jpg') }}" alt="Tulsa Atelier Mannequin Avatar" class="vton-promo-hero-img" loading="lazy">
-                            <div class="vton-promo-garment-inset">
+                            <img src="{{ product_image_url(cms.get('vton_showcase_image', 'bridal-wedding-collection.jpg')) }}?v={{ cache_id }}" alt="Tulsa Atelier Mannequin Avatar" class="vton-promo-hero-img" loading="lazy" data-editor-image="vton_showcase_image">
+                            <a href="{{ url_for('fitting_room', select=feat_fitting.id) if feat_fitting else url_for('fitting_room') }}" class="vton-promo-garment-inset" style="text-decoration:none; cursor:pointer;" title="Tap to drape {{ feat_fitting.name if feat_fitting else 'this garment' }} in Virtual Fitting Room">
                                 <img src="{{ product_image_url(feat_fitting.image) if feat_fitting else url_for('static', filename='images/garment-01.jpg') }}" alt="{{ feat_fitting.name if feat_fitting else 'Active Drape Preview' }}" class="vton-inset-thumb" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/garment-01.jpg') }}';">
                                 <div class="vton-inset-info">
-                                    <span class="vton-inset-badge">✦ Active Drape</span>
+                                    <span class="vton-inset-badge">✦ Active Drape • Tap to Drape</span>
                                     <h4 class="vton-inset-name">{{ feat_fitting.name if feat_fitting else 'Handcrafted Silhouette' }}</h4>
-                                    <span class="vton-inset-price">₹{{ "{:,.0f}".format(feat_fitting.price) if feat_fitting else '2,499' }}</span>
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
+                                        <span class="vton-inset-price">₹{{ "{:,.0f}".format(feat_fitting.price) if feat_fitting else '2,499' }}</span>
+                                        <span class="vton-inset-tap-action" style="font-size:11px; color:#DFC187; font-weight:700; letter-spacing:0.04em; display:inline-flex; align-items:center; gap:2px;">Try On <span style="font-size:13px;">→</span></span>
+                                    </div>
                                 </div>
-                            </div>
+                            </a>
                             <div class="vton-promo-lighting-tag">
                                 <span class="tag-dot"></span> Studio Lighting: Festive Hall
                             </div>

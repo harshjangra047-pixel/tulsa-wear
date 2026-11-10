@@ -2922,46 +2922,60 @@ main {
     .nav-brand-center {
         display: flex !important;
         align-items: center !important;
-        gap: 6px !important;
+        gap: 7px !important;
         text-decoration: none !important;
-        flex-shrink: 1 !important;
+        flex-shrink: 0 !important;
         min-width: 0 !important;
-        overflow: hidden !important;
     }
 
     .brand-crest-logo {
-        width: 30px !important;
-        height: 30px !important;
+        width: 28px !important;
+        height: 28px !important;
         border-radius: 50% !important;
         object-fit: cover !important;
         border: 1.5px solid #c9a96e !important;
         background: #fff !important;
         flex-shrink: 0 !important;
+        box-shadow: 0 0 6px rgba(201, 169, 110, 0.3) !important;
+    }
+
+    .brand-title-group {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        text-align: left !important;
     }
 
     .brand-text-luxury {
-        font-family: 'Cormorant Garamond', serif !important;
-        font-size: 17px !important;
-        font-weight: 600 !important;
+        font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif !important;
+        font-size: 14.5px !important;
+        font-weight: 700 !important;
         letter-spacing: 0.14em !important;
         color: #f7f4ef !important;
         white-space: nowrap !important;
         text-transform: uppercase !important;
+        line-height: 1.05 !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
     .brand-sub-luxury {
-        font-family: 'Cormorant Garamond', serif !important;
-        font-size: 13px !important;
+        font-family: 'Cormorant Garamond', Georgia, serif !important;
+        font-size: 11px !important;
         font-style: italic !important;
         color: #c9a96e !important;
-        letter-spacing: 0.04em !important;
+        letter-spacing: 0.05em !important;
         text-transform: lowercase !important;
+        line-height: 1 !important;
+        margin-top: 1.5px !important;
+        white-space: nowrap !important;
     }
 
     .nav-group-right {
         display: flex !important;
         align-items: center !important;
-        gap: 6px !important;
+        gap: 5px !important;
         flex-shrink: 0 !important;
     }
 
@@ -2973,19 +2987,22 @@ main {
         display: inline-flex !important;
         align-items: center !important;
         justify-content: center !important;
-        height: 32px !important;
-        padding: 0 10px !important;
-        font-size: 11px !important;
-        font-weight: 600 !important;
-        letter-spacing: 0.06em !important;
+        gap: 3px !important;
+        height: 28px !important;
+        padding: 0 9px !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.08em !important;
         text-transform: uppercase !important;
         border-radius: 999px !important;
-        background: rgba(201, 169, 110, 0.18) !important;
+        background: rgba(201, 169, 110, 0.22) !important;
         border: 1px solid #DFC187 !important;
         color: #DFC187 !important;
         text-decoration: none !important;
         white-space: nowrap !important;
         flex-shrink: 0 !important;
+        line-height: 1 !important;
+        box-shadow: 0 0 10px rgba(201, 169, 110, 0.25) !important;
     }
 
     .nav-link-account-icon {
@@ -4471,13 +4488,23 @@ main {
     display: flex;
     align-items: center;
     gap: 14px;
-    background: rgba(8, 24, 18, 0.88);
+    background: rgba(8, 24, 18, 0.92);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(201, 169, 110, 0.45);
+    border: 1px solid rgba(201, 169, 110, 0.5);
     border-radius: 14px;
     padding: 10px 14px;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+    cursor: pointer !important;
+    text-decoration: none !important;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.vton-promo-garment-inset:hover,
+.vton-promo-garment-inset:active {
+    transform: translateY(-2px) !important;
+    border-color: rgba(201, 169, 110, 0.95) !important;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.75) !important;
 }
 
 .vton-inset-thumb {
@@ -4520,21 +4547,27 @@ main {
 
 .vton-promo-lighting-tag {
     position: absolute;
-    top: 28px;
-    right: 28px;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 3;
     display: inline-flex;
     align-items: center;
-    gap: 7px;
-    background: rgba(6, 20, 15, 0.85);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(201, 169, 110, 0.4);
+    justify-content: center;
+    gap: 6px;
+    background: rgba(6, 20, 15, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(201, 169, 110, 0.5);
     border-radius: 999px;
-    padding: 5px 12px;
+    padding: 5px 14px;
     font-size: 10px;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: #E8DFD2;
+    color: #F5EFEB;
+    white-space: nowrap !important;
+    max-width: 90%;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
 }
 
 .vton-promo-lighting-tag .tag-dot {
@@ -4753,6 +4786,23 @@ main {
     }
     .vton-promo-desc {
         font-size: 15px;
+    }
+    .vton-promo-garment-inset {
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        padding: 9px 12px;
+        gap: 10px;
+    }
+    .vton-inset-thumb {
+        width: 48px;
+        height: 48px;
+    }
+    .vton-promo-lighting-tag {
+        top: 14px;
+        font-size: 9px;
+        padding: 4px 12px;
+        letter-spacing: 0.1em;
     }
     .nav-tryon-mobile-pill {
         display: inline-flex;

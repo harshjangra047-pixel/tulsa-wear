@@ -65,7 +65,8 @@ class TestStage10MobileAndCmsSuite(unittest.TestCase):
 
     def test_02_editor_preview_token_generation_and_headers(self):
         """Verify that an EditorPreviewToken allows embedding without X-Frame-Options and sets CSP frame-ancestors."""
-        raw_token = "stage10-test-token-safe-random-12345"
+        import secrets
+        raw_token = secrets.token_urlsafe(24)
         token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
         with app.app_context():
             token_rec = EditorPreviewToken(
@@ -90,7 +91,8 @@ class TestStage10MobileAndCmsSuite(unittest.TestCase):
     def test_03_heritage_curtain_suppressed_in_preview(self):
         """Verify heritageOpeningCurtain is conditioned on {% if not editor_preview %}."""
         self.assertIn("{% if not editor_preview %}", self.index_html)
-        raw_token = "curtain-bypass-test-token-67890"
+        import secrets
+        raw_token = secrets.token_urlsafe(24)
         token_hash = hashlib.sha256(raw_token.encode("utf-8")).hexdigest()
         with app.app_context():
             token_rec = EditorPreviewToken(
@@ -131,6 +133,29 @@ class TestStage10MobileAndCmsSuite(unittest.TestCase):
         self.assertIn(".pdp-mobile-sticky-bar.is-hidden", self.atelier_css)
         self.assertIn('id="pdpMainAddBagBtn"', self.product_html)
         self.assertIn("IntersectionObserver", self.product_html)
+
+    def test_08_navbar_mobile_branding_and_tryon_nowrap(self):
+        """Verify navbar uses .brand-title-group and try-on pill never wraps on mobile."""
+        self.assertIn("brand-title-group", self.index_html)
+        self.assertIn("brand-title-group", self.product_html)
+        self.assertIn(".brand-title-group", self.atelier_css)
+        self.assertIn("white-space: nowrap !important;", self.atelier_css)
+
+    def test_09_vton_promo_clickable_inset_and_centered_lighting_tag(self):
+        """Verify the promo garment inset is a clickable link to fitting room and lighting tag is centered."""
+        self.assertIn('<a href="{{ url_for(\'fitting_room\'', self.index_html)
+        self.assertIn("vton-promo-garment-inset", self.index_html)
+        self.assertIn("left: 50%;", self.atelier_css)
+        self.assertIn("transform: translateX(-50%);", self.atelier_css)
+
+    def test_10_vton_showcase_image_cms_support(self):
+        """Verify vton_showcase_image is configurable in admin customizer and bound in index template."""
+        self.assertIn("vton_showcase_image_file", self.customizer_html)
+        self.assertIn("vton_showcase_image", self.index_html)
+        with app.app_context():
+            from services.site_content import get_site_content
+            cms = get_site_content()
+            self.assertIn("vton_showcase_image", cms)
 
 if __name__ == "__main__":
     unittest.main()

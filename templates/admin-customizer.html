@@ -1263,6 +1263,33 @@
                                 </div>
                             </div>
                         </div>
+
+                        <!-- Homepage Promotional Showcase Model / Mannequin Photo -->
+                        <div class="form-group" style="margin-top: 20px; padding-top: 18px; border-top: 1px dashed var(--admin-border, #e4ddd2);">
+                            <label class="form-label" style="font-weight: 700; color: #111;">
+                                👗 Homepage Arch Model / Mannequin Photo (Feature Silhouette)
+                            </label>
+                            <p style="font-size: 11px; color: var(--admin-muted, #666); margin-bottom: 10px;">
+                                Upload the photoshoot model or mannequin image displayed inside the grand arch on the homepage. Change this whenever you craft or want to feature a new silhouette!
+                            </p>
+                            <div class="image-picker-box">
+                                <div class="image-picker-flex">
+                                    <div class="current-thumb-wrap" style="width: 110px; height: 150px;">
+                                        <img src="{{ product_image_url(cms.get('vton_showcase_image', 'bridal-wedding-collection.jpg')) }}?v={{ cache_id }}" id="preview_vton_showcase" alt="Showcase Model Image" style="width: 100%; height: 100%; object-fit: cover;">
+                                        <span class="thumb-tag">Current</span>
+                                    </div>
+                                    <div class="upload-controls">
+                                        <label class="custom-file-btn">
+                                            📷 Choose New Photo / Camera
+                                            <input type="file" name="vton_showcase_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_vton_showcase', 'vton_showcase_status')">
+                                        </label>
+                                        <button type="button" class="btn-delete" style="font-size:11px; padding:6px 12px; margin-top:6px;" onclick="removeSectionImage('vton_showcase_image', 'preview_vton_showcase', 'vton_showcase_status')">🗑️ Reset to Default Photo</button>
+                                        <input type="hidden" name="vton_showcase_image" value="{{ cms.get('vton_showcase_image', 'bridal-wedding-collection.jpg') }}">
+                                        <div class="file-chosen-status" id="vton_showcase_status">Current: {{ cms.get('vton_showcase_image', 'bridal-wedding-collection.jpg') }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- =========================================

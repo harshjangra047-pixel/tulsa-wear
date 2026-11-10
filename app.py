@@ -4120,6 +4120,7 @@ def admin_customizer():
             "lookbook_slide3_image_file": ("lookbook_slide3_image", "lb3"),
             "lookbook_slide4_image_file": ("lookbook_slide4_image", "lb4"),
             "brand_logo_file": ("brand_logo", "logo"),
+            "vton_showcase_image_file": ("vton_showcase_image", "vton_model"),
         }
 
         updated_count = 0
