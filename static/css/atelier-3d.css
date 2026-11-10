@@ -6404,3 +6404,610 @@ body.luxury-page-emerald .catalog-empty-state p {
     max-width: 500px !important;
     margin: 0 auto 24px !important;
 }
+
+/* =====================================================
+   STAGE 9/10: MOBILE-FIRST LUXURY REDESIGN (MATCHING REFERENCE MOCKUP)
+   ===================================================== */
+
+/* Desktop defaults: Hide mobile-only components */
+.mobile-bottom-nav,
+.mobile-luxury-hero-wrap,
+.mobile-collections-header,
+.mobile-vton-card-wrap,
+.nav-tryon-mobile-circle,
+.btn-nav-bag-icon {
+    display: none !important;
+}
+
+/* Base Mobile Bottom Nav */
+.mobile-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    background: rgba(8, 26, 20, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-top: 1px solid rgba(201, 169, 110, 0.35);
+    z-index: 9998;
+    display: none;
+    align-items: center;
+    justify-content: space-around;
+    padding: 8px 6px calc(8px + env(safe-area-inset-bottom, 8px));
+    box-sizing: border-box;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.45);
+}
+
+.mobile-nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: rgba(245, 239, 235, 0.65);
+    text-decoration: none;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    transition: color 0.2s ease, transform 0.2s ease;
+    padding: 4px 0;
+    min-height: 44px;
+}
+
+.mobile-nav-tab.active {
+    color: #DFC187;
+    font-weight: 700;
+}
+
+.mobile-nav-tab:hover,
+.mobile-nav-tab:active {
+    color: #DFC187;
+}
+
+.mobile-nav-icon {
+    width: 22px;
+    height: 22px;
+    stroke: currentColor;
+    transition: transform 0.2s ease;
+}
+
+.mobile-nav-tab.active .mobile-nav-icon {
+    stroke: #DFC187;
+    filter: drop-shadow(0 0 6px rgba(223, 193, 135, 0.45));
+}
+
+.mobile-nav-tab.active svg path,
+.mobile-nav-tab.active svg polyline {
+    stroke-width: 2.2px;
+}
+
+.mobile-nav-label {
+    line-height: 1;
+}
+
+/* Suppress bottom nav on PDP page to let the sticky purchase bar breathe */
+body.is-pdp-page .mobile-bottom-nav {
+    display: none !important;
+}
+
+@media (max-width: 768px) {
+    /* Show mobile-first bottom nav on mobile */
+    body:not(.is-pdp-page) .mobile-bottom-nav {
+        display: flex !important;
+    }
+
+    body:not(.is-pdp-page) {
+        padding-bottom: calc(64px + env(safe-area-inset-bottom, 12px)) !important;
+    }
+
+    /* Floating AI Support bubble docked above bottom nav */
+    .ai-chat-bubble-toggle,
+    .tulsa-ai-bubble,
+    #tulsaAiToggle {
+        bottom: calc(72px + env(safe-area-inset-bottom, 12px)) !important;
+        right: 16px !important;
+        z-index: 9997 !important;
+    }
+
+    /* Mobile Header Layout Matching Reference Mockup */
+    .navbar.floating-frosted-nav {
+        padding: 0 10px !important;
+        height: 58px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        background: rgba(8, 26, 20, 0.88) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        border: 1px solid rgba(201, 169, 110, 0.3) !important;
+        border-radius: 999px !important;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5) !important;
+    }
+
+    .nav-brand-center {
+        position: static !important;
+        transform: none !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-left: 2px !important;
+    }
+
+    .brand-crest-logo {
+        width: 32px !important;
+        height: 32px !important;
+        border-radius: 50% !important;
+        border: 1.5px solid #DFC187 !important;
+        object-fit: cover !important;
+        background: #ffffff !important;
+    }
+
+    .brand-title-group {
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+    }
+
+    .brand-text-luxury {
+        font-family: 'Cinzel', Georgia, serif !important;
+        font-size: 15px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.16em !important;
+        color: #F5EFEB !important;
+        line-height: 1.05 !important;
+    }
+
+    .brand-sub-luxury {
+        font-family: 'Cormorant Garamond', Georgia, serif !important;
+        font-size: 11.5px !important;
+        font-style: italic !important;
+        color: #DFC187 !important;
+        letter-spacing: 0.05em !important;
+        margin-top: 1px !important;
+    }
+
+    .nav-group-right {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    .nav-tryon-mobile-circle {
+        display: inline-flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 38px !important;
+        height: 38px !important;
+        border-radius: 50% !important;
+        border: 1.2px solid #DFC187 !important;
+        background: radial-gradient(circle, rgba(201, 169, 110, 0.25) 0%, rgba(8, 26, 20, 0.95) 100%) !important;
+        color: #DFC187 !important;
+        text-decoration: none !important;
+        box-shadow: 0 0 10px rgba(201, 169, 110, 0.3) !important;
+        flex-shrink: 0 !important;
+        line-height: 1 !important;
+        padding: 2px !important;
+    }
+
+    .tryon-circle-icon {
+        width: 13px !important;
+        height: 13px !important;
+        stroke: #DFC187 !important;
+        margin-bottom: 1px !important;
+    }
+
+    .tryon-circle-text {
+        font-family: 'Cinzel', Georgia, serif !important;
+        font-size: 7px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.04em !important;
+        color: #DFC187 !important;
+        text-align: center !important;
+        line-height: 0.9 !important;
+    }
+
+    .btn-nav-bag-icon {
+        display: inline-flex !important;
+        position: relative !important;
+        width: 36px !important;
+        height: 36px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #F5EFEB !important;
+        text-decoration: none !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(201, 169, 110, 0.3) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .btn-nav-bag-icon svg {
+        width: 18px !important;
+        height: 18px !important;
+        stroke: #F5EFEB !important;
+    }
+
+    .bag-badge-counter {
+        position: absolute !important;
+        top: 2px !important;
+        right: 2px !important;
+        background: #C9A96E !important;
+        color: #061611 !important;
+        font-size: 9.5px !important;
+        font-weight: 800 !important;
+        min-width: 15px !important;
+        height: 15px !important;
+        border-radius: 50% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        line-height: 1 !important;
+        padding: 0 2px !important;
+        border: 1px solid #061611 !important;
+    }
+
+    .nav-link-account-icon {
+        display: inline-flex !important;
+        width: 36px !important;
+        height: 36px !important;
+        align-items: center !important;
+        justify-content: center !important;
+        color: #F5EFEB !important;
+        text-decoration: none !important;
+        border-radius: 50% !important;
+        background: rgba(255, 255, 255, 0.05) !important;
+        border: 1px solid rgba(201, 169, 110, 0.3) !important;
+        flex-shrink: 0 !important;
+    }
+
+    .nav-link-account-icon svg {
+        width: 18px !important;
+        height: 18px !important;
+        stroke: #F5EFEB !important;
+    }
+
+    .nav-tryon-mobile-pill,
+    .btn-nav-bag {
+        display: none !important;
+    }
+
+    /* Mobile Hero Experience (Matching Reference Mockup) */
+    .hero.hero-royal-emerald {
+        padding: 80px 16px 28px !important;
+        min-height: auto !important;
+        background: 
+            radial-gradient(circle at 80% 30%, rgba(20, 60, 48, 0.75) 0%, transparent 65%),
+            radial-gradient(circle at 20% 80%, rgba(12, 37, 29, 0.95) 0%, transparent 70%),
+            linear-gradient(180deg, #05140f 0%, #081e17 60%, #05140f 100%) !important;
+    }
+
+    .hero-grid-split {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 18px !important;
+    }
+
+    .hero-editorial-left {
+        text-align: left !important;
+        padding: 0 !important;
+    }
+
+    /* Hide desktop hero text blocks on mobile */
+    .hero-tag-tradition,
+    .hero-display-h1,
+    .hero-narrative-copy,
+    .hero-cta-cluster,
+    .hero-stats-strip {
+        display: none !important;
+    }
+
+    /* Show mobile-first hero text overlay */
+    .mobile-luxury-hero-wrap {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        text-align: left !important;
+        padding: 6px 4px 12px !important;
+    }
+
+    .mobile-luxury-h1 {
+        font-family: 'Cinzel', Georgia, serif !important;
+        font-size: 27px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.1em !important;
+        color: #F5EFEB !important;
+        line-height: 1.22 !important;
+        margin: 0 0 14px 0 !important;
+    }
+
+    .mobile-luxury-h1 .gold-italic {
+        font-family: 'Cormorant Garamond', Georgia, serif !important;
+        font-style: italic !important;
+        font-weight: 500 !important;
+        letter-spacing: 0.05em !important;
+        color: #DFC187 !important;
+        background: linear-gradient(135deg, #DFC187 0%, #F5EFEB 60%, #C9A96E 100%) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        display: block !important;
+    }
+
+    .mobile-luxury-desc {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 13px !important;
+        line-height: 1.55 !important;
+        color: rgba(245, 239, 235, 0.8) !important;
+        margin: 0 0 20px 0 !important;
+        max-width: 320px !important;
+    }
+
+    .mobile-hero-btn-row {
+        margin-bottom: 20px !important;
+    }
+
+    .btn-mobile-explore-collections {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 10px 22px !important;
+        border-radius: 999px !important;
+        border: 1px solid #DFC187 !important;
+        background: rgba(201, 169, 110, 0.12) !important;
+        color: #DFC187 !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 11px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.12em !important;
+        text-transform: uppercase !important;
+        text-decoration: none !important;
+        box-shadow: 0 4px 16px rgba(201, 169, 110, 0.18) !important;
+    }
+
+    .mobile-hero-dots-row {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+    }
+
+    .hero-dot {
+        width: 8px !important;
+        height: 8px !important;
+        border-radius: 50% !important;
+        border: 1px solid #DFC187 !important;
+        background: transparent !important;
+        transition: all 0.2s ease !important;
+    }
+
+    .hero-dot.active {
+        background: #DFC187 !important;
+        box-shadow: 0 0 8px rgba(223, 193, 135, 0.6) !important;
+    }
+
+    .hero-archway-wrap {
+        width: 100% !important;
+        max-width: 380px !important;
+        margin: 0 auto !important;
+    }
+
+    .mughal-arch-frame {
+        border-radius: 120px 120px 16px 16px !important;
+        max-height: 380px !important;
+        overflow: hidden !important;
+        border: 1px solid rgba(201, 169, 110, 0.4) !important;
+    }
+
+    .arch-hero-image {
+        height: 380px !important;
+        object-fit: cover !important;
+        object-position: top center !important;
+    }
+
+    /* Collections Section Matching Reference Mockup */
+    .arched-portals-section {
+        padding: 24px 0 20px !important;
+    }
+
+    .section-head-editorial {
+        display: none !important;
+    }
+
+    .mobile-collections-header {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 12px !important;
+        margin: 12px auto 16px !important;
+        padding: 0 16px !important;
+    }
+
+    .gold-line {
+        flex: 0 0 38px !important;
+        height: 1px !important;
+        background: rgba(201, 169, 110, 0.45) !important;
+    }
+
+    .gold-collections-title {
+        font-family: 'Cinzel', Georgia, serif !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.18em !important;
+        color: #DFC187 !important;
+        text-transform: uppercase !important;
+    }
+
+    .arched-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 8px !important;
+        padding: 0 12px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .arched-card {
+        border-radius: 18px 18px 6px 6px !important;
+        overflow: hidden !important;
+        border: 1px solid rgba(201, 169, 110, 0.45) !important;
+        background: #081e17 !important;
+        aspect-ratio: 0.62 !important;
+        position: relative !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-end !important;
+        text-decoration: none !important;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35) !important;
+    }
+
+    .arched-card .arched-media {
+        position: absolute !important;
+        inset: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .arched-card .arched-media img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        object-position: top center !important;
+    }
+
+    .arched-card .arched-overlay {
+        position: absolute !important;
+        inset: 0 !important;
+        background: linear-gradient(180deg, rgba(6, 22, 17, 0.05) 30%, rgba(6, 22, 17, 0.88) 88%) !important;
+    }
+
+    .arched-card .arched-info {
+        position: relative !important;
+        z-index: 2 !important;
+        padding: 6px 2px !important;
+        text-align: center !important;
+    }
+
+    .arched-card .arched-number,
+    .arched-card .arched-link {
+        display: none !important;
+    }
+
+    .arched-card .arched-title {
+        font-family: 'Cormorant Garamond', Georgia, serif !important;
+        font-size: 13.5px !important;
+        font-weight: 600 !important;
+        color: #F5EFEB !important;
+        letter-spacing: 0.05em !important;
+        margin: 0 !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+        text-shadow: 0 2px 6px rgba(0, 0, 0, 0.8) !important;
+    }
+
+    /* Virtual Fitting Room Banner Matching Reference Mockup */
+    .mobile-vton-card-wrap {
+        display: block !important;
+        padding: 8px 12px 16px !important;
+    }
+
+    .mobile-vton-banner-card {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        background: linear-gradient(135deg, rgba(14, 44, 34, 0.95) 0%, rgba(6, 22, 17, 0.98) 100%) !important;
+        border: 1px solid rgba(201, 169, 110, 0.45) !important;
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
+        text-decoration: none !important;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 0 20px rgba(201, 169, 110, 0.08) !important;
+        transition: transform 0.2s ease, border-color 0.2s ease !important;
+    }
+
+    .mobile-vton-banner-card:active {
+        transform: scale(0.98) !important;
+        border-color: #DFC187 !important;
+    }
+
+    .mobile-vton-silhouette-side {
+        width: 58px !important;
+        height: 72px !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-right: 12px !important;
+    }
+
+    .silhouette-gold-svg {
+        width: 100% !important;
+        height: 100% !important;
+        filter: drop-shadow(0 0 6px rgba(201, 169, 110, 0.4)) !important;
+    }
+
+    .mobile-vton-content {
+        flex: 1 !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 3px !important;
+    }
+
+    .mobile-vton-title {
+        font-family: 'Cinzel', Georgia, serif !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.12em !important;
+        color: #DFC187 !important;
+        line-height: 1.1 !important;
+    }
+
+    .mobile-vton-sub {
+        font-family: 'Cormorant Garamond', Georgia, serif !important;
+        font-size: 13px !important;
+        font-style: italic !important;
+        color: rgba(245, 239, 235, 0.78) !important;
+        letter-spacing: 0.04em !important;
+        margin-bottom: 4px !important;
+    }
+
+    .btn-mobile-vton-try {
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+        padding: 5px 14px !important;
+        border-radius: 999px !important;
+        border: 1px solid #DFC187 !important;
+        background: rgba(201, 169, 110, 0.15) !important;
+        color: #DFC187 !important;
+        font-family: 'Inter', sans-serif !important;
+        font-size: 10px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.08em !important;
+        text-transform: uppercase !important;
+    }
+
+    /* Product Cards Mobile Quality Guarantee: image strictly on top, text and price below */
+    .product-card,
+    .editorial-product-card {
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
+    }
+
+    .product-card .product-image,
+    .editorial-product-card .product-media {
+        width: 100% !important;
+        position: relative !important;
+    }
+
+    .product-card .product-info,
+    .editorial-product-card .product-meta {
+        position: static !important;
+        width: 100% !important;
+        padding: 10px 4px 6px !important;
+        background: transparent !important;
+    }
+}

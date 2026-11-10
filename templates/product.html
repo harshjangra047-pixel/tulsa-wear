@@ -61,17 +61,44 @@
         </a>
 
         <div class="nav-group-right">
+            <a href="{{ url_for('fitting_room') }}?select={{ product.id }}" class="nav-tryon-mobile-circle" title="Virtual Try-On">
+                <svg class="tryon-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3c0 .7.3 1.4.8 1.9L4 12v2h16v-2l-5.8-5.1c.5-.5.8-1.2.8-1.9a3 3 0 0 0-3-3Z"/>
+                    <path d="M6 14v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7"/>
+                </svg>
+                <span class="tryon-circle-text">TRY-<br>ON</span>
+            </a>
             <a href="{{ url_for('fitting_room') }}?select={{ product.id }}" class="nav-tryon-mobile-pill" title="Virtual Try-On">✦ Try-On</a>
             <a href="{{ url_for('home') }}#weaving-studio" class="nav-link-item">Weaving Studio</a>
-            {% if current_customer %}
-            <a href="{{ url_for('customer_dashboard') }}" class="nav-link-account-icon" title="My Account">👤</a>
-            {% else %}
-            <a href="{{ url_for('customer_login') }}" class="nav-link-account-icon" title="Sign In">👤</a>
-            {% endif %}
+            <a href="{{ url_for('bag') }}" class="btn-nav-bag-icon" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                    <path d="M3 6h18"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+                {% if session.get('cart', [])|length > 0 %}
+                <span class="bag-badge-counter">{{ session.get('cart', [])|length }}</span>
+                {% endif %}
+            </a>
             <a href="{{ url_for('bag') }}" class="btn-nav-bag" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
                 <span class="bag-label-text">Bag</span>
                 <span class="bag-count-pill">{{ session.get('cart', [])|length }}</span>
             </a>
+            {% if current_customer %}
+            <a href="{{ url_for('customer_dashboard') }}" class="nav-link-account-icon" title="My Account">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="7" r="4"/>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                </svg>
+            </a>
+            {% else %}
+            <a href="{{ url_for('customer_login') }}" class="nav-link-account-icon" title="Sign In">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="7" r="4"/>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                </svg>
+            </a>
+            {% endif %}
         </div>
 
         <!-- Mobile Navigation Drawer -->
@@ -600,6 +627,7 @@
             observer.observe(pdpMainBtn);
         }
     </script>
+    {% include 'mobile_bottom_nav.html' %}
 </body>
 
 </html>

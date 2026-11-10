@@ -157,18 +157,45 @@
         </a>
 
         <div class="nav-group-right">
+            <a href="{{ url_for('fitting_room') }}" class="nav-tryon-mobile-circle" title="Virtual Try-On">
+                <svg class="tryon-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a3 3 0 0 0-3 3c0 .7.3 1.4.8 1.9L4 12v2h16v-2l-5.8-5.1c.5-.5.8-1.2.8-1.9a3 3 0 0 0-3-3Z"/>
+                    <path d="M6 14v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7"/>
+                </svg>
+                <span class="tryon-circle-text">TRY-<br>ON</span>
+            </a>
             <a href="{{ url_for('fitting_room') }}" class="nav-tryon-mobile-pill" title="Virtual Try-On">✦ Try-On</a>
             <a href="#weaving-studio" class="nav-link-item">Weaving Studio</a>
             <a href="#cinematic-lookbook" class="nav-link-item">Reels</a>
-            {% if current_customer %}
-            <a href="{{ url_for('customer_account_dashboard') }}" class="nav-link-account-icon" title="My Account">👤</a>
-            {% else %}
-            <a href="{{ url_for('customer_login') }}" class="nav-link-account-icon" title="Sign In">👤</a>
-            {% endif %}
+            <a href="{{ url_for('bag') }}" class="btn-nav-bag-icon" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
+                    <path d="M3 6h18"/>
+                    <path d="M16 10a4 4 0 0 1-8 0"/>
+                </svg>
+                {% if session.get('cart', [])|length > 0 %}
+                <span class="bag-badge-counter">{{ session.get('cart', [])|length }}</span>
+                {% endif %}
+            </a>
             <a href="{{ url_for('bag') }}" class="btn-nav-bag" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
                 <span class="bag-label-text">Bag</span>
                 <span class="bag-badge-pill">{{ session.get('cart', [])|length }}</span>
             </a>
+            {% if current_customer %}
+            <a href="{{ url_for('customer_account_dashboard') }}" class="nav-link-account-icon" title="My Account">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="7" r="4"/>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                </svg>
+            </a>
+            {% else %}
+            <a href="{{ url_for('customer_login') }}" class="nav-link-account-icon" title="Sign In">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="7" r="4"/>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                </svg>
+            </a>
+            {% endif %}
         </div>
 
         <nav class="nav-links mobile-navigation-drawer" id="navLinks" role="navigation" aria-label="Mobile Navigation">
@@ -212,6 +239,29 @@
 
                 <!-- Editorial Copy Column -->
                 <div class="hero-editorial-left">
+                    <!-- Mobile-First Luxury Hero Card (Reference Mockup Experience) -->
+                    <div class="mobile-luxury-hero-wrap">
+                        <h1 class="mobile-luxury-h1">
+                            YOUR STYLE.<br>
+                            YOUR FIT.<br>
+                            <em class="gold-italic">YOUR EXPERIENCE.</em>
+                        </h1>
+                        <p class="mobile-luxury-desc">
+                            Step into the Tulsa virtual fitting room and explore our handcrafted collections in a more personal way.
+                        </p>
+                        <div class="mobile-hero-btn-row">
+                            <a href="#mood-portals" class="btn-mobile-explore-collections">
+                                EXPLORE COLLECTIONS →
+                            </a>
+                        </div>
+                        <div class="mobile-hero-dots-row" aria-hidden="true">
+                            <span class="hero-dot active"></span>
+                            <span class="hero-dot"></span>
+                            <span class="hero-dot"></span>
+                            <span class="hero-dot"></span>
+                        </div>
+                    </div>
+
                     <p class="hero-tag-tradition" data-editor-field="hero_badge">
                         ✦ TRADITION MEETS TOMORROW ✦
                     </p>
@@ -285,72 +335,101 @@
                 <h2>{{ cms.get('mood_title', 'Six Moods. <em>Infinite Craft.</em>')|safe }}</h2>
             </div>
 
+            <!-- Mobile-First Header Matching Reference Mockup -->
+            <div class="mobile-collections-header">
+                <span class="gold-line"></span>
+                <span class="gold-collections-title">OUR COLLECTIONS</span>
+                <span class="gold-line"></span>
+            </div>
+
             <div class="arched-grid">
 
-                <a href="{{ cms.get('mood_cat1_link') or url_for('shop', category=cms.get('mood_cat1_title', 'Palazzo Set')) }}" class="arched-card reveal reveal-delay-1">
+                <a href="{{ cms.get('mood_cat1_link') or url_for('shop', category=cms.get('mood_cat1_title', 'Festive')) }}" class="arched-card reveal reveal-delay-1">
                     <div class="arched-media">
-                        <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'editorial-category-1.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat1_title', 'Palazzo Set') }}" 
+                        <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'festive-atelier-collection.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat1_title', 'Festive') }}" 
                              loading="lazy"
                              decoding="async"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/festive-atelier-collection.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">01 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat1_title', 'Palazzo Set') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat1_title', 'Festive') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat1_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
-                <a href="{{ cms.get('mood_cat2_link') or url_for('shop', category=cms.get('mood_cat2_title', 'Salwar Kameez')) }}" class="arched-card reveal reveal-delay-2">
+                <a href="{{ cms.get('mood_cat2_link') or url_for('shop', category=cms.get('mood_cat2_title', 'Bridal')) }}" class="arched-card reveal reveal-delay-2">
                     <div class="arched-media">
-                        <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'editorial-category-2.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}" 
+                        <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'bridal-wedding-collection.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat2_title', 'Bridal') }}" 
                              loading="lazy"
                              decoding="async"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/bridal-wedding-collection.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">02 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat2_title', 'Bridal') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat2_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
-                <a href="{{ cms.get('mood_cat3_link') or url_for('shop', category=cms.get('mood_cat3_title', 'Casual Wear')) }}" class="arched-card reveal reveal-delay-3">
+                <a href="{{ cms.get('mood_cat3_link') or url_for('shop', category=cms.get('mood_cat3_title', 'Silk')) }}" class="arched-card reveal reveal-delay-3">
                     <div class="arched-media">
-                        <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-category-3.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat3_title', 'Casual Wear') }}" 
+                        <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-collection.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat3_title', 'Silk') }}" 
                              loading="lazy"
                              decoding="async"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-collection.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">03 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat3_title', 'Casual Wear') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat3_title', 'Silk') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat3_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
-                <a href="{{ cms.get('mood_cat4_link') or url_for('shop', category=cms.get('mood_cat4_title', 'Party / Wedding Regalia')) }}" class="arched-card reveal reveal-delay-4">
+                <a href="{{ cms.get('mood_cat4_link') or '#cinematic-lookbook' }}" class="arched-card reveal reveal-delay-4">
                     <div class="arched-media">
-                        <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'editorial-category-4.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat4_title', 'Party / Wedding Regalia') }}" 
+                        <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'garment-01.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat4_title', 'Lookbook') }}" 
                              loading="lazy"
                              decoding="async"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/garment-01.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">04 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat4_title', 'Party / Wedding Regalia') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat4_title', 'Lookbook') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat4_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
+            </div>
+
+            <!-- Mobile Virtual Fitting Room Luxury Card (Reference Mockup Experience) -->
+            <div class="mobile-vton-card-wrap">
+                <a href="{{ url_for('fitting_room') }}" class="mobile-vton-banner-card">
+                    <div class="mobile-vton-silhouette-side">
+                        <svg class="silhouette-gold-svg" viewBox="0 0 100 120" fill="none" stroke="#DFC187" stroke-width="1.8">
+                            <path d="M50 15 C44 15 40 20 40 28 C40 36 44 42 50 42 C56 42 60 36 60 28 C60 20 56 15 50 15 Z" stroke-width="1.5"/>
+                            <path d="M42 22 C38 18 34 26 36 34 C38 42 42 46 42 46" stroke-width="1.2"/>
+                            <path d="M58 22 C62 18 66 26 64 34 C62 42 58 46 58 46" stroke-width="1.2"/>
+                            <path d="M46 42 L46 50 C46 52 44 54 41 55 C33 58 24 64 20 74 C18 78 19 86 21 95 C22 100 24 108 26 115" stroke-width="1.6"/>
+                            <path d="M54 42 L54 50 C54 52 56 54 59 55 C67 58 76 64 80 74 C82 78 81 86 79 95 C78 100 76 108 74 115" stroke-width="1.6"/>
+                            <path d="M36 68 C44 76 56 76 64 68" stroke-width="1.4"/>
+                            <path d="M40 88 C46 92 54 92 60 88" stroke-width="1.2"/>
+                        </svg>
+                    </div>
+                    <div class="mobile-vton-content">
+                        <span class="mobile-vton-title">VIRTUAL FITTING ROOM</span>
+                        <span class="mobile-vton-sub">Try. Experience. Own.</span>
+                        <span class="btn-mobile-vton-try">TRY NOW →</span>
+                    </div>
+                </a>
             </div>
 
         </section>
@@ -2477,6 +2556,7 @@
     {% endif %}
 
 
+    {% include 'mobile_bottom_nav.html' %}
 </body>
 
 </html>

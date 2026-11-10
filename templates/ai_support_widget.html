@@ -3,8 +3,13 @@
 ========================================== -->
 <div id="tulsaAiSupportWidget" class="ai-support-widget-root">
 
-    <!-- Floating Help Button (Bottom-Left Desktop / Docked Mobile) -->
+    <!-- Floating Help Button (Bottom-Left Desktop / Docked Round Bubble Mobile) -->
     <button type="button" class="btn-floating-ai-help" id="btnToggleAiSupport" aria-label="Open AI Shopping Assistant" title="Tulsa AI Shopping Concierge">
+        <span class="ai-help-bubble-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            </svg>
+        </span>
         <span class="ai-help-icon">✨</span>
         <span class="ai-help-label">Need Help? Ask AI</span>
         <span class="ai-help-dot-online"></span>
@@ -502,24 +507,47 @@
         object-fit: cover;
     }
 
-    /* Mobile Responsive Docking */
+    .ai-help-bubble-icon {
+        display: none;
+    }
+
+    /* Mobile Responsive Docking (Stage 9 Floating Round Gold Bubble) */
     @media (max-width: 768px) {
         .btn-floating-ai-help {
-            bottom: calc(20px + env(safe-area-inset-bottom, 0px));
-            left: 14px;
-            padding: 8px 14px;
-            z-index: 996;
+            position: fixed !important;
+            bottom: calc(68px + env(safe-area-inset-bottom, 12px)) !important;
+            right: 16px !important;
+            left: auto !important;
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 50% !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            background: radial-gradient(circle at 35% 35%, #F5E5C9 0%, #C9A96E 60%, #9E7D3B 100%) !important;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 14px rgba(201, 169, 110, 0.35) !important;
+            border: 1.5px solid #F2D08C !important;
+            z-index: 1000 !important;
+        }
+        .ai-help-bubble-icon {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            color: #FFFFFF !important;
+        }
+        .ai-help-icon,
+        .ai-help-label,
+        .ai-help-dot-online {
+            display: none !important;
         }
         /* Elevate above sticky purchase / checkout bar if active */
         body.has-pdp-sticky-bar .btn-floating-ai-help,
         .has-sticky-bar .btn-floating-ai-help {
-            bottom: calc(78px + env(safe-area-inset-bottom, 12px)) !important;
-        }
-        .ai-help-label {
-            font-size: 10.5px;
+            bottom: calc(76px + env(safe-area-inset-bottom, 12px)) !important;
         }
         .chatgpt-profile-pill {
-            display: none !important; /* Account shortcut is conveniently located in header and mobile drawer */
+            display: none !important; /* Account shortcut is conveniently located in header, mobile drawer & bottom nav */
         }
         .profile-pill-avatar {
             width: 28px;
@@ -529,7 +557,7 @@
         .ai-chat-drawer {
             left: 10px;
             right: 10px;
-            bottom: calc(80px + env(safe-area-inset-bottom, 12px));
+            bottom: calc(76px + env(safe-area-inset-bottom, 12px));
             width: auto;
             max-width: none;
             height: min(480px, 75vh);
