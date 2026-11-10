@@ -127,15 +127,25 @@
     {% endif %}
 
     <header class="navbar floating-frosted-nav" id="top">
-        <button
-            id="menuButton"
-            class="menu-button mobile-menu-toggle"
-            type="button"
-            aria-label="Open navigation menu"
-            aria-expanded="false"
-        >
-            ☰
-        </button>
+        <div class="nav-brand-cluster-left">
+            <button
+                id="menuButton"
+                class="menu-button mobile-menu-toggle"
+                type="button"
+                aria-label="Open navigation menu"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+
+            <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
+                <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
+                <div class="brand-title-group">
+                    <span class="brand-text-luxury">TULSA</span>
+                    <span class="brand-sub-luxury">by Anjali</span>
+                </div>
+            </a>
+        </div>
 
         <div class="nav-group-left">
             <a href="#hero-section" class="nav-link-item">New In</a>
@@ -147,14 +157,6 @@
             <a href="#the-rack" class="nav-link-item">The Rack</a>
             <a href="{{ url_for('shop') }}" class="nav-link-item">Catalogue</a>
         </div>
-
-        <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
-            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
-            <div class="brand-title-group">
-                <span class="brand-text-luxury">TULSA</span>
-                <span class="brand-sub-luxury">by Anjali</span>
-            </div>
-        </a>
 
         <div class="nav-group-right">
             <a href="{{ url_for('fitting_room') }}" class="nav-tryon-mobile-circle" title="Virtual Try-On">
@@ -235,33 +237,39 @@
 
         <section class="hero hero-royal-emerald" id="hero-section">
 
+            <!-- Mobile-First Luxury Hero Card (Reference Photo 2 Experience) -->
+            <div class="mobile-mockup-hero-card">
+                <div class="mobile-hero-bg-media">
+                    <img src="{{ url_for('static', filename='images/mobile_hero_ref.jpg') }}?v={{ cache_id }}" 
+                         alt="Tulsa Royal Emerald Couture" 
+                         class="mobile-hero-ref-img">
+                    <div class="mobile-hero-gradient-overlay"></div>
+                </div>
+                <div class="mobile-hero-text-content">
+                    <h1 class="mobile-hero-title">
+                        <span>YOUR STYLE.</span>
+                        <span>YOUR FIT.</span>
+                        <em class="mobile-hero-italic">YOUR EXPERIENCE.</em>
+                    </h1>
+                    <p class="mobile-hero-paragraph">
+                        Step into the Tulsa virtual fitting room and explore our handcrafted collections in a more personal way.
+                    </p>
+                    <a href="#mood-portals" class="mobile-hero-pill-btn">
+                        EXPLORE COLLECTIONS →
+                    </a>
+                    <div class="mobile-hero-dots">
+                        <span class="dot active"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                </div>
+            </div>
+
             <div class="hero-grid-split">
 
                 <!-- Editorial Copy Column -->
                 <div class="hero-editorial-left">
-                    <!-- Mobile-First Luxury Hero Card (Reference Mockup Experience) -->
-                    <div class="mobile-luxury-hero-wrap">
-                        <h1 class="mobile-luxury-h1">
-                            YOUR STYLE.<br>
-                            YOUR FIT.<br>
-                            <em class="gold-italic">YOUR EXPERIENCE.</em>
-                        </h1>
-                        <p class="mobile-luxury-desc">
-                            Step into the Tulsa virtual fitting room and explore our handcrafted collections in a more personal way.
-                        </p>
-                        <div class="mobile-hero-btn-row">
-                            <a href="#mood-portals" class="btn-mobile-explore-collections">
-                                EXPLORE COLLECTIONS →
-                            </a>
-                        </div>
-                        <div class="mobile-hero-dots-row" aria-hidden="true">
-                            <span class="hero-dot active"></span>
-                            <span class="hero-dot"></span>
-                            <span class="hero-dot"></span>
-                            <span class="hero-dot"></span>
-                        </div>
-                    </div>
-
                     <p class="hero-tag-tradition" data-editor-field="hero_badge">
                         ✦ TRADITION MEETS TOMORROW ✦
                     </p>
@@ -346,7 +354,7 @@
 
                 <a href="{{ cms.get('mood_cat1_link') or url_for('shop', category=cms.get('mood_cat1_title', 'Festive')) }}" class="arched-card reveal reveal-delay-1">
                     <div class="arched-media">
-                        <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'festive-atelier-collection.jpg') }}?v={{ cache_id }}"
+                        <img src="{{ url_for('static', filename='images/mobile_col_festive.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat1_title', 'Festive') }}" 
                              loading="lazy"
                              decoding="async"
@@ -362,7 +370,7 @@
 
                 <a href="{{ cms.get('mood_cat2_link') or url_for('shop', category=cms.get('mood_cat2_title', 'Bridal')) }}" class="arched-card reveal reveal-delay-2">
                     <div class="arched-media">
-                        <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'bridal-wedding-collection.jpg') }}?v={{ cache_id }}"
+                        <img src="{{ url_for('static', filename='images/mobile_col_bridal.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat2_title', 'Bridal') }}" 
                              loading="lazy"
                              decoding="async"
@@ -378,7 +386,7 @@
 
                 <a href="{{ cms.get('mood_cat3_link') or url_for('shop', category=cms.get('mood_cat3_title', 'Silk')) }}" class="arched-card reveal reveal-delay-3">
                     <div class="arched-media">
-                        <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-collection.jpg') }}?v={{ cache_id }}"
+                        <img src="{{ url_for('static', filename='images/mobile_col_silk.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat3_title', 'Silk') }}" 
                              loading="lazy"
                              decoding="async"
@@ -394,7 +402,7 @@
 
                 <a href="{{ cms.get('mood_cat4_link') or '#cinematic-lookbook' }}" class="arched-card reveal reveal-delay-4">
                     <div class="arched-media">
-                        <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'garment-01.jpg') }}?v={{ cache_id }}"
+                        <img src="{{ url_for('static', filename='images/mobile_col_lookbook.jpg') }}?v={{ cache_id }}"
                              alt="{{ cms.get('mood_cat4_title', 'Lookbook') }}" 
                              loading="lazy"
                              decoding="async"

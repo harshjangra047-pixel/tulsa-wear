@@ -32,15 +32,25 @@
          FLOATING LUXURY FROSTED NAVBAR
     ========================================== -->
     <header class="navbar floating-frosted-nav" id="top">
-        <button
-            id="menuButton"
-            class="menu-button mobile-menu-toggle"
-            type="button"
-            aria-label="Open navigation menu"
-            aria-expanded="false"
-        >
-            ☰
-        </button>
+        <div class="nav-brand-cluster-left">
+            <button
+                id="menuButton"
+                class="menu-button mobile-menu-toggle"
+                type="button"
+                aria-label="Open navigation menu"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+
+            <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
+                <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
+                <div class="brand-title-group">
+                    <span class="brand-text-luxury">TULSA</span>
+                    <span class="brand-sub-luxury">by Anjali</span>
+                </div>
+            </a>
+        </div>
 
         <div class="nav-group-left">
             <a href="{{ url_for('home') }}" class="nav-link-item">← Boutique Home</a>
@@ -51,14 +61,6 @@
             <a href="{{ url_for('shop') }}" class="nav-link-item">The Collection</a>
             <a href="{{ url_for('home') }}#pick-your-silk" class="nav-link-item">Pick a Silk</a>
         </div>
-
-        <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
-            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
-            <div class="brand-title-group">
-                <span class="brand-text-luxury">TULSA</span>
-                <span class="brand-sub-luxury">by Anjali</span>
-            </div>
-        </a>
 
         <div class="nav-group-right">
             <a href="{{ url_for('fitting_room') }}?select={{ product.id }}" class="nav-tryon-mobile-circle" title="Virtual Try-On">

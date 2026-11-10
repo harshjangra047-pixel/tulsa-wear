@@ -243,7 +243,7 @@ def get_merchant_upi_config():
 # Admin Anti-Brute-Force Rate Limiting Store
 FAILED_ADMIN_LOGINS = {}  # ip -> {"count": int, "lockout_until": float}
 _STUDIO_CACHE = {"data": None, "ts": 0.0}
-ASSET_VERSION = os.environ.get("ASSET_VERSION", "2026.8.1")
+ASSET_VERSION = os.environ.get("ASSET_VERSION", "2026.11.10.stage9ref2")
 
 # Production HTTP Security & Caching Headers
 @app.after_request
@@ -254,14 +254,14 @@ def add_security_headers(response):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
 
     if request.path.startswith("/static/"):
-        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        response.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=3600"
     elif getattr(g, "editor_preview", False):
         response.headers.pop("X-Frame-Options", None)
         response.headers["Content-Security-Policy"] = "frame-ancestors 'self' *"
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
     elif request.method == "GET" and not session.get("customer_id") and not session.get("admin_authenticated"):
         if request.path in ["/", "/shop", "/fitting-room", "/robots.txt", "/sitemap.xml"]:
-            response.headers["Cache-Control"] = "public, max-age=120, s-maxage=600, stale-while-revalidate=120"
+            response.headers["Cache-Control"] = "public, max-age=10, s-maxage=10, stale-while-revalidate=10"
     return response
 
 @app.context_processor

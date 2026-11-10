@@ -47,12 +47,12 @@ class TestStage9MobileRedesign(unittest.TestCase):
         response = self.client.get('/')
         self.assertEqual(response.status_code, 200)
         html = response.data.decode('utf-8')
-        self.assertIn('mobile-luxury-hero-wrap', html)
+        self.assertIn('mobile-mockup-hero-card', html)
         self.assertIn('YOUR STYLE.', html)
         self.assertIn('YOUR FIT.', html)
         self.assertIn('YOUR EXPERIENCE.', html)
         self.assertIn('EXPLORE COLLECTIONS →', html)
-        self.assertIn('mobile-hero-dots-row', html)
+        self.assertIn('mobile-hero-dots', html)
 
     def test_our_collections_arched_cards_present(self):
         response = self.client.get('/')

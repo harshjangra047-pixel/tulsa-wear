@@ -10,9 +10,11 @@
     <link rel="icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" type="image/png">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}">
 
-    <meta name="description" content="Step inside Tulsa's interactive virtual fitting room. Drape 16 slow-crafted silken silhouettes upon our studio mannequin, preview under true-to-life ambient lighting, and discover styling notes curated for every occasion.">
+    <meta name="description"
+        content="Step inside Tulsa's interactive virtual fitting room. Drape 16 slow-crafted silken silhouettes upon our studio mannequin, preview under true-to-life ambient lighting, and discover styling notes curated for every occasion.">
     <meta property="og:title" content="Virtual Fitting Room — {{ brand_name }}">
-    <meta property="og:description" content="Interactive mannequin-based garment drape and bespoke atelier styling studio.">
+    <meta property="og:description"
+        content="Interactive mannequin-based garment drape and bespoke atelier styling studio.">
     <meta property="og:type" content="website">
 
     <title>Virtual Fitting Room — {{ brand_name }}</title>
@@ -20,7 +22,9 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap"
+        rel="stylesheet">
 
     <!-- Stylesheets -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
@@ -33,32 +37,32 @@
          FLOATING LUXURY NAVBAR
     ========================================== -->
     <header class="navbar floating-frosted-nav" id="top">
-        <button
-            id="menuButton"
-            class="menu-button mobile-menu-toggle"
-            type="button"
-            aria-label="Open navigation menu"
-            aria-expanded="false"
-        >
-            ☰
-        </button>
+        <div class="nav-brand-cluster-left">
+            <button id="menuButton" class="menu-button mobile-menu-toggle" type="button" aria-label="Open navigation menu"
+                aria-expanded="false">
+                ☰
+            </button>
+
+            <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
+                <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali"
+                    class="brand-crest-logo"
+                    style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
+                <div class="brand-title-group">
+                    <span class="brand-text-luxury">TULSA</span>
+                    <span class="brand-sub-luxury">by Anjali</span>
+                </div>
+            </a>
+        </div>
 
         <div class="nav-group-left">
             <a href="{{ url_for('home') }}" class="nav-link-item">← Boutique Home</a>
             <a href="{{ url_for('home') }}#curved-carousel" class="nav-link-item">3D Runway</a>
-            <a href="{{ url_for('fitting_room') }}" class="nav-link-item nav-link-virtual-tryon" style="color:var(--gold-bright, #F2D08C); font-weight:600;">
+            <a href="{{ url_for('fitting_room') }}" class="nav-link-item nav-link-virtual-tryon"
+                style="color:var(--gold-bright, #F2D08C); font-weight:600;">
                 <span class="tryon-sparkle">✦</span> VIRTUAL TRY-ON
             </a>
             <a href="{{ url_for('shop') }}" class="nav-link-item">Catalogue</a>
         </div>
-
-        <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
-            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
-            <div class="brand-title-group">
-                <span class="brand-text-luxury">TULSA</span>
-                <span class="brand-sub-luxury">by Anjali</span>
-            </div>
-        </a>
 
         <div class="nav-group-right">
             <a href="{{ url_for('shop') }}" class="nav-tryon-mobile-circle" title="Shop Collection">
@@ -82,7 +86,8 @@
                 <span class="bag-badge-counter">{{ session.get('cart', [])|length }}</span>
                 {% endif %}
             </a>
-            <a href="{{ url_for('bag') }}" class="btn-nav-bag" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
+            <a href="{{ url_for('bag') }}" class="btn-nav-bag"
+                aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
                 <span class="bag-label-text">Bag</span>
                 <span class="bag-badge-pill">{{ session.get('cart', [])|length }}</span>
             </a>
@@ -107,7 +112,8 @@
             <div class="mobile-drawer-header">
                 <span class="mobile-drawer-brand">✦ TULSA ATELIER</span>
             </div>
-            <a href="{{ url_for('fitting_room') }}" class="mobile-tryon-btn" style="color:#DFC187;">✦ VIRTUAL TRY-ON (Active)</a>
+            <a href="{{ url_for('fitting_room') }}" class="mobile-tryon-btn" style="color:#DFC187;">✦ VIRTUAL TRY-ON
+                (Active)</a>
             <a href="{{ url_for('home') }}">Boutique Home</a>
             <a href="{{ url_for('shop') }}">Catalogue</a>
             <a href="{{ url_for('home') }}#curved-carousel">3D Runway</a>
@@ -115,21 +121,23 @@
             <a href="{{ url_for('home') }}#trends">Weaving Studio</a>
             <a href="{{ url_for('bag') }}">Shopping Bag ({{ session.get('cart', [])|length }})</a>
             {% if current_customer %}
-            <a href="{{ url_for('customer_dashboard') }}" style="color:#DFC187;">👤 My Account ({{ current_customer.name }})</a>
+            <a href="{{ url_for('customer_dashboard') }}" style="color:#DFC187;">👤 My Account ({{ current_customer.name
+                }})</a>
             <a href="{{ url_for('customer_logout') }}" style="color:#f87171;">Sign Out</a>
             {% else %}
             <a href="{{ url_for('customer_login') }}" style="color:#DFC187;">👤 Sign In / Register</a>
             {% endif %}
-            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa%20Wears!%20I%20have%20an%20inquiry." target="_blank" style="color:#25d366;">
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa%20Wears!%20I%20have%20an%20inquiry."
+                target="_blank" style="color:#25d366;">
                 💬 WhatsApp Concierge
             </a>
         </nav>
     </header>
-            <a href="{{ url_for('home') }}#trends">Weaving Studio</a>
-            <a href="{{ url_for('home') }}#campaign-gallery">Lookbook</a>
-            <a href="{{ url_for('bag') }}">Bag ({{ session.get('cart', [])|length }})</a>
-            {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}">My account</a>{% endif %}
-        </nav>
+    <a href="{{ url_for('home') }}#trends">Weaving Studio</a>
+    <a href="{{ url_for('home') }}#campaign-gallery">Lookbook</a>
+    <a href="{{ url_for('bag') }}">Bag ({{ session.get('cart', [])|length }})</a>
+    {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}">My account</a>{% endif %}
+    </nav>
     </header>
 
     <!-- =========================================
@@ -144,10 +152,13 @@
                     <p class="stage-eyebrow">✦ ATELIER BESPOKE SUITE ✦</p>
                     <h1 class="stage-title">Virtual Fitting Room. <em>Dressed in Craft.</em></h1>
                     <p style="font-size: 15px; color: #D3C9BD; max-width: 720px; margin: 0 auto; line-height: 1.7;">
-                        Step inside Tulsa's interactive virtual dressing room. Drape 16 slow-crafted silken silhouettes upon our studio mannequin, preview subtle zari reflections under authentic ambient lighting, and consult our AI Stylist for bespoke tailoring advice.
+                        Step inside Tulsa's interactive virtual dressing room. Drape 16 slow-crafted silken silhouettes
+                        upon our studio mannequin, preview subtle zari reflections under authentic ambient lighting, and
+                        consult our AI Stylist for bespoke tailoring advice.
                     </p>
                     <div class="fitting-transparency-pill">
-                        ✦ Grounded in Genuine Tulsa Handloom Photography • Authentic Mannequin Drape Preview • Zero Synthetic Hallucinations ✦
+                        ✦ Grounded in Genuine Tulsa Handloom Photography • Authentic Mannequin Drape Preview • Zero
+                        Synthetic Hallucinations ✦
                     </div>
                 </div>
 
@@ -159,9 +170,12 @@
                         <div class="fitting-stage-topbar">
                             <span class="label">Studio Lighting:</span>
                             <div class="stage-ambience-pills">
-                                <button type="button" class="btn-stage-pill stage-ambience-pill active" data-ambience="daylight">Daylight</button>
-                                <button type="button" class="btn-stage-pill stage-ambience-pill" data-ambience="festive">Festive Hall</button>
-                                <button type="button" class="btn-stage-pill stage-ambience-pill" data-ambience="candlelight">Candlelight</button>
+                                <button type="button" class="btn-stage-pill stage-ambience-pill active"
+                                    data-ambience="daylight">Daylight</button>
+                                <button type="button" class="btn-stage-pill stage-ambience-pill"
+                                    data-ambience="festive">Festive Hall</button>
+                                <button type="button" class="btn-stage-pill stage-ambience-pill"
+                                    data-ambience="candlelight">Candlelight</button>
                             </div>
                         </div>
 
@@ -172,33 +186,37 @@
 
                             <!-- Floating Zoom & Fit Controls -->
                             <div class="stage-zoom-controls">
-                                <button type="button" class="btn-stage-zoom" id="btnZoomIn" title="Zoom In (Inspect Details)">＋</button>
+                                <button type="button" class="btn-stage-zoom" id="btnZoomIn"
+                                    title="Zoom In (Inspect Details)">＋</button>
                                 <button type="button" class="btn-stage-zoom" id="btnZoomOut" title="Zoom Out">－</button>
-                                <button type="button" class="btn-stage-zoom" id="btnZoomReset" title="Reset View">⟲</button>
-                                <button type="button" class="btn-stage-zoom btn-fit-toggle" id="btnFitToggle" title="Toggle Full Outfit / Scroll Mode">⤢ Full</button>
+                                <button type="button" class="btn-stage-zoom" id="btnZoomReset"
+                                    title="Reset View">⟲</button>
+                                <button type="button" class="btn-stage-zoom btn-fit-toggle" id="btnFitToggle"
+                                    title="Toggle Full Outfit / Scroll Mode">⤢ Full</button>
                             </div>
 
                             <!-- Prev & Next Gallery Navigation Arrows -->
-                            <button type="button" class="stage-nav-arrow stage-nav-prev" id="stageImgPrev" aria-label="Previous View">‹</button>
-                            <button type="button" class="stage-nav-arrow stage-nav-next" id="stageImgNext" aria-label="Next View">›</button>
+                            <button type="button" class="stage-nav-arrow stage-nav-prev" id="stageImgPrev"
+                                aria-label="Previous View">‹</button>
+                            <button type="button" class="stage-nav-arrow stage-nav-next" id="stageImgNext"
+                                aria-label="Next View">›</button>
 
                             <!-- Scrollable Inner Canvas -->
                             <div class="fitting-avatar-canvas" id="fittingAvatarCanvas">
                                 {% set initial_garment = products[0] if products else None %}
-                                <img
-                                    id="fittingStageImg"
+                                <img id="fittingStageImg"
                                     src="{{ product_image_url(initial_garment.image) if initial_garment else url_for('static', filename='images/bridal-wedding-collection.jpg') }}?v={{ cache_id }}"
                                     alt="{{ initial_garment.name if initial_garment else 'Tulsa Silhouette' }}"
                                     class="avatar-garment-layer"
                                     onerror="this.onerror=null;this.src='/static/images/garment-01.jpg';"
-                                    loading="eager"
-                                >
+                                    loading="eager">
                             </div>
 
                             <!-- Live Garment Badge on Stage -->
                             <div class="fitting-live-badge" id="fittingActiveBadge">
                                 <span class="dot"></span>
-                                <span id="fittingStageCategory">{{ initial_garment.category if initial_garment else 'Couture' }} • Hansi Atelier</span>
+                                <span id="fittingStageCategory">{{ initial_garment.category if initial_garment else
+                                    'Couture' }} • Hansi Atelier</span>
                             </div>
                         </div>
 
@@ -211,8 +229,10 @@
                         <div class="stage-view-controls">
                             <span class="view-label">Drape Perspective:</span>
                             <div class="stage-angle-pills">
-                                <button type="button" class="btn-stage-pill stage-angle-pill active" data-angle="front">Front Silhouette</button>
-                                <button type="button" class="btn-stage-pill stage-angle-pill" data-angle="drape">Drape & Embroidery Detail</button>
+                                <button type="button" class="btn-stage-pill stage-angle-pill active"
+                                    data-angle="front">Front Silhouette</button>
+                                <button type="button" class="btn-stage-pill stage-angle-pill" data-angle="drape">Drape &
+                                    Embroidery Detail</button>
                             </div>
                         </div>
                     </div>
@@ -222,37 +242,41 @@
 
                         <!-- Wardrobe Filter Tabs -->
                         <div class="wardrobe-filter-bar">
-                            <button type="button" class="wardrobe-filter-btn active" data-category="all">All Silhouettes</button>
-                            <button type="button" class="wardrobe-filter-btn" data-category="Plazo / Kurta">Plazo / Kurta</button>
-                            <button type="button" class="wardrobe-filter-btn" data-category="Salwar Kameez">Salwar Kameez</button>
-                            <button type="button" class="wardrobe-filter-btn" data-category="Party Wear">Party Wear</button>
-                            <button type="button" class="wardrobe-filter-btn" data-category="Wedding Wear">Wedding Wear</button>
+                            <button type="button" class="wardrobe-filter-btn active" data-category="all">All
+                                Silhouettes</button>
+                            <button type="button" class="wardrobe-filter-btn" data-category="Plazo / Kurta">Plazo /
+                                Kurta</button>
+                            <button type="button" class="wardrobe-filter-btn" data-category="Salwar Kameez">Salwar
+                                Kameez</button>
+                            <button type="button" class="wardrobe-filter-btn" data-category="Party Wear">Party
+                                Wear</button>
+                            <button type="button" class="wardrobe-filter-btn" data-category="Wedding Wear">Wedding
+                                Wear</button>
                         </div>
 
                         <!-- Horizontal Wardrobe Cards Rail (All 16 Products) -->
                         <div class="wardrobe-rail-container">
-                            <button type="button" class="wardrobe-rail-arrow wardrobe-rail-prev" id="wardrobeRailPrev" aria-label="Previous Garments" title="Scroll Previous Garments">‹</button>
+                            <button type="button" class="wardrobe-rail-arrow wardrobe-rail-prev" id="wardrobeRailPrev"
+                                aria-label="Previous Garments" title="Scroll Previous Garments">‹</button>
                             <div class="wardrobe-cards-rail" id="wardrobeCardsRail">
                                 {% for p in products %}
-                                <div
-                                    class="wardrobe-item-card {% if loop.first %}active-wear{% endif %}"
-                                    data-id="{{ p.id }}"
-                                    data-name="{{ p.name }}"
-                                    data-price="{{ p.price }}"
+                                <div class="wardrobe-item-card {% if loop.first %}active-wear{% endif %}"
+                                    data-id="{{ p.id }}" data-name="{{ p.name }}" data-price="{{ p.price }}"
                                     data-category="{{ p.category }}"
                                     data-fabric="{{ p.fabric or 'Pure Handloom Silk' }}"
-                                    data-color="{{ p.color or 'Artisanal Dye' }}"
-                                    data-desc="{{ p.description or '' }}"
+                                    data-color="{{ p.color or 'Artisanal Dye' }}" data-desc="{{ p.description or '' }}"
                                     data-stock="{{ p.stock }}"
                                     data-img="{{ product_image_url(p.image) }}?v={{ cache_id }}"
-                                    title="Click to wear {{ p.name }}"
-                                >
+                                    title="Click to wear {{ p.name }}">
                                     {% if loop.first %}
                                     <span class="wearing-pill-indicator">WEARING</span>
                                     {% endif %}
                                     <div class="wardrobe-card-thumb-wrap">
-                                        <img src="{{ product_image_url(p.image) }}?v={{ cache_id }}" alt="{{ p.name }}" loading="lazy" draggable="false">
-                                        <button type="button" class="hanger-btn-overlay" title="Drape {{ p.name }} on Mannequin" aria-label="Drape {{ p.name }} on Mannequin">
+                                        <img src="{{ product_image_url(p.image) }}?v={{ cache_id }}" alt="{{ p.name }}"
+                                            loading="lazy" draggable="false">
+                                        <button type="button" class="hanger-btn-overlay"
+                                            title="Drape {{ p.name }} on Mannequin"
+                                            aria-label="Drape {{ p.name }} on Mannequin">
                                             👗
                                         </button>
                                     </div>
@@ -263,29 +287,41 @@
                                 </div>
                                 {% endfor %}
                             </div>
-                            <button type="button" class="wardrobe-rail-arrow wardrobe-rail-next" id="wardrobeRailNext" aria-label="Next Garments" title="Scroll Next Garments">›</button>
+                            <button type="button" class="wardrobe-rail-arrow wardrobe-rail-next" id="wardrobeRailNext"
+                                aria-label="Next Garments" title="Scroll Next Garments">›</button>
                         </div>
 
                         <!-- Active Fitted Specifications & Tailoring Drawer -->
                         <div class="fitted-specs-card" id="fittedSpecsCard">
-                            <span class="fitted-category-pill" id="stageSpecsCategory">{{ initial_garment.category if initial_garment else 'Atelier' }}</span>
-                            <h3 id="fittingStageTitle">{{ initial_garment.name if initial_garment else 'Atelier Silhouette' }}</h3>
-                            <div class="fitted-price-callout" id="fittingStagePrice">₹{{ "{:,.0f}".format(initial_garment.price) if initial_garment else '0' }}</div>
+                            <span class="fitted-category-pill" id="stageSpecsCategory">{{ initial_garment.category if
+                                initial_garment else 'Atelier' }}</span>
+                            <h3 id="fittingStageTitle">{{ initial_garment.name if initial_garment else 'Atelier
+                                Silhouette' }}</h3>
+                            <div class="fitted-price-callout" id="fittingStagePrice">₹{{
+                                "{:,.0f}".format(initial_garment.price) if initial_garment else '0' }}</div>
 
-                            <div class="fitted-meta-row" style="display:flex;gap:18px;margin-bottom:12px;font-size:12px;color:#C9A96E;">
-                                <span>✦ Fabric: <strong id="fittingStageFabric" style="color:#FFF;">{{ initial_garment.fabric if initial_garment and initial_garment.fabric else 'Pure Handloom' }}</strong></span>
-                                <span>✦ Shade: <strong id="fittingStageColor" style="color:#FFF;">{{ initial_garment.color if initial_garment and initial_garment.color else 'Artisanal' }}</strong></span>
-                                <span>✦ Stock: <strong id="fittingStageStock" style="color:#FFF;">{{ initial_garment.stock if initial_garment else 5 }} in atelier</strong></span>
+                            <div class="fitted-meta-row"
+                                style="display:flex;gap:18px;margin-bottom:12px;font-size:12px;color:#C9A96E;">
+                                <span>✦ Fabric: <strong id="fittingStageFabric" style="color:#FFF;">{{
+                                        initial_garment.fabric if initial_garment and initial_garment.fabric else 'Pure
+                                        Handloom' }}</strong></span>
+                                <span>✦ Shade: <strong id="fittingStageColor" style="color:#FFF;">{{
+                                        initial_garment.color if initial_garment and initial_garment.color else
+                                        'Artisanal' }}</strong></span>
+                                <span>✦ Stock: <strong id="fittingStageStock" style="color:#FFF;">{{
+                                        initial_garment.stock if initial_garment else 5 }} in atelier</strong></span>
                             </div>
 
                             <p class="fitted-desc-text" id="fittingStageDesc">
-                                {{ initial_garment.description if initial_garment and initial_garment.description else 'Hand-stitched slow luxury tailored to your proportions.' }}
+                                {{ initial_garment.description if initial_garment and initial_garment.description else
+                                'Hand-stitched slow luxury tailored to your proportions.' }}
                             </p>
 
                             <!-- AI Stylist Occasion & Drape Guidance -->
                             <div class="ai-stylist-advice-box" id="fittingStageAdvice">
                                 <strong>✦ AI Stylist Drape Guidance</strong>
-                                Select any garment from the wardrobe above to view silhouette drape, occasion pairing notes, and dupatta drapery guidance.
+                                Select any garment from the wardrobe above to view silhouette drape, occasion pairing
+                                notes, and dupatta drapery guidance.
                             </div>
 
                             <!-- Tailoring & Size Selector -->
@@ -298,19 +334,24 @@
                                     <button type="button" class="fitted-size-btn" data-size="L">L</button>
                                     <button type="button" class="fitted-size-btn" data-size="XL">XL</button>
                                     <button type="button" class="fitted-size-btn" data-size="XXL">XXL</button>
-                                    <button type="button" class="fitted-size-btn" data-size="Custom Fit">Custom Fit (Atelier)</button>
+                                    <button type="button" class="fitted-size-btn" data-size="Custom Fit">Custom Fit
+                                        (Atelier)</button>
                                 </div>
                             </div>
 
                             <!-- Action CTA Cluster -->
-                            <div class="fitted-actions-row" style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
-                                <a href="/buy-now/{{ initial_garment.id if initial_garment else 1 }}" class="btn-spec-buy" id="fittedBuyBtn">
+                            <div class="fitted-actions-row"
+                                style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px;">
+                                <a href="/buy-now/{{ initial_garment.id if initial_garment else 1 }}"
+                                    class="btn-spec-buy" id="fittedBuyBtn">
                                     ⚡ Buy Now
                                 </a>
-                                <button type="button" class="btn-spec-bag" id="fittedBagBtn" data-product-id="{{ initial_garment.id if initial_garment else 1 }}">
+                                <button type="button" class="btn-spec-bag" id="fittedBagBtn"
+                                    data-product-id="{{ initial_garment.id if initial_garment else 1 }}">
                                     👜 Add to Bag
                                 </button>
-                                <a href="/product/{{ initial_garment.id if initial_garment else 1 }}" class="btn-spec-view" id="fittedViewBtn">
+                                <a href="/product/{{ initial_garment.id if initial_garment else 1 }}"
+                                    class="btn-spec-view" id="fittedViewBtn">
                                     👁️ View Product
                                 </a>
                             </div>
@@ -344,7 +385,8 @@
 
         <div class="footer-column">
             <h4>Connect</h4>
-            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa!%20I%20have%20an%20inquiry%20from%20the%20Fitting%20Room." target="_blank">
+            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa!%20I%20have%20an%20inquiry%20from%20the%20Fitting%20Room."
+                target="_blank">
                 💬 WhatsApp: {{ studio_phone }}
             </a>
             <a href="tel:{{ studio_phone }}">
@@ -367,5 +409,5 @@
     <script src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"></script>
     {% include 'mobile_bottom_nav.html' %}
 </body>
-</html>
 
+</html>
