@@ -12,5 +12,4 @@ class CustomerAddress(db.Model):
     address = db.Column(db.Text, nullable=False)
     city = db.Column(db.String(100), nullable=False)
     pincode = db.Column(db.String(20), nullable=False)
-    is_default = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())

@@ -19,10 +19,8 @@
             --admin-bg: #f7f5f0;
             --admin-card-bg: #ffffff;
             --admin-border: #e6dfd5;
-            --admin-dark: #081A14;
-            --admin-emerald: #0C4533;
+            --admin-dark: #171614;
             --admin-gold: #c5a059;
-            --admin-gold-hover: #b38f48;
             --admin-burgundy: #5a1e28;
             --admin-green: #2e7d32;
             --admin-amber: #e65100;
@@ -39,8 +37,8 @@
 
         /* Top Admin Navbar */
         .admin-nav {
-            background: #081A14;
-            border-bottom: 1px solid rgba(197, 160, 89, 0.25);
+            background: #11100e;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             position: sticky;
             top: 0;
             z-index: 9999;
@@ -542,7 +540,7 @@
 
         <nav class="admin-menu-links">
             <a href="{{ url_for('admin_dashboard') }}" class="admin-menu-link active">📊 Mission Control</a>
-            <a href="{{ url_for('admin_customizer') }}" class="admin-menu-link" style="color: var(--admin-gold); font-weight: 600;">🎨 Website Management</a>
+            <a href="{{ url_for('admin_customizer') }}" class="admin-menu-link" style="color: var(--admin-gold); font-weight: 600;">🎨 Website Designer</a>
             <a href="{{ url_for('admin_orders') }}" class="admin-menu-link">📦 Orders</a>
             <a href="{{ url_for('admin_products') }}" class="admin-menu-link">👗 Products ({{ product_count }})</a>
             <a href="{{ url_for('admin_coupons') }}" class="admin-menu-link">🎟️ Coupons</a>

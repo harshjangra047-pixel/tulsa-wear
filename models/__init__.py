@@ -9,7 +9,6 @@ from .customer_user import CustomerUser
 from .traffic_log import TrafficLog
 from .site_content import SiteContent, SiteContentRevision
 from .customer_address import CustomerAddress
-from .customer_wishlist import CustomerWishlist
 from .editor_preview_token import EditorPreviewToken
 
 from .product_image import ProductImage
@@ -24,6 +23,6 @@ __all__ = [
     "db", "Product", "ProductCategory", "ProductImage", "Order", "OrderNotification",
     "ProductionBatch", "ProductionAllocation", "ProductionSetting", "PaymentWebhookEvent",
     "Feedback", "CustomOrder", "AdminUser", "TrendUpload", "CustomerUser", "TrafficLog",
-    "SiteContent", "SiteContentRevision", "CustomerAddress", "CustomerWishlist", "EditorPreviewToken"
+    "SiteContent", "SiteContentRevision", "CustomerAddress", "EditorPreviewToken"
 ]
 

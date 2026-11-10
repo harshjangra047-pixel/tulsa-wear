@@ -15,8 +15,7 @@ DEFAULT_SITE_CONTENT = {
     "editor_sections": [
         {"id": section_id, "visible": True} for section_id in (
             "hero-section", "mood-portals", "curved-carousel", "look-builder",
-            "best-sellers", "collections", "bridal", "pick-your-silk", "the-rack",
-            "cinematic-lookbook", "weaving-studio", "seasonal", "campaign-gallery",
+            "best-sellers", "collections", "bridal", "seasonal", "campaign-gallery",
             "trends", "categories", "shop-price", "process", "about", "contact",
             "ai-studio", "feedback", "faq-section", "contact-us", "instagram-section",
             "newsletter-section"
@@ -139,35 +138,6 @@ DEFAULT_SITE_CONTENT = {
     "custom_title": "Your piece. Your story.",
     "custom_desc": "Custom clothing made around your occasion, preferences and vision. Begin a conversation with the studio.",
     "custom_cta_text": "Start a custom order →",
-
-    # Stage 8: Fitting Room, Silk Atelier, Lookbook, Weaving Studio & Access Policy
-    "mandatory_customer_login": "false",
-    "fitting_room_eyebrow": "03 / VIRTUAL SILHOUETTE STUDIO",
-    "fitting_room_title": "Interactive Atelier Fitting Room",
-    "fitting_room_desc": "Select from 16 artisanal silhouettes. Inspect delicate zardozi, handwoven mulberry silk and custom tailoring drapes in real time.",
-    "vton_showcase_image": "bridal-wedding-collection.jpg",
-    "silk_atelier_eyebrow": "04 / TEXTILE REPERTORY",
-    "silk_atelier_title": "Pick Your Silk",
-    "silk_atelier_desc": "Eight signature slow-woven weaves from Hansi, Varanasi, Chanderi, and Bengal.",
-    "lookbook_eyebrow": "05 / EDITORIAL ARCHIVE",
-    "lookbook_title": "Cinematic Lookbook",
-    "lookbook_subtitle": "A visual journey through sacred celebrations, living drapes, and heirloom slow fashion.",
-    "lookbook_slide1_title": "The Heritage Edit",
-    "lookbook_slide1_desc": "Sacred crimson silks embroidered with antique zardozi wires.",
-    "lookbook_slide1_image": "editorial-bridal.jpg",
-    "lookbook_slide2_title": "Threads of Memory",
-    "lookbook_slide2_desc": "Hand-loomed Chanderi ensembles created for eternal elegance.",
-    "lookbook_slide2_image": "editorial-collection.jpg",
-    "lookbook_slide3_title": "Sculpted Festive",
-    "lookbook_slide3_desc": "Sculptural pleats, regal silhouettes, and rich jewel-toned velvets.",
-    "lookbook_slide3_image": "editorial-trends.jpg",
-    "lookbook_slide4_title": "One of One",
-    "lookbook_slide4_desc": "Bespoke creations shaped intimately around personal family celebrations.",
-    "lookbook_slide4_image": "editorial-custom.jpg",
-    "weaving_studio_eyebrow": "06 / INTERACTIVE JACQUARD",
-    "weaving_studio_title": "The 3D Weaving Studio",
-    "weaving_studio_desc": "Observe the interlacing of warp and weft threads under dynamic lighting. Adjust speed, density, and colors to understand the complexity of authentic handloom textiles.",
-    "footer_copyright": "© 2026 TULSA BY ANJALI. All rights reserved. Handcrafted slow fashion made thoughtfully in Hansi, India.",
 
     # Studio Contact & Social
     "studio_phone": "+91 93504 39667",

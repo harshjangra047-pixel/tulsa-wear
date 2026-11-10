@@ -19,8 +19,7 @@
             --admin-bg: #f5f3ee;
             --admin-card-bg: #ffffff;
             --admin-border: #e4ddd2;
-            --admin-dark: #081A14;
-            --admin-emerald: #0C4533;
+            --admin-dark: #141311;
             --admin-gold: #c5a059;
             --admin-gold-hover: #b38f48;
             --admin-burgundy: #5a1e28;
@@ -43,8 +42,8 @@
 
         /* Top Admin Navbar */
         .admin-nav {
-            background: #081A14;
-            border-bottom: 1px solid rgba(197, 160, 89, 0.25);
+            background: #11100e;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             position: sticky;
             top: 0;
             z-index: 9999;
@@ -747,7 +746,7 @@
         <!-- Desktop Navigation Links -->
         <nav class="admin-menu-links">
             <a href="{{ url_for('admin_dashboard') }}" class="admin-menu-link">📊 Mission Control</a>
-            <a href="{{ url_for('admin_customizer') }}" class="admin-menu-link active">🎨 Website Management</a>
+            <a href="{{ url_for('admin_customizer') }}" class="admin-menu-link active">🎨 Website Designer</a>
             <a href="{{ url_for('admin_orders') }}" class="admin-menu-link">📦 Orders</a>
             <a href="{{ url_for('admin_products') }}" class="admin-menu-link">👗 Products</a>
             <a href="{{ url_for('admin_coupons') }}" class="admin-menu-link">🎟️ Coupons</a>
@@ -829,13 +828,8 @@
         <div class="section-tabs-bar" id="sectionTabs">
             <button type="button" class="section-tab-btn active" data-tab="tab-header">📢 Header & Announcement</button>
             <button type="button" class="section-tab-btn" data-tab="tab-hero">🌟 Hero Opening Stage</button>
-            <button type="button" class="section-tab-btn" data-tab="tab-showcase">🏛️ 3D Showcase Runway</button>
             <button type="button" class="section-tab-btn" data-tab="tab-moods">🏛️ Mood Portals (Categories)</button>
             <button type="button" class="section-tab-btn" data-tab="tab-collection">📜 Featured Collection</button>
-            <button type="button" class="section-tab-btn" data-tab="tab-fitting">👗 Fitting Room</button>
-            <button type="button" class="section-tab-btn" data-tab="tab-silk">🌸 Silk Atelier</button>
-            <button type="button" class="section-tab-btn" data-tab="tab-lookbook">📖 Cinematic Lookbook</button>
-            <button type="button" class="section-tab-btn" data-tab="tab-weaving">🧵 3D Weaving Studio</button>
             <button type="button" class="section-tab-btn" data-tab="tab-bridal">👰 Bridal & Celebration Edit</button>
             <button type="button" class="section-tab-btn" data-tab="tab-seasonal">🍂 Seasonal Archive (3 Photos)</button>
             <button type="button" class="section-tab-btn" data-tab="tab-trends">⚡ Latest Trends Forecast</button>
@@ -991,39 +985,6 @@
                                         <div class="file-chosen-status" id="hero_file_status">Current file: {{ cms.get('hero_image', 'editorial-hero.jpg') }}</div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <!-- =========================================
-                         TAB: 3D SHOWCASE RUNWAY
-                    ========================================== -->
-                    <div class="customizer-card" id="tab-showcase">
-                        <div class="card-header-bar">
-                            <h2>🏛️ 3D Showcase Runway</h2>
-                            <span class="card-badge-tag">Stage 2 & 8 Interactive</span>
-                        </div>
-
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Showcase Headline</label>
-                                <input type="text" class="form-input" name="showcase_title" value="{{ cms.get('showcase_title', 'Curated Runway Silhouettes') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Showcase Tagline</label>
-                                <input type="text" class="form-input" name="showcase_tagline" value="{{ cms.get('showcase_tagline', 'Drag horizontally to rotate garments in true 360° space') }}">
-                            </div>
-                        </div>
-
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Primary CTA Button Text</label>
-                                <input type="text" class="form-input" name="showcase_cta_text" value="{{ cms.get('showcase_cta_text', 'Inspect Silhouette Details') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Showcase Background Lighting Accent</label>
-                                <input type="text" class="form-input" name="showcase_light_color" value="{{ cms.get('showcase_light_color', '#c5a059') }}">
                             </div>
                         </div>
                     </div>
@@ -1223,145 +1184,6 @@
                                         <div class="file-chosen-status" id="status_coll">{{ cms.get('collection_image', 'editorial-collection.jpg') }}</div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-
-                    <!-- =========================================
-                         TAB: VIRTUAL FITTING ROOM
-                    ========================================== -->
-                    <div class="customizer-card" id="tab-fitting">
-                        <div class="card-header-bar">
-                            <h2>👗 Virtual Fitting Room</h2>
-                            <span class="card-badge-tag">Stage 3 & 8 Virtual Fitting</span>
-                        </div>
-
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Fitting Room Heading</label>
-                                <input type="text" class="form-input" name="fitting_room_title" value="{{ cms.get('fitting_room_title', 'Virtual Haute Couture Fitting Room') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Subheading & Guidance</label>
-                                <input type="text" class="form-input" name="fitting_room_subtitle" value="{{ cms.get('fitting_room_subtitle', 'Specify personal measurements and preview real-time silhouette drape.') }}">
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="form-label">Fitting Room Atelier Background Photo</label>
-                            <div class="image-upload-wrapper">
-                                <div class="image-preview-box">
-                                    <img src="{{ cms.get('fitting_bg_image') or '/static/images/hero-fashion.jpg' }}" alt="Fitting Room Background" id="preview_fitting_bg">
-                                </div>
-                                <div class="upload-controls">
-                                    <label class="custom-file-btn" for="fitting_bg_file">📁 Choose Photo</label>
-                                    <input type="file" id="fitting_bg_file" name="fitting_bg_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_fitting_bg', 'fitting_file_status')">
-                                    <button type="button" class="btn-delete" style="font-size:11px; padding:6px 10px; margin-left:6px;" onclick="removeSectionImage('fitting_bg_image', 'preview_fitting_bg', 'fitting_file_status')">🗑️ Remove Image</button>
-                                    <input type="hidden" name="fitting_bg_image" value="{{ cms.get('fitting_bg_image', '') }}">
-                                    <div class="file-chosen-status" id="fitting_file_status">Current: {{ cms.get('fitting_bg_image', 'Default Studio Background') }}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Homepage Promotional Showcase Model / Mannequin Photo -->
-                        <div class="form-group" style="margin-top: 20px; padding-top: 18px; border-top: 1px dashed var(--admin-border, #e4ddd2);">
-                            <label class="form-label" style="font-weight: 700; color: #111;">
-                                👗 Homepage Arch Model / Mannequin Photo (Feature Silhouette)
-                            </label>
-                            <p style="font-size: 11px; color: var(--admin-muted, #666); margin-bottom: 10px;">
-                                Upload the photoshoot model or mannequin image displayed inside the grand arch on the homepage. Change this whenever you craft or want to feature a new silhouette!
-                            </p>
-                            <div class="image-picker-box">
-                                <div class="image-picker-flex">
-                                    <div class="current-thumb-wrap" style="width: 110px; height: 150px;">
-                                        <img src="{{ product_image_url(cms.get('vton_showcase_image', 'bridal-wedding-collection.jpg')) }}?v={{ cache_id }}" id="preview_vton_showcase" alt="Showcase Model Image" style="width: 100%; height: 100%; object-fit: cover;">
-                                        <span class="thumb-tag">Current</span>
-                                    </div>
-                                    <div class="upload-controls">
-                                        <label class="custom-file-btn">
-                                            📷 Choose New Photo / Camera
-                                            <input type="file" name="vton_showcase_image_file" accept="image/*" style="display:none;" onchange="previewUploadImage(this, 'preview_vton_showcase', 'vton_showcase_status')">
-                                        </label>
-                                        <button type="button" class="btn-delete" style="font-size:11px; padding:6px 12px; margin-top:6px;" onclick="removeSectionImage('vton_showcase_image', 'preview_vton_showcase', 'vton_showcase_status')">🗑️ Reset to Default Photo</button>
-                                        <input type="hidden" name="vton_showcase_image" value="{{ cms.get('vton_showcase_image', 'bridal-wedding-collection.jpg') }}">
-                                        <div class="file-chosen-status" id="vton_showcase_status">Current: {{ cms.get('vton_showcase_image', 'bridal-wedding-collection.jpg') }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- =========================================
-                         TAB: PICK YOUR SILK ATELIER
-                    ========================================== -->
-                    <div class="customizer-card" id="tab-silk">
-                        <div class="card-header-bar">
-                            <h2>🌸 Pick Your Silk Atelier</h2>
-                            <span class="card-badge-tag">Stage 4 Fabric Customizer</span>
-                        </div>
-
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Section Heading</label>
-                                <input type="text" class="form-input" name="silk_atelier_title" value="{{ cms.get('silk_atelier_title', 'Pick Your Silk Atelier') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Atelier Tagline</label>
-                                <input type="text" class="form-input" name="silk_atelier_subtitle" value="{{ cms.get('silk_atelier_subtitle', 'Touch, inspect, and drape pure mulberry, organza, and brocade.') }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- =========================================
-                         TAB: CINEMATIC LOOKBOOK
-                    ========================================== -->
-                    <div class="customizer-card" id="tab-lookbook">
-                        <div class="card-header-bar">
-                            <h2>📖 Cinematic Lookbook (4 Slides)</h2>
-                            <span class="card-badge-tag">Stage 4 & 8 Visual Story</span>
-                        </div>
-
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Lookbook Title</label>
-                                <input type="text" class="form-input" name="lookbook_title" value="{{ cms.get('lookbook_title', 'The Royal Heritage Lookbook') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Lookbook Subtitle</label>
-                                <input type="text" class="form-input" name="lookbook_subtitle" value="{{ cms.get('lookbook_subtitle', 'Volume IV — An Odyssey Through Indian Silks & Embroidery') }}">
-                            </div>
-                        </div>
-
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Slide 1 Caption</label>
-                                <input type="text" class="form-input" name="lookbook_slide_1_title" value="{{ cms.get('lookbook_slide_1_title', 'Emerald Zari Symphony') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Slide 2 Caption</label>
-                                <input type="text" class="form-input" name="lookbook_slide_2_title" value="{{ cms.get('lookbook_slide_2_title', 'Regal Ivory Organza') }}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- =========================================
-                         TAB: 3D WEAVING STUDIO
-                    ========================================== -->
-                    <div class="customizer-card" id="tab-weaving">
-                        <div class="card-header-bar">
-                            <h2>🧵 3D Handloom Weaving Studio</h2>
-                            <span class="card-badge-tag">Stage 4 Interactive Canvas</span>
-                        </div>
-
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Weaving Studio Title</label>
-                                <input type="text" class="form-input" name="weaving_title" value="{{ cms.get('weaving_title', '3D Handloom Weaving Studio') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Weaving Subtitle</label>
-                                <input type="text" class="form-input" name="weaving_subtitle" value="{{ cms.get('weaving_subtitle', 'Watch individual gold threads interlock across pure mulberry silk.') }}">
                             </div>
                         </div>
                     </div>
@@ -1787,21 +1609,6 @@
                                 <input type="text" class="form-input" name="instagram_handle_2" value="{{ cms.get('instagram_handle_2', 'tulsawear') }}">
                             </div>
                         </div>
-
-                        <div class="form-grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Footer Copyright / Signature Line</label>
-                                <input type="text" class="form-input" name="footer_copyright" value="{{ cms.get('footer_copyright', '© 2026 TULSA BY ANJALI. All Rights Reserved. Master Crafted in India.') }}">
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">Customer Access Policy (Mandatory Login)</label>
-                                <select class="form-input" name="mandatory_customer_login">
-                                    <option value="false" {% if cms.get('mandatory_customer_login') != 'true' %}selected{% endif %}>🔓 Guest Access Allowed (Recommended for Higher Conversions)</option>
-                                    <option value="true" {% if cms.get('mandatory_customer_login') == 'true' %}selected{% endif %}>🔒 Mandatory Customer Login (Require Sign-In to View Storefront)</option>
-                                </select>
-                                <small style="color:var(--admin-muted); font-size:11px;">When mandatory, guest visitors are redirected to the luxury curtain sign-in portal before browsing.</small>
-                            </div>
-                        </div>
                     </div>
 
                 </div>
@@ -1828,7 +1635,7 @@
                         </div>
 
                         <div class="preview-viewport-box">
-                            <iframe id="livePreviewIframe" class="preview-frame mode-mobile" src="{{ url_for('home') }}?preview=1{% if preview_token %}&editor_preview={{ preview_token }}{% endif %}" title="Live Storefront Preview"></iframe>
+                            <iframe id="livePreviewIframe" class="preview-frame mode-mobile" src="{{ url_for('home') }}?preview=1" title="Live Storefront Preview"></iframe>
                         </div>
                     </div>
                 </div>
@@ -1900,31 +1707,6 @@
                 };
 
                 reader.readAsDataURL(file);
-            }
-        }
-
-        // Safe Image Reference Removal Handler
-        function removeSectionImage(imageKey, previewId, statusId) {
-            if (!confirm('Remove this image? It will revert to placeholder/empty when you save.')) return;
-            let input = document.querySelector(`input[name="remove_image_${imageKey}"]`);
-            if (!input) {
-                input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = `remove_image_${imageKey}`;
-                input.value = '1';
-                document.getElementById('cmsForm').appendChild(input);
-            } else {
-                input.value = '1';
-            }
-            const preview = document.getElementById(previewId);
-            if (preview) {
-                preview.src = '/static/images/hero-fashion.jpg';
-                preview.style.opacity = '0.4';
-                preview.style.filter = 'grayscale(1)';
-            }
-            const status = document.getElementById(statusId);
-            if (status) {
-                status.innerHTML = '<span style="color:#c62828; font-weight:600;">🗑️ Marked for removal upon save</span>';
             }
         }
 
@@ -2029,9 +1811,7 @@
         const editorNames = {
             'hero-section':'Hero', 'mood-portals':'Category portals', 'curved-carousel':'Product carousel',
             'look-builder':'Look builder', 'best-sellers':'Best sellers', 'collections':'Collection',
-            'bridal':'Bridal edit', 'pick-your-silk':'Pick Your Silk (Stage 4)', 'the-rack':'The Rack Rail (Stage 4)',
-            'cinematic-lookbook':'Cinematic Lookbook (Stage 4)', 'weaving-studio':'3D Weaving Studio (Stage 4)',
-            'seasonal':'Seasonal edit', 'campaign-gallery':'Campaign gallery',
+            'bridal':'Bridal edit', 'seasonal':'Seasonal edit', 'campaign-gallery':'Campaign gallery',
             'trends':'Trends', 'categories':'Categories', 'shop-price':'Shop by price', 'process':'Craft process',
             'about':'About the studio', 'contact':'Custom order', 'ai-studio':'AI style studio',
             'feedback':'Customer feedback', 'faq-section':'FAQ', 'contact-us':'Contact details',
@@ -2046,7 +1826,7 @@
         let draggingSectionId = null;
         const sectionWidthControl = document.getElementById('selectedSectionWidth');
         const sectionHeightControl = document.getElementById('selectedSectionHeight');
-        const previewOrigin = window.location.origin;
+        const previewOrigin = new URL('{{ website_url }}').origin;
         function persistEditorLayout() {
             if (!editorSectionInput) return;
             editorSectionInput.value = JSON.stringify(editorSections);

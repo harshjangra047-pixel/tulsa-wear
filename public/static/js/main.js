@@ -6,44 +6,6 @@
 
 document.addEventListener("DOMContentLoaded", () => {
 
-    /* =========================================
-       HERITAGE CURTAIN ENTRANCE ANIMATION (Video 4)
-    ========================================== */
-    const curtain = document.getElementById("heritageOpeningCurtain");
-    const enterBtn = document.getElementById("btnEnterCurtain");
-
-    if (curtain) {
-        const dismissCurtain = () => {
-            curtain.classList.add("curtain-opened");
-            setTimeout(() => {
-                curtain.classList.add("curtain-dismissed");
-                const gate = document.getElementById("mandatoryLoginGateModal");
-                if (gate) {
-                    gate.style.display = "flex";
-                }
-            }, 1300);
-            sessionStorage.setItem("tulsa_curtain_viewed", "true");
-        };
-
-        if (enterBtn) {
-            enterBtn.addEventListener("click", dismissCurtain);
-        }
-
-        curtain.addEventListener("click", (e) => {
-            if (e.target !== enterBtn) {
-                dismissCurtain();
-            }
-        });
-
-        // Auto dismiss after 2.6s for seamless immersion
-        const autoTimer = setTimeout(dismissCurtain, 2600);
-
-        // Cancel timer if user clicked early
-        if (enterBtn) {
-            enterBtn.addEventListener("click", () => clearTimeout(autoTimer));
-        }
-    }
-
 
     /* =========================================
        STICKY NAVBAR — transparent → solid
@@ -500,32 +462,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (result) result.textContent = "The AI assistant is currently unavailable.";
             }
         });
-    }
-
-    /* =========================================
-       STAGE 9: MOBILE SIZE SELECTOR & STICKY BAR ENHANCEMENTS
-    ========================================== */
-    const sizeRadios = document.querySelectorAll(".pdp-size-radio input[type='radio']");
-    sizeRadios.forEach((radio) => {
-        radio.addEventListener("change", function () {
-            const label = this.closest(".pdp-size-radio");
-            if (label && label.scrollIntoView) {
-                label.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-            }
-        });
-    });
-
-    const pdpStickyBar = document.getElementById("pdpMobileStickyBar");
-    if (pdpStickyBar) {
-        document.body.classList.add("has-pdp-sticky-bar");
-        const checkStickyOverlap = () => {
-            const rect = pdpStickyBar.getBoundingClientRect();
-            const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-            document.body.classList.toggle("has-pdp-sticky-bar", isVisible);
-        };
-        window.addEventListener("scroll", checkStickyOverlap, { passive: true });
-        window.addEventListener("resize", checkStickyOverlap, { passive: true });
-        checkStickyOverlap();
     }
 
 });

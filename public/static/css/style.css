@@ -23,15 +23,11 @@ html {
     scroll-behavior: smooth;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    overflow-x: hidden;
-    max-width: 100vw;
 }
 
 body {
     background: var(--bg-ivory);
     color: var(--text-primary);
-    overflow-x: hidden;
-    max-width: 100vw;
     font-family: "Inter", -apple-system, sans-serif;
     font-weight: 300;
     font-size: 15px;
@@ -76,28 +72,11 @@ ul, ol {
     --bg-brown:     #261C18;
     --bg-wine:      #1A0F12;
 
-    /* Royal Emerald & Forest Heritage Palette */
-    --emerald-dark:    #061611;
-    --emerald-deep:    #0C251D;
-    --emerald-forest:  #14352B;
-    --emerald-tint:    #1C483B;
-    --emerald-glow:    rgba(20, 53, 43, 0.6);
-
-    /* Antique Gold & Imperial Radiance */
+    /* Accent */
     --accent-burgundy: #681F2E;
     --accent-wine:     #7D3040;
     --accent-rose:     #9B4A5A;
     --accent-gold:     #C9A96E;
-    --gold-antique:    #C9A96E;
-    --gold-bright:     #DFC187;
-    --gold-shimmer:    #F5E8D2;
-    --gold-dark:       #96723B;
-    --gold-glow:       rgba(201, 169, 110, 0.45);
-
-    /* Heritage Crimson & Sindoor Accents */
-    --crimson-heritage:#7A162B;
-    --crimson-velvet:  #4A0D1A;
-    --sindoor-red:     #981C2D;
 
     /* Text */
     --text-primary:  #171614;
@@ -4407,43 +4386,14 @@ html {
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .pdp-main-bounding-box {
-        aspect-ratio: 4 / 5;
-        max-height: 58vh;
-        min-height: 330px;
-        height: auto;
+        height: 60vh;
+        max-height: 60vh;
+        min-height: 320px;
     }
     .pdp-thumb-card-item {
         flex: 0 0 64px;
         width: 64px;
         height: 80px;
-    }
-
-    .size-selector-row {
-        width: 100%;
-        overflow: hidden;
-    }
-    .size-pill-group {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
-        gap: 8px;
-        padding-bottom: 8px;
-        scrollbar-width: none;
-    }
-    .size-pill-group::-webkit-scrollbar {
-        display: none;
-    }
-    .pdp-size-radio {
-        flex: 0 0 auto;
-    }
-    .pdp-size-tag {
-        min-width: 48px;
-        height: 46px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
     }
 
     /* Mobile horizontally scrollable filter strip */
@@ -4513,7 +4463,7 @@ html {
         bottom: 0;
         left: 0;
         right: 0;
-        z-index: 1002;
+        z-index: 998;
         background: rgba(255, 255, 255, 0.97);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);

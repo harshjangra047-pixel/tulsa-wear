@@ -18,42 +18,50 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-    <!-- Stylesheets -->
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v={{ cache_id }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/atelier-3d.css') }}?v={{ cache_id }}">
 
     <!-- Razorpay Standard Checkout SDK -->
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
-<body class="luxury-page-emerald checkout-page">
+<body>
 
     <!-- =========================================
-         FLOATING LUXURY FROSTED NAVBAR
+         NAVBAR
     ========================================== -->
-    <header class="navbar floating-frosted-nav" id="top">
-        <div class="nav-group-left">
-            <a href="{{ url_for('home') }}" class="nav-link-item">← Boutique Home</a>
-            <a href="{{ url_for('home') }}#curved-carousel" class="nav-link-item">3D Runway</a>
-            <a href="{{ url_for('fitting_room') }}" class="nav-link-item nav-link-virtual-tryon">
-                <span class="tryon-sparkle">✦</span> VIRTUAL TRY-ON
-            </a>
-            <a href="{{ url_for('shop') }}" class="nav-link-item">The Collection</a>
-            <a href="{{ url_for('home') }}#pick-your-silk" class="nav-link-item">Pick a Silk</a>
-        </div>
-
-        <a href="{{ url_for('home') }}" class="nav-brand-center">
-            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;">
-            <span class="brand-text-luxury">TULSA <em>by Anjali</em></span>
+    <header class="navbar navbar-solid" id="top">
+        <a href="{{ url_for('home') }}" class="logo" style="display:inline-flex;align-items:center;gap:10px;">
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="logo-img" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;box-shadow:0 2px 10px rgba(0,0,0,0.15);background:#fff;">
+            <span>TULSA <span style="font-size:0.75em;opacity:0.85;font-weight:400;letter-spacing:0.12em;">BY ANJALI</span></span>
         </a>
 
-        <div class="nav-group-right">
-            <a href="{{ url_for('fitting_room') }}" class="nav-tryon-mobile-pill">✦ Try-On</a>
-            <a href="{{ url_for('home') }}#weaving-studio" class="nav-link-item">Weaving Studio</a>
-            <a href="{{ url_for('bag') }}" class="btn-nav-bag">
-                <span>Bag</span>
-                <span class="bag-count-pill">{{ session.get('cart', [])|length }}</span>
+        <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('home') }}#new-arrivals">New</a>
+            <a href="{{ url_for('shop') }}">Shop</a>
+            <a href="{{ url_for('home') }}#collections">Collections</a>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+        </nav>
+
+        <div class="nav-right">
+            {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}" class="ai-link">My account</a>{% endif %}
+            <a href="{{ url_for('home') }}#ai-studio" class="ai-link">
+                ✦ AI Studio
             </a>
+            <a href="{{ url_for('bag') }}" class="bag-link">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
+            <button
+                id="menuButton"
+                class="menu-button"
+                type="button"
+                aria-label="Toggle navigation"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
         </div>
     </header>
 
@@ -118,9 +126,9 @@
                                 </a>
                             </div>
                             {% else %}
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: rgba(8, 26, 20, 0.7); border: 1px solid rgba(201, 169, 110, 0.3); padding: 12px 16px; border-radius: 8px; flex-wrap: wrap; gap: 8px;">
-                                <span style="font-size: 12px; color: rgba(245, 239, 235, 0.75);">Already have a Tulsa Wears profile?</span>
-                                <button type="button" onclick="openCustomerLoginModal()" style="background: none; border: none; color: #DFC187; font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: underline; letter-spacing: 0.04em;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #faf7f2; border: 1px solid var(--border-light); padding: 12px 16px; border-radius: 2px; flex-wrap: wrap; gap: 8px;">
+                                <span style="font-size: 12px; color: var(--text-secondary);">Already have a Tulsa Wears profile?</span>
+                                <button type="button" onclick="openCustomerLoginModal()" style="background: none; border: none; color: var(--accent-burgundy); font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600; cursor: pointer; text-decoration: underline; letter-spacing: 0.04em;">
                                     Sign In to Auto-Fill →
                                 </button>
                             </div>

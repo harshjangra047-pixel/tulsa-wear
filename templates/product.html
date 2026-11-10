@@ -26,106 +26,43 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/atelier-3d.css') }}?v={{ cache_id }}">
 </head>
 
-<body class="luxury-page-emerald pdp-page">
+<body>
 
     <!-- =========================================
-         FLOATING LUXURY FROSTED NAVBAR
+         NAVBAR
     ========================================== -->
-    <header class="navbar floating-frosted-nav" id="top">
-        <div class="nav-brand-cluster-left">
+    <header class="navbar navbar-solid" id="top">
+        <a href="{{ url_for('home') }}" class="logo" style="display:inline-flex;align-items:center;gap:10px;">
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="logo-img" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;box-shadow:0 2px 10px rgba(0,0,0,0.15);background:#fff;">
+            <span>TULSA <span style="font-size:0.75em;opacity:0.85;font-weight:400;letter-spacing:0.12em;">BY ANJALI</span></span>
+        </a>
+
+        <nav class="nav-links" id="navLinks">
+            <a href="{{ url_for('home') }}#new-arrivals">New</a>
+            <a href="{{ url_for('shop') }}">Shop</a>
+            <a href="{{ url_for('home') }}#collections">Collections</a>
+            <a href="{{ url_for('home') }}#about">About</a>
+            <a href="{{ url_for('home') }}#process">Process</a>
+            <a href="{{ url_for('home') }}#ai-studio">AI Studio</a>
+        </nav>
+
+        <div class="nav-right">
+            <a href="{{ url_for('home') }}#ai-studio" class="ai-link">
+                ✦ AI Studio
+            </a>
+            <a href="{{ url_for('bag') }}" class="bag-link">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
             <button
                 id="menuButton"
-                class="menu-button mobile-menu-toggle"
+                class="menu-button"
                 type="button"
-                aria-label="Open navigation menu"
+                aria-label="Toggle navigation"
                 aria-expanded="false"
             >
                 ☰
             </button>
-
-            <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
-                <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
-                <div class="brand-title-group">
-                    <span class="brand-text-luxury">TULSA</span>
-                    <span class="brand-sub-luxury">by Anjali</span>
-                </div>
-            </a>
         </div>
-
-        <div class="nav-group-left">
-            <a href="{{ url_for('home') }}" class="nav-link-item">← Boutique Home</a>
-            <a href="{{ url_for('home') }}#curved-carousel" class="nav-link-item">3D Runway</a>
-            <a href="{{ url_for('fitting_room') }}" class="nav-link-item nav-link-virtual-tryon">
-                <span class="tryon-sparkle">✦</span> VIRTUAL TRY-ON
-            </a>
-            <a href="{{ url_for('shop') }}" class="nav-link-item">The Collection</a>
-            <a href="{{ url_for('home') }}#pick-your-silk" class="nav-link-item">Pick a Silk</a>
-        </div>
-
-        <div class="nav-group-right">
-            <a href="{{ url_for('fitting_room') }}?select={{ product.id }}" class="nav-tryon-mobile-circle" title="Virtual Try-On">
-                <svg class="tryon-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2a3 3 0 0 0-3 3c0 .7.3 1.4.8 1.9L4 12v2h16v-2l-5.8-5.1c.5-.5.8-1.2.8-1.9a3 3 0 0 0-3-3Z"/>
-                    <path d="M6 14v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7"/>
-                </svg>
-                <span class="tryon-circle-text">TRY-<br>ON</span>
-            </a>
-            <a href="{{ url_for('fitting_room') }}?select={{ product.id }}" class="nav-tryon-mobile-pill" title="Virtual Try-On">✦ Try-On</a>
-            <a href="{{ url_for('home') }}#weaving-studio" class="nav-link-item">Weaving Studio</a>
-            <a href="{{ url_for('bag') }}" class="btn-nav-bag-icon" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-                    <path d="M3 6h18"/>
-                    <path d="M16 10a4 4 0 0 1-8 0"/>
-                </svg>
-                {% if session.get('cart', [])|length > 0 %}
-                <span class="bag-badge-counter">{{ session.get('cart', [])|length }}</span>
-                {% endif %}
-            </a>
-            <a href="{{ url_for('bag') }}" class="btn-nav-bag" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
-                <span class="bag-label-text">Bag</span>
-                <span class="bag-count-pill">{{ session.get('cart', [])|length }}</span>
-            </a>
-            {% if current_customer %}
-            <a href="{{ url_for('customer_dashboard') }}" class="nav-link-account-icon" title="My Account">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="7" r="4"/>
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                </svg>
-            </a>
-            {% else %}
-            <a href="{{ url_for('customer_login') }}" class="nav-link-account-icon" title="Sign In">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="7" r="4"/>
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                </svg>
-            </a>
-            {% endif %}
-        </div>
-
-        <!-- Mobile Navigation Drawer -->
-        <nav class="nav-links mobile-navigation-drawer" id="navLinks" role="navigation" aria-label="Mobile Navigation">
-            <div class="mobile-drawer-header">
-                <span class="mobile-drawer-brand">✦ TULSA ATELIER</span>
-            </div>
-            <a href="{{ url_for('fitting_room') }}?select={{ product.id }}" class="mobile-tryon-btn">✦ VIRTUAL TRY-ON</a>
-            <a href="{{ url_for('home') }}">Boutique Home</a>
-            <a href="{{ url_for('shop') }}">The Collection</a>
-            <a href="{{ url_for('home') }}#curved-carousel">3D Runway</a>
-            <a href="{{ url_for('home') }}#pick-your-silk">Pick a Silk</a>
-            <a href="{{ url_for('home') }}#weaving-studio">Weaving Studio</a>
-            <a href="{{ url_for('home') }}#cinematic-lookbook">Lookbook & Reels</a>
-            <a href="{{ url_for('bag') }}">Shopping Bag ({{ session.get('cart', [])|length }})</a>
-            {% if current_customer %}
-            <a href="{{ url_for('customer_dashboard') }}" style="color:#DFC187;">👤 My Account ({{ current_customer.name }})</a>
-            <a href="{{ url_for('customer_logout') }}" style="color:#f87171;">Sign Out</a>
-            {% else %}
-            <a href="{{ url_for('customer_login') }}" style="color:#DFC187;">👤 Sign In / Register</a>
-            {% endif %}
-            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa%20Wears!%20I%20have%20an%20inquiry%20regarding%20{{ product.name }}." target="_blank" style="color:#25d366;">
-                💬 WhatsApp Concierge
-            </a>
-        </nav>
     </header>
 
     <main class="inner-page-main">
@@ -229,7 +166,7 @@
                     <h1 class="pdp-title">{{ product.name }}</h1>
 
                     <div class="pdp-price-row" style="display: flex; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 16px;">
-                        <span class="pdp-price" style="font-size: 34px; font-weight: 600; color: #DFC187; font-family: 'Cormorant Garamond', Georgia, serif;">₹{{ "{:,.0f}".format(product.price) }}</span>
+                        <span class="pdp-price" style="font-size: 32px; font-weight: 600; color: #1a1a1a;">₹{{ "{:,.0f}".format(product.price) }}</span>
                         {% if product.has_discount %}
                         <span class="pdp-mrp" style="text-decoration: line-through; font-size: 18px; color: #888;">₹{{ "{:,.0f}".format(product.original_price) }}</span>
                         <span class="pdp-discount-badge" style="background: rgba(34, 197, 94, 0.12); color: #16a34a; font-weight: 700; font-size: 13px; padding: 4px 10px; border-radius: 4px; border: 1px solid rgba(22, 163, 74, 0.25); letter-spacing: 0.04em;">{{ product.effective_discount_percent }}% OFF</span>
@@ -291,13 +228,10 @@
 
                         <!-- Action Buttons -->
                         <div class="pdp-action-buttons">
-                            <button type="submit" class="btn-luxury-bag" id="pdpMainAddBagBtn">
+                            <button type="submit" class="btn-luxury-bag">
                                 Add to Bag
                             </button>
-                            <a href="{{ url_for('fitting_room') }}" class="btn-tryon-pdp">
-                                ✦ Drape in Virtual Fitting Room
-                            </a>
-                            <button type="button" onclick="proceedToBuyNow()" class="btn-luxury-buynow" style="background: rgba(8,26,20,0.85); border: 1px solid rgba(201,169,110,0.4); color: #DFC187;">
+                            <button type="button" onclick="proceedToBuyNow()" class="btn-luxury-buynow">
                                 Buy Now — Direct Checkout
                             </button>
                         </div>
@@ -430,8 +364,9 @@
        target="_blank" 
        rel="noopener noreferrer" 
        id="floatingWhatsAppBtn"
-       class="floating-whatsapp-btn"
-       aria-label="Chat with Tulsa on WhatsApp"
+       style="position: fixed; bottom: 24px; right: 24px; z-index: 9999; background: #25d366; color: #fff; width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; box-shadow: 0 4px 18px rgba(37,211,102,0.45); text-decoration: none; transition: transform 0.2s;"
+       onmouseover="this.style.transform='scale(1.1)'" 
+       onmouseout="this.style.transform='scale(1)'"
        title="Chat with Tulsa Wears on WhatsApp">
         💬
     </a>
@@ -612,24 +547,7 @@
                 pdpFrame.style.transform = 'rotateX(0deg) rotateY(0deg) translateZ(0px)';
             });
         }
-
-        // Toggle PDP Mobile Sticky Purchase Bar only when inline button is off-screen
-        const pdpMainBtn = document.getElementById('pdpMainAddBagBtn');
-        const pdpStickyBar = document.getElementById('pdpMobileStickyBar');
-        if (pdpMainBtn && pdpStickyBar && 'IntersectionObserver' in window) {
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        pdpStickyBar.classList.add('is-hidden');
-                    } else {
-                        pdpStickyBar.classList.remove('is-hidden');
-                    }
-                });
-            }, { threshold: 0.15 });
-            observer.observe(pdpMainBtn);
-        }
     </script>
-    {% include 'mobile_bottom_nav.html' %}
 </body>
 
 </html>

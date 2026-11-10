@@ -74,45 +74,6 @@
 
 <body>
 
-    <!-- =========================================
-         0. HERITAGE ENTRANCE CURTAIN (Video 4)
-    ========================================== -->
-    {% if not editor_preview %}
-    <div class="heritage-curtain-overlay" id="heritageOpeningCurtain">
-        <div class="curtain-panel curtain-left">
-            <div class="curtain-folds"></div>
-        </div>
-        <div class="curtain-panel curtain-right">
-            <div class="curtain-folds"></div>
-        </div>
-        <div class="curtain-center-medallion">
-            <div class="medallion-crest">
-                <svg viewBox="0 0 40 40" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="20" cy="20" r="18" stroke-dasharray="2 3"/>
-                    <path d="M20 8 C20 16 12 20 12 28 C16 32 24 32 28 28 C28 20 20 16 20 8 Z" fill="rgba(201,169,110,0.2)"/>
-                    <circle cx="20" cy="22" r="3" fill="currentColor"/>
-                </svg>
-            </div>
-            <p class="medallion-eyebrow">HAUTE COUTURE ATELIER • HANSI</p>
-            <h1 class="medallion-title">TULSA <em>by Anjali</em></h1>
-            <p class="medallion-tagline">"Woven with Devotion. Worn in Light."</p>
-            <button type="button" class="btn-enter-curtain" id="btnEnterCurtain">
-                ✦ Enter Atelier ✦
-            </button>
-            <p class="curtain-skip-hint">Click anywhere or scroll to enter</p>
-        </div>
-    </div>
-    {% endif %}
-
-    <!-- Storefront Customer Gate (Active only when Mandatory Customer Login is configured) -->
-    {% if cms.get('mandatory_customer_login') == 'true' and not current_customer %}
-    <div id="mandatoryLoginGateModal" style="position:fixed;inset:0;background:rgba(8,26,20,0.92);backdrop-filter:blur(16px);z-index:9998;display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="width:100%;max-width:460px;position:relative;">
-            <iframe src="{{ url_for('customer_login') }}" style="width:100%;height:590px;border:none;border-radius:16px;box-shadow:0 24px 60px rgba(0,0,0,0.6);" title="Tulsa Customer Sign In Required"></iframe>
-        </div>
-    </div>
-    {% endif %}
-
     <!-- 3D WebGL Background Canvas Container -->
     <div id="three-canvas-container"></div>
 
@@ -126,104 +87,66 @@
     </div>
     {% endif %}
 
-    <header class="navbar floating-frosted-nav" id="top">
-        <div class="nav-brand-cluster-left">
+    <header class="navbar" id="top">
+
+        <a href="{{ url_for('home') }}" class="logo" style="display:inline-flex;align-items:center;gap:10px;">
+            <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="logo-img" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;box-shadow:0 2px 10px rgba(0,0,0,0.15);background:#fff;">
+            <span>TULSA <span style="font-size:0.75em;opacity:0.85;font-weight:400;letter-spacing:0.12em;">BY ANJALI</span></span>
+        </a>
+
+
+        <nav class="nav-links" id="navLinks">
+
+            <a href="#new-arrivals">
+                New
+            </a>
+
+            <a href="{{ url_for('shop') }}">
+                Shop
+            </a>
+
+            <a href="#collections">
+                Collections
+            </a>
+
+            <a href="#about">
+                About
+            </a>
+
+            <a href="#process">
+                Process
+            </a>
+
+            <a href="#ai-studio">
+                AI Studio
+            </a>
+
+        </nav>
+
+
+        <div class="nav-right">
+
+            <a href="#ai-studio" class="ai-link">
+                ✦ AI Studio
+            </a>
+
+            <a href="{{ url_for('bag') }}" class="bag-link">
+                Bag ({{ session.get('cart', [])|length }})
+            </a>
+            {% if current_customer %}<a href="{{ url_for('customer_dashboard') }}" class="ai-link">My account</a>{% endif %}
+
             <button
                 id="menuButton"
-                class="menu-button mobile-menu-toggle"
+                class="menu-button"
                 type="button"
-                aria-label="Open navigation menu"
+                aria-label="Open navigation"
                 aria-expanded="false"
             >
                 ☰
             </button>
 
-            <a href="{{ url_for('home') }}" class="nav-brand-center" aria-label="Tulsa by Anjali Home">
-                <img src="{{ url_for('static', filename='images/tulsa-brand-logo.png') }}" alt="Tulsa by Anjali" class="brand-crest-logo" style="width:30px;height:30px;border-radius:50%;object-fit:cover;border:1.5px solid #c9a96e;background:#fff;flex-shrink:0;">
-                <div class="brand-title-group">
-                    <span class="brand-text-luxury">TULSA</span>
-                    <span class="brand-sub-luxury">by Anjali</span>
-                </div>
-            </a>
         </div>
 
-        <div class="nav-group-left">
-            <a href="#hero-section" class="nav-link-item">New In</a>
-            <a href="#curved-carousel" class="nav-link-item">3D Runway</a>
-            <a href="{{ url_for('fitting_room') }}" class="nav-link-item nav-link-virtual-tryon">
-                <span class="tryon-sparkle">✦</span> VIRTUAL TRY-ON
-            </a>
-            <a href="#pick-your-silk" class="nav-link-item">Pick a Silk</a>
-            <a href="#the-rack" class="nav-link-item">The Rack</a>
-            <a href="{{ url_for('shop') }}" class="nav-link-item">Catalogue</a>
-        </div>
-
-        <div class="nav-group-right">
-            <a href="{{ url_for('fitting_room') }}" class="nav-tryon-mobile-circle" title="Virtual Try-On">
-                <svg class="tryon-circle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2a3 3 0 0 0-3 3c0 .7.3 1.4.8 1.9L4 12v2h16v-2l-5.8-5.1c.5-.5.8-1.2.8-1.9a3 3 0 0 0-3-3Z"/>
-                    <path d="M6 14v7a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-7"/>
-                </svg>
-                <span class="tryon-circle-text">TRY-<br>ON</span>
-            </a>
-            <a href="{{ url_for('fitting_room') }}" class="nav-tryon-mobile-pill" title="Virtual Try-On">✦ Try-On</a>
-            <a href="#weaving-studio" class="nav-link-item">Weaving Studio</a>
-            <a href="#cinematic-lookbook" class="nav-link-item">Reels</a>
-            <a href="{{ url_for('bag') }}" class="btn-nav-bag-icon" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/>
-                    <path d="M3 6h18"/>
-                    <path d="M16 10a4 4 0 0 1-8 0"/>
-                </svg>
-                {% if session.get('cart', [])|length > 0 %}
-                <span class="bag-badge-counter">{{ session.get('cart', [])|length }}</span>
-                {% endif %}
-            </a>
-            <a href="{{ url_for('bag') }}" class="btn-nav-bag" aria-label="Shopping Bag ({{ session.get('cart', [])|length }} items)">
-                <span class="bag-label-text">Bag</span>
-                <span class="bag-badge-pill">{{ session.get('cart', [])|length }}</span>
-            </a>
-            {% if current_customer %}
-            <a href="{{ url_for('customer_account_dashboard') }}" class="nav-link-account-icon" title="My Account">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="7" r="4"/>
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                </svg>
-            </a>
-            {% else %}
-            <a href="{{ url_for('customer_login') }}" class="nav-link-account-icon" title="Sign In">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="7" r="4"/>
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                </svg>
-            </a>
-            {% endif %}
-        </div>
-
-        <nav class="nav-links mobile-navigation-drawer" id="navLinks" role="navigation" aria-label="Mobile Navigation">
-            <div class="mobile-drawer-header">
-                <span class="mobile-drawer-brand">✦ TULSA ATELIER</span>
-            </div>
-            <a href="{{ url_for('fitting_room') }}" class="mobile-tryon-btn">✦ VIRTUAL TRY-ON</a>
-            <a href="#hero-section">New In</a>
-            <a href="#curved-carousel">3D Runway</a>
-            <a href="#pick-your-silk">Pick a Silk</a>
-            <a href="#the-rack">The Rack</a>
-            <a href="{{ url_for('shop') }}">Catalogue</a>
-            <a href="#weaving-studio">Weaving Studio</a>
-            <a href="#cinematic-lookbook">Lookbook</a>
-            <a href="#ai-studio">AI Stylist</a>
-            <a href="{{ url_for('bag') }}">Shopping Bag ({{ session.get('cart', [])|length }})</a>
-            {% if current_customer %}
-            <a href="{{ url_for('customer_account_dashboard') }}" style="color:#DFC187;">👤 My Account ({{ current_customer.name }})</a>
-            <a href="{{ url_for('customer_logout') }}" style="color:#f87171;">Sign Out</a>
-            {% else %}
-            <a href="{{ url_for('customer_login') }}" style="color:#DFC187;">👤 Sign In / Register</a>
-            {% endif %}
-            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa%20Wears!%20I%20have%20an%20inquiry." target="_blank" style="color:#25d366;">
-                💬 WhatsApp Concierge
-            </a>
-        </nav>
     </header>
 
 
@@ -232,98 +155,42 @@
 
 
         <!-- =========================================
-             HERO — Royal Emerald Indian Archway (Video 2)
+             HERO — 3D Cinematic Fashion Opening
         ========================================== -->
 
-        <section class="hero hero-royal-emerald" id="hero-section">
+        <section class="hero section-wave wave-dark-to-ivory" id="hero-section">
 
-            <!-- Mobile-First Luxury Hero Card (Reference Photo 2 Experience) -->
-            <div class="mobile-mockup-hero-card">
-                <div class="mobile-hero-bg-media">
-                    <img src="{{ url_for('static', filename='images/mobile_hero_ref.jpg') }}?v={{ cache_id }}" 
-                         alt="Tulsa Royal Emerald Couture" 
-                         class="mobile-hero-ref-img">
-                    <div class="mobile-hero-gradient-overlay"></div>
-                </div>
-                <div class="mobile-hero-text-content">
-                    <h1 class="mobile-hero-title">
-                        <span>YOUR STYLE.</span>
-                        <span>YOUR FIT.</span>
-                        <em class="mobile-hero-italic">YOUR EXPERIENCE.</em>
-                    </h1>
-                    <p class="mobile-hero-paragraph">
-                        Step into the Tulsa virtual fitting room and explore our handcrafted collections in a more personal way.
-                    </p>
-                    <a href="#mood-portals" class="mobile-hero-pill-btn">
-                        EXPLORE COLLECTIONS →
+            <div class="hero-background" data-editor-image="hero_image_file" style="background-image: url('{{ product_image_url(cms.get('hero_image'), 'editorial-hero.jpg') }}?v={{ cache_id }}');"></div>
+
+            <div class="hero-overlay"></div>
+
+            <div class="hero-content">
+
+                <p class="eyebrow hero-eyebrow" data-editor-field="hero_badge">
+                    {{ cms.get('hero_badge', '✦ ' ~ brand_name|upper ~ ' — ATELIER COUTURE ✦') }}
+                </p>
+
+                <h1>
+                    <span data-editor-field="hero_title_line1">{{ cms.get('hero_title_line1', 'The Art of') }}</span><br>
+                    <span class="italic" data-editor-field="hero_title_line2">{{ cms.get('hero_title_line2', 'Handmade') }}</span>
+                </h1>
+
+                <p class="hero-sub" data-editor-field="hero_subtitle">
+                    {{ cms.get('hero_subtitle', 'Handcrafted silhouettes shaped slowly by fabric, memory and modern craft. Artisanal Indian couture for discerning souls.') }}
+                </p>
+
+                <div class="hero-actions">
+                    <a href="{{ cms.get('hero_cta1_link', '#curved-carousel') }}" class="btn-luxury-gold" data-editor-field="hero_cta1_text">
+                        {{ cms.get('hero_cta1_text', 'Explore Collection →') }}
                     </a>
-                    <div class="mobile-hero-dots">
-                        <span class="dot active"></span>
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                        <span class="dot"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="hero-grid-split">
-
-                <!-- Editorial Copy Column -->
-                <div class="hero-editorial-left">
-                    <p class="hero-tag-tradition" data-editor-field="hero_badge">
-                        ✦ TRADITION MEETS TOMORROW ✦
-                    </p>
-
-                    <h1 class="hero-display-h1">
-                        <span data-editor-field="hero_title_line1">{{ cms.get('hero_title_line1', 'More Than') }}</span>
-                        <em data-editor-field="hero_title_line2">{{ cms.get('hero_title_line2', 'Fashion.') }}</em>
-                    </h1>
-
-                    <p class="hero-narrative-copy" data-editor-field="hero_subtitle">
-                        {{ cms.get('hero_subtitle', 'A story in every drape. Handcrafted silhouettes shaped slowly in pure Chanderi silks, Banarasi brocades, and mulmul cotton. Artisanal Indian couture tailored for modern royalty.') }}
-                    </p>
-
-                    <div class="hero-cta-cluster">
-                        <a href="{{ cms.get('hero_cta1_link', '#curved-carousel') }}" class="btn-hero-primary" data-editor-field="hero_cta1_text">
-                            Explore 2026 Collection →
-                        </a>
-                        <a href="#curved-carousel" class="btn-hero-ghost">
-                            ✦ 3D Runway Stage
-                        </a>
-                    </div>
-
-                    <div class="hero-stats-strip">
-                        <div><strong>16</strong> Silhouettes</div>
-                        <div><strong>100%</strong> Hand-Tailored</div>
-                        <div><strong>Zero</strong> Waste Couture</div>
-                        <div><strong>Estd</strong> 2026 Hansi</div>
-                    </div>
-                </div>
-
-                <!-- Mughal Jharokha Archway & Authentic Tulsa Photography -->
-                <div class="hero-archway-wrap">
-                    <div class="mughal-arch-frame">
-                        <div class="arch-inner-window">
-                            <img src="{{ url_for('static', filename='images/bridal-wedding-collection.jpg') }}?v={{ cache_id }}" 
-                                 alt="Tulsa Royal Bridal Couture" 
-                                 class="arch-hero-image"
-                                 fetchpriority="high"
-                                 loading="eager"
-                                 decoding="async"
-                                 onerror="this.onerror=null; this.src='{{ product_image_url(cms.get('hero_image'), 'festive-atelier-collection.jpg') }}?v={{ cache_id }}';">
-                            <div class="arch-light-shaft"></div>
-                        </div>
-                        <div class="rotated-heritage-badge">HERITAGE WOVEN FOR TOMORROW</div>
-                        <div class="hero-spotlight-pill">
-                            <span class="dot"></span>
-                            <span>Mughal Embroidered Anarkali • Chanderi Silk</span>
-                        </div>
-                    </div>
+                    <a href="{{ cms.get('hero_cta2_link', '#ai-studio') }}" class="btn-luxury-outline">
+                        {{ cms.get('hero_cta2_text', '✦ AI Style Studio') }}
+                    </a>
                 </div>
 
             </div>
 
-            <div class="scroll-indicator" style="bottom: 18px;">
+            <div class="scroll-indicator">
                 <span>SCROLL</span>
                 <span>↓</span>
             </div>
@@ -343,101 +210,68 @@
                 <h2>{{ cms.get('mood_title', 'Six Moods. <em>Infinite Craft.</em>')|safe }}</h2>
             </div>
 
-            <!-- Mobile-First Header Matching Reference Mockup -->
-            <div class="mobile-collections-header">
-                <span class="gold-line"></span>
-                <span class="gold-collections-title">OUR COLLECTIONS</span>
-                <span class="gold-line"></span>
-            </div>
-
             <div class="arched-grid">
 
-                <a href="{{ cms.get('mood_cat1_link') or url_for('shop', category=cms.get('mood_cat1_title', 'Festive')) }}" class="arched-card reveal reveal-delay-1">
+                <a href="{{ cms.get('mood_cat1_link') or url_for('shop', category=cms.get('mood_cat1_title', 'Palazzo Set')) }}" class="arched-card reveal reveal-delay-1">
                     <div class="arched-media">
-                        <img src="{{ url_for('static', filename='images/mobile_col_festive.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat1_title', 'Festive') }}" 
-                             loading="lazy"
+                        <img src="{{ product_image_url(cms.get('mood_cat1_image'), 'editorial-category-1.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat1_title', 'Palazzo Set') }}" 
                              decoding="async"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/festive-atelier-collection.jpg') }}?v={{ cache_id }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">01 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat1_title', 'Festive') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat1_title', 'Palazzo Set') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat1_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
-                <a href="{{ cms.get('mood_cat2_link') or url_for('shop', category=cms.get('mood_cat2_title', 'Bridal')) }}" class="arched-card reveal reveal-delay-2">
+                <a href="{{ cms.get('mood_cat2_link') or url_for('shop', category=cms.get('mood_cat2_title', 'Salwar Kameez')) }}" class="arched-card reveal reveal-delay-2">
                     <div class="arched-media">
-                        <img src="{{ url_for('static', filename='images/mobile_col_bridal.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat2_title', 'Bridal') }}" 
-                             loading="lazy"
+                        <img src="{{ product_image_url(cms.get('mood_cat2_image'), 'editorial-category-2.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}" 
                              decoding="async"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/bridal-wedding-collection.jpg') }}?v={{ cache_id }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">02 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat2_title', 'Bridal') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat2_title', 'Salwar Kameez') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat2_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
-                <a href="{{ cms.get('mood_cat3_link') or url_for('shop', category=cms.get('mood_cat3_title', 'Silk')) }}" class="arched-card reveal reveal-delay-3">
+                <a href="{{ cms.get('mood_cat3_link') or url_for('shop', category=cms.get('mood_cat3_title', 'Casual Wear')) }}" class="arched-card reveal reveal-delay-3">
                     <div class="arched-media">
-                        <img src="{{ url_for('static', filename='images/mobile_col_silk.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat3_title', 'Silk') }}" 
-                             loading="lazy"
+                        <img src="{{ product_image_url(cms.get('mood_cat3_image'), 'editorial-category-3.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat3_title', 'Casual Wear') }}" 
                              decoding="async"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-collection.jpg') }}?v={{ cache_id }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">03 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat3_title', 'Silk') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat3_title', 'Casual Wear') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat3_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
-                <a href="{{ cms.get('mood_cat4_link') or '#cinematic-lookbook' }}" class="arched-card reveal reveal-delay-4">
+                <a href="{{ cms.get('mood_cat4_link') or url_for('shop', category=cms.get('mood_cat4_title', 'Party / Wedding Regalia')) }}" class="arched-card reveal reveal-delay-4">
                     <div class="arched-media">
-                        <img src="{{ url_for('static', filename='images/mobile_col_lookbook.jpg') }}?v={{ cache_id }}"
-                             alt="{{ cms.get('mood_cat4_title', 'Lookbook') }}" 
-                             loading="lazy"
+                        <img src="{{ product_image_url(cms.get('mood_cat4_image'), 'editorial-category-4.jpg') }}?v={{ cache_id }}"
+                             alt="{{ cms.get('mood_cat4_title', 'Party / Wedding Regalia') }}" 
                              decoding="async"
-                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/garment-01.jpg') }}?v={{ cache_id }}';">
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         <div class="arched-overlay"></div>
                     </div>
                     <div class="arched-info">
                         <span class="arched-number">04 / MOOD</span>
-                        <h3 class="arched-title">{{ cms.get('mood_cat4_title', 'Lookbook') }}</h3>
+                        <h3 class="arched-title">{{ cms.get('mood_cat4_title', 'Party / Wedding Regalia') }}</h3>
                         <span class="arched-link">{{ cms.get('mood_cat4_sub', 'Explore Pieces →') }}</span>
                     </div>
                 </a>
 
-            </div>
-
-            <!-- Mobile Virtual Fitting Room Luxury Card (Reference Mockup Experience) -->
-            <div class="mobile-vton-card-wrap">
-                <a href="{{ url_for('fitting_room') }}" class="mobile-vton-banner-card">
-                    <div class="mobile-vton-silhouette-side">
-                        <svg class="silhouette-gold-svg" viewBox="0 0 100 120" fill="none" stroke="#DFC187" stroke-width="1.8">
-                            <path d="M50 15 C44 15 40 20 40 28 C40 36 44 42 50 42 C56 42 60 36 60 28 C60 20 56 15 50 15 Z" stroke-width="1.5"/>
-                            <path d="M42 22 C38 18 34 26 36 34 C38 42 42 46 42 46" stroke-width="1.2"/>
-                            <path d="M58 22 C62 18 66 26 64 34 C62 42 58 46 58 46" stroke-width="1.2"/>
-                            <path d="M46 42 L46 50 C46 52 44 54 41 55 C33 58 24 64 20 74 C18 78 19 86 21 95 C22 100 24 108 26 115" stroke-width="1.6"/>
-                            <path d="M54 42 L54 50 C54 52 56 54 59 55 C67 58 76 64 80 74 C82 78 81 86 79 95 C78 100 76 108 74 115" stroke-width="1.6"/>
-                            <path d="M36 68 C44 76 56 76 64 68" stroke-width="1.4"/>
-                            <path d="M40 88 C46 92 54 92 60 88" stroke-width="1.2"/>
-                        </svg>
-                    </div>
-                    <div class="mobile-vton-content">
-                        <span class="mobile-vton-title">VIRTUAL FITTING ROOM</span>
-                        <span class="mobile-vton-sub">Try. Experience. Own.</span>
-                        <span class="btn-mobile-vton-try">TRY NOW →</span>
-                    </div>
-                </a>
             </div>
 
         </section>
@@ -445,72 +279,56 @@
 
 
         <!-- =========================================
-             SCENE 03 — GRAND CYLINDRICAL 3D RUNWAY & SPECIFICATION DRAWER
-             Inspired by Reference Video 1
+             SCENE 03 — 3D CYLINDRICAL CURVED CAROUSEL
+             ("Woven to Be Remembered")
         ========================================== -->
 
-        <section class="stage-3d-section" id="curved-carousel">
+        <section class="curved-carousel-section" id="curved-carousel">
 
-            <div class="stage-header-editorial reveal">
-                <p class="stage-eyebrow">✦ ATELIER CYLINDRICAL STAGE ✦</p>
-                <h2 class="stage-title">Interactive 3D Runway. <em>Step Into The Silhouette.</em></h2>
-                <p style="font-size: 15px; color: #B5A898; max-width: 660px; margin: 0 auto; line-height: 1.6;">
-                    Experience our 16 authentic artisanal silhouettes staged in a dynamic cylindrical formation. Drag, swipe or use navigation controls to rotate, and inspect tailoring specifications.
-                </p>
+            <div class="section-head-editorial reveal">
+                <p class="eyebrow">{{ cms.get('signatures_eyebrow', 'THE ATELIER SIGNATURES') }}</p>
+                <h2>{{ cms.get('signatures_title', 'Woven to Be <em>Remembered</em>')|safe }}</h2>
             </div>
 
-            <!-- Category Filter Chips -->
-            <div class="stage-category-filters">
-                <button type="button" class="stage-filter-chip active" data-category="all">All Silhouettes</button>
-                <button type="button" class="stage-filter-chip" data-category="Plazo / Kurta">Plazo / Kurta</button>
-                <button type="button" class="stage-filter-chip" data-category="Salwar Kameez">Salwar Kameez</button>
-                <button type="button" class="stage-filter-chip" data-category="Party Wear">Party Wear</button>
-                <button type="button" class="stage-filter-chip" data-category="Wedding Wear">Wedding Wear</button>
+            <!-- Curated Filmstrip Preview Ribbon -->
+            <div class="filmstrip-row">
+                {% for p in products[:8] %}
+                    {% if p.image %}
+                    <div class="filmstrip-thumb">
+                        <img src="{{ product_image_url(p.image) }}?v={{ cache_id }}"
+                             alt="{{ p.name }}" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                    </div>
+                    {% endif %}
+                {% endfor %}
             </div>
 
-            <!-- Cylindrical 3D Arena Viewport -->
-            <div class="stage-arena-container">
-                <div class="stage-pedestal-glow"></div>
-                <div class="stage-track-3d" id="stageTrack3D">
+            <!-- 3D Perspective Curved Viewport -->
+            <div class="curved-viewport" id="curvedViewport">
+                <div class="curved-track" id="curvedTrack">
                     {% for product in products %}
-                    <div class="stage-card-3d {% if loop.first %}active-focus{% endif %}"
-                         data-id="{{ product.id }}"
-                         data-name="{{ product.name }}"
-                         data-price="{{ product.price }}"
-                         data-category="{{ product.category }}"
-                         data-fabric="{{ product.fabric or 'Pure Natural Fibers' }}"
-                         data-color="{{ product.color or 'Artisanal Dye' }}"
-                         data-desc="{{ product.description or 'Handcrafted slow luxury shaped from fine natural fibers with artisanal needlework.' }}"
-                         data-stock="{{ product.stock }}"
-                         data-img="{{ product_image_url(product.image, 'garment-01.jpg') }}?v={{ cache_id }}">
-                        
-                        <div class="stage-card-media">
-                            <span class="stage-card-badge">{{ product.category }}</span>
-                            <button type="button" 
-                                    class="stage-hanger-trigger" 
-                                    title="Try on in Studio Fitting Room"
-                                    data-product-id="{{ product.id }}"
-                                    data-name="{{ product.name }}"
-                                    data-price="{{ product.price }}"
-                                    data-fabric="{{ product.fabric or 'Pure Natural Fibers' }}"
-                                    data-color="{{ product.color or 'Artisanal Dye' }}"
-                                    data-desc="{{ product.description or 'Handcrafted slow luxury shaped from fine natural fibers with artisanal needlework.' }}"
-                                    data-img="{{ product_image_url(product.image, 'garment-01.jpg') }}?v={{ cache_id }}">
-                                👗
-                            </button>
-                            <img src="{{ product_image_url(product.image, 'garment-01.jpg') }}?v={{ cache_id }}"
-                                 alt="{{ product.name }}"
-                                 class="stage-card-img"
-                                 loading="lazy"
+                    <div class="curved-item" data-id="{{ product.id }}">
+                        <div class="curved-card-media">
+                            <span class="curved-badge">Handmade</span>
+                            <img src="{{ product_image_url(product.image) }}?v={{ cache_id }}"
+                                 alt="{{ product.name }}" 
+                                 decoding="async"
+                                 loading="eager"
                                  onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                         </div>
-
-                        <div class="stage-card-meta">
-                            <p class="stage-card-cat">{{ product.fabric or 'Artisanal Handloom' }}</p>
-                            <h3 class="stage-card-name">{{ product.name }}</h3>
-                            <div class="stage-card-price-row">
-                                <span class="stage-card-price">₹{{ "{:,.0f}".format(product.price) }}</span>
-                                <span style="font-size:11px;color:var(--gold-bright);text-transform:uppercase;letter-spacing:0.1em;">Select Piece →</span>
+                        <div class="curved-meta">
+                            <p class="curved-category">{{ product.category }}</p>
+                            <h3 class="curved-title">{{ product.name }}</h3>
+                            <div class="curved-price-row">
+                                <div>
+                                    <span class="curved-price">₹{{ "{:,.0f}".format(product.price) }}</span>
+                                    {% if product.has_discount %}
+                                    <span style="text-decoration: line-through; font-size: 13px; color: #888; margin-left: 6px;">₹{{ "{:,.0f}".format(product.original_price) }}</span>
+                                    <span style="background: rgba(34, 197, 94, 0.12); color: #16a34a; font-weight: 600; font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-left: 6px;">{{ product.effective_discount_percent }}% OFF</span>
+                                    {% endif %}
+                                </div>
+                                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="curved-btn">View Piece →</a>
                             </div>
                         </div>
                     </div>
@@ -518,52 +336,10 @@
                 </div>
             </div>
 
-            <!-- Stage Navigation & Numerical Step Counter (< 01 / 16 >) -->
-            <div class="stage-controls-bar">
-                <button class="stage-nav-arrow" id="stagePrev" aria-label="Previous silhouette">←</button>
-                <div class="stage-counter-display" id="stageCounter">&lt; 01 / 16 &gt;</div>
-                <button class="stage-nav-arrow" id="stageNext" aria-label="Next silhouette">→</button>
-            </div>
-
-            <!-- Sliding Luxury Product Information Panel (Video 1) -->
-            <div class="stage-spec-drawer" id="specDrawer">
-                <div class="spec-preview-media">
-                    {% set initial_item = products[0] if products else None %}
-                    <img id="specPreviewImg" 
-                         src="{{ product_image_url(initial_item.image if initial_item else None, 'garment-01.jpg') }}?v={{ cache_id }}" 
-                         alt="Active Runway Silhouette" 
-                         class="spec-preview-img">
-                </div>
-                <div class="spec-info-col">
-                    <p class="stage-eyebrow" id="specCategory">{{ initial_item.category if initial_item else 'Plazo / Kurta' }} • Hansi Atelier</p>
-                    <h3 id="specTitle">{{ initial_item.name if initial_item else 'Hand Embroidered Kurta' }}</h3>
-                    <p class="spec-price-tag" id="specPrice">₹{{ "{:,.0f}".format(initial_item.price if initial_item else 2800) }}</p>
-                    <p class="spec-desc" id="specDesc">{{ initial_item.description if initial_item and initial_item.description else 'Handcrafted slow luxury shaped from fine natural fibers with artisanal needlework.' }}</p>
-                    
-                    <div class="spec-attributes-grid">
-                        <div><strong>Fabric:</strong> <span id="specFabric">{{ initial_item.fabric if initial_item and initial_item.fabric else 'Pure Mulmul Cotton' }}</span></div>
-                        <div><strong>Shade:</strong> <span id="specColor">{{ initial_item.color if initial_item and initial_item.color else 'Beige' }}</span></div>
-                        <div><strong>Craft:</strong> <span>Needlework by Hand</span></div>
-                        <div><strong>Availability:</strong> <span id="specStock" style="color:#50E3C2;">● In Stock - Ready to Tailor</span></div>
-                    </div>
-
-                    <p style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold-antique);margin-bottom:8px;">Select Tailoring Size</p>
-                    <div class="spec-size-picker">
-                        <button type="button" class="spec-size-btn" data-size="XS">XS</button>
-                        <button type="button" class="spec-size-btn" data-size="S">S</button>
-                        <button type="button" class="spec-size-btn active" data-size="M">M</button>
-                        <button type="button" class="spec-size-btn" data-size="L">L</button>
-                        <button type="button" class="spec-size-btn" data-size="XL">XL</button>
-                        <button type="button" class="spec-size-btn" data-size="2XL">2XL</button>
-                        <button type="button" class="spec-size-btn" data-size="Custom">Custom Fit</button>
-                    </div>
-
-                    <div class="spec-actions-row">
-                        <a href="/buy-now/{{ initial_item.id if initial_item else 1 }}" class="btn-spec-buy" id="specBuyBtn">⚡ Buy Now</a>
-                        <button type="button" class="btn-spec-bag" id="specBagBtn" data-product-id="{{ initial_item.id if initial_item else 1 }}">👜 Add to Bag</button>
-                        <a href="/product/{{ initial_item.id if initial_item else 1 }}" class="btn-spec-view" id="specViewBtn">👁️ View Product</a>
-                    </div>
-                </div>
+            <!-- Carousel Controls -->
+            <div class="carousel-controls">
+                <button class="carousel-arrow" id="carouselPrev" aria-label="Previous garment">←</button>
+                <button class="carousel-arrow" id="carouselNext" aria-label="Next garment">→</button>
             </div>
 
         </section>
@@ -571,254 +347,73 @@
 
 
         <!-- =========================================
-             SCENE 03.5 — VIRTUAL FITTING ROOM PROMOTIONAL SHOWCASE (PART 3)
-             Direct Gateway to /fitting-room
+             SCENE 04 — INTERACTIVE STUDIO LOOK BUILDER
+             ("Change Look")
         ========================================== -->
 
-        <section class="vton-promo-section" id="virtual-try-on-promo">
-            <div class="vton-promo-container">
-                <div class="vton-promo-grid">
-                    <!-- Left: Avatar & Mannequin Luxury Showcase Preview -->
-                    <div class="vton-promo-media">
-                        {% set feat_fitting = best_sellers[0] if best_sellers else (products[0] if products else None) %}
-                        <div class="vton-promo-arch-frame">
-                            <div class="vton-promo-aura-glow"></div>
-                            <img src="{{ product_image_url(cms.get('vton_showcase_image', 'bridal-wedding-collection.jpg')) }}?v={{ cache_id }}" alt="Tulsa Atelier Mannequin Avatar" class="vton-promo-hero-img" loading="lazy" data-editor-image="vton_showcase_image">
-                            <a href="{{ url_for('fitting_room', select=feat_fitting.id) if feat_fitting else url_for('fitting_room') }}" class="vton-promo-garment-inset" style="text-decoration:none; cursor:pointer;" title="Tap to drape {{ feat_fitting.name if feat_fitting else 'this garment' }} in Virtual Fitting Room">
-                                <img src="{{ product_image_url(feat_fitting.image) if feat_fitting else url_for('static', filename='images/garment-01.jpg') }}" alt="{{ feat_fitting.name if feat_fitting else 'Active Drape Preview' }}" class="vton-inset-thumb" onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/garment-01.jpg') }}';">
-                                <div class="vton-inset-info">
-                                    <span class="vton-inset-badge">✦ Active Drape • Tap to Drape</span>
-                                    <h4 class="vton-inset-name">{{ feat_fitting.name if feat_fitting else 'Handcrafted Silhouette' }}</h4>
-                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-top:2px;">
-                                        <span class="vton-inset-price">₹{{ "{:,.0f}".format(feat_fitting.price) if feat_fitting else '2,499' }}</span>
-                                        <span class="vton-inset-tap-action" style="font-size:11px; color:#DFC187; font-weight:700; letter-spacing:0.04em; display:inline-flex; align-items:center; gap:2px;">Try On <span style="font-size:13px;">→</span></span>
-                                    </div>
-                                </div>
-                            </a>
-                            <div class="vton-promo-lighting-tag">
-                                <span class="tag-dot"></span> Studio Lighting: Festive Hall
-                            </div>
-                        </div>
-                    </div>
+        <section class="look-builder-section" id="look-builder">
 
-                    <!-- Right: Content & Call To Action -->
-                    <div class="vton-promo-content">
-                        <div class="vton-promo-eyebrow">
-                            <span class="eyebrow-accent">✦</span> ATELIER SILHOUETTE STUDIO
-                        </div>
-                        <h2 class="vton-promo-heading">
-                            YOUR STYLE.<br>
-                            YOUR FIT.<br>
-                            <span class="gold-gradient-text">YOUR EXPERIENCE.</span>
-                        </h2>
-                        <p class="vton-promo-desc">
-                            Step into the Tulsa virtual fitting room and explore our handcrafted collections in a more personal way.
-                        </p>
-
-                        <div class="vton-promo-feature-list">
-                            <div class="vton-feature-item">
-                                <div class="feature-icon">👗</div>
-                                <div class="feature-text">
-                                    <strong>Interactive Mannequin Drape</strong>
-                                    <span>Instant silhouette visualization across authentic Tulsa couture</span>
-                                </div>
-                            </div>
-                            <div class="vton-feature-item">
-                                <div class="feature-icon">✨</div>
-                                <div class="feature-text">
-                                    <strong>Triple Ambiance Lighting</strong>
-                                    <span>Experience rich zari reflection under Daylight, Festive Hall, and Candlelight</span>
-                                </div>
-                            </div>
-                            <div class="vton-feature-item">
-                                <div class="feature-icon">💎</div>
-                                <div class="feature-text">
-                                    <strong>AI Stylist Occasion Pairing</strong>
-                                    <span>Tailored recommendations on dupatta drape, accessories, and bespoke sizing</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="vton-promo-cta-row">
-                            <a href="{{ url_for('fitting_room', select=feat_fitting.id) if feat_fitting else url_for('fitting_room') }}" class="btn-enter-vton">
-                                <span>ENTER VIRTUAL FITTING ROOM</span>
-                                <span class="btn-arrow-gold">→</span>
-                            </a>
-                            <span class="vton-safe-tag">✦ Mannequin Drape Preview • {{ products|length if products else '16' }} Real Pieces</span>
-                        </div>
-                    </div>
-                </div>
+            <div class="section-head-editorial reveal">
+                <p class="eyebrow">{{ cms.get('look_eyebrow', 'INTERACTIVE ATELIER STUDIO') }}</p>
+                <h2>{{ cms.get('look_title', 'Change Look. <em>Personalize Your Silhouette.</em>')|safe }}</h2>
             </div>
-        </section>
 
+            <div class="look-builder-wrapper">
 
-
-        <!-- =========================================
-             SCENE 04 — INTERACTIVE AI VIRTUAL FITTING ROOM (Stage 3)
-             Inspired by Reference Video 3
-        ========================================== -->
-
-        <section class="fitting-room-section" id="look-builder">
-
-            <div class="fitting-room-wrapper">
-
-                <div class="fitting-room-header reveal">
-                    <p class="stage-eyebrow">{{ cms.get('look_eyebrow', '✦ ATELIER INTERACTIVE FITTING ROOM ✦') }}</p>
-                    <h2 class="stage-title">Virtual Silhouette Studio. <em>Dressed in Craft.</em></h2>
-                    <p style="font-size: 15px; color: #B5A898; max-width: 680px; margin: 0 auto; line-height: 1.6;">
-                        Tap the hanger on any authentic Tulsa garment to immediately preview how it drapes on our studio mannequin. Review bespoke tailoring notes, switch ambient lighting, and adjust sizing.
-                    </p>
-                    <div class="fitting-transparency-pill">
-                        ✦ Grounded in Genuine Tulsa Handloom Assets • Transparent Silhouette Drape Preview ✦
+                <!-- Left Thumbnail Look Switcher -->
+                <div class="look-rail">
+                    {% for p in products[:4] %}
+                    <div class="look-thumb {% if loop.first %}active{% endif %}"
+                         data-id="{{ p.id }}"
+                         data-title="{{ p.name }}"
+                         data-price="{{ p.price }}"
+                         data-desc="{{ p.description or 'Handcrafted from fine natural fibers with artisanal precision.' }}"
+                         data-tag="{{ p.category }}"
+                         data-img="{{ product_image_url(p.image, 'garment-01.jpg') }}?v={{ cache_id }}">
+                        <img src="{{ product_image_url(p.image, 'garment-01.jpg') }}?v={{ cache_id }}" alt="{{ p.name }}">
                     </div>
+                    {% endfor %}
                 </div>
 
-                <div class="fitting-grid-split">
+                <!-- Center Stage with Mannequin Preview -->
+                <div class="look-stage">
+                    {% set initial_p = products[0] if products else None %}
+                    <img id="lookStageImg"
+                         class="look-mannequin-img"
+                         src="{{ product_image_url(initial_p.image if initial_p else None) }}?v={{ cache_id }}"
+                         alt="Selected Couture Look">
+                </div>
 
-                    <!-- Left Column: Avatar & Mannequin Podium -->
-                    <div class="fitting-stage-card">
-                        <div class="fitting-stage-topbar">
-                            <span class="label">Studio Lighting:</span>
-                            <div class="stage-ambience-pills">
-                                <button type="button" class="btn-stage-pill stage-ambience-pill active" data-ambience="daylight">Daylight</button>
-                                <button type="button" class="btn-stage-pill stage-ambience-pill" data-ambience="festive">Festive Hall</button>
-                                <button type="button" class="btn-stage-pill stage-ambience-pill" data-ambience="candlelight">Candlelit</button>
-                            </div>
+                <!-- Right Configuration Details -->
+                <div class="look-details">
+                    <span class="look-tag" id="lookTag">{{ initial_p.category if initial_p else 'Plazo / Kurta' }}</span>
+                    <h3 class="look-name" id="lookName">{{ initial_p.name if initial_p else 'Hand Embroidered Kurta' }}</h3>
+                    <p class="look-price" id="lookPrice">₹{{ "{:,.0f}".format(initial_p.price if initial_p else 2800) }}</p>
+                    <p class="look-desc" id="lookDesc">{{ initial_p.description if initial_p and initial_p.description else 'Featherlight organic cotton spun with intricate handwork and subtle zari edges.' }}</p>
 
-                            <span class="label" style="margin-left:auto;">Angle:</span>
-                            <div class="stage-angle-pills">
-                                <button type="button" class="btn-stage-pill stage-angle-pill active" data-angle="front" id="btnAngleFront">Front</button>
-                                <button type="button" class="btn-stage-pill stage-angle-pill" data-angle="drape" id="btnAngleDrape">Drape Detail</button>
-                            </div>
+                    <div class="look-selectors">
+                        <span class="selector-label">Select Color Palette</span>
+                        <div class="swatch-group">
+                            <span class="swatch active" style="background: #F5F0E8;" title="Ivory"></span>
+                            <span class="swatch" style="background: #D7C5B1;" title="Sand"></span>
+                            <span class="swatch" style="background: #681F2E;" title="Burgundy"></span>
+                            <span class="swatch" style="background: #181615;" title="Charcoal"></span>
                         </div>
 
-                        {% set initial_p = products[0] if products else None %}
-                        <div class="fitting-avatar-viewport" id="fittingAvatarViewport">
-                            <div class="stage-radial-light"></div>
-                            <div class="stage-pedestal-disc"></div>
-
-                            <!-- Floating Zoom & Fit Controls -->
-                            <div class="stage-zoom-controls">
-                                <button type="button" class="btn-stage-zoom" id="btnZoomIn" title="Zoom In">＋</button>
-                                <button type="button" class="btn-stage-zoom" id="btnZoomOut" title="Zoom Out">－</button>
-                                <button type="button" class="btn-stage-zoom" id="btnZoomReset" title="Reset View">⟲</button>
-                                <button type="button" class="btn-stage-zoom btn-fit-toggle" id="btnFitToggle" title="Toggle Full Outfit / Scroll Mode">⤢ Full</button>
-                            </div>
-
-                            <!-- Prev & Next Gallery Navigation Arrows -->
-                            <button type="button" class="stage-nav-arrow stage-nav-prev" id="stageImgPrev" aria-label="Previous View">‹</button>
-                            <button type="button" class="stage-nav-arrow stage-nav-next" id="stageImgNext" aria-label="Next View">›</button>
-
-                            <div class="fitting-avatar-canvas" id="fittingAvatarCanvas">
-                                <img id="fittingStageImg"
-                                     class="avatar-garment-layer"
-                                     src="{{ product_image_url(initial_p.image if initial_p else None, 'garment-01.jpg') }}?v={{ cache_id }}"
-                                     alt="Active Avatar Fitted Garment"
-                                     onerror="this.onerror=null;this.src='/static/images/garment-01.jpg';"
-                                     loading="eager">
-                            </div>
-                        </div>
-
-                        <!-- Gallery Indicators & Thumbnails Bar -->
-                        <div class="stage-gallery-dots" id="stageGalleryDots">
-                            <!-- Populated dynamically via JS -->
-                        </div>
-
-                        <div class="fitting-stage-bottom-info">
-                            <div>Active Fit: <strong id="fittingStageFabric">{{ initial_p.fabric if initial_p and initial_p.fabric else 'Pure Mulmul Cotton' }}</strong></div>
-                            <div>Craftsmanship: <strong>Hand-Cut &amp; Stitched</strong></div>
+                        <span class="selector-label">Select Tailored Size</span>
+                        <div class="size-group">
+                            <button class="size-pill" type="button">XS</button>
+                            <button class="size-pill active" type="button">S</button>
+                            <button class="size-pill" type="button">M</button>
+                            <button class="size-pill" type="button">L</button>
+                            <button class="size-pill" type="button">XL</button>
                         </div>
                     </div>
 
-                    <!-- Right Column: Wardrobe Selection & AI Styling Panel -->
-                    <div class="wardrobe-panel-card">
-
-                        <!-- Category Filters -->
-                        <div>
-                            <p style="font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold-antique);margin-bottom:10px;">Select Wardrobe Category</p>
-                            <div class="wardrobe-filter-row">
-                                <button type="button" class="wardrobe-filter-btn active" data-category="all">All Outfits (16)</button>
-                                <button type="button" class="wardrobe-filter-btn" data-category="Plazo / Kurta">Plazo / Kurta</button>
-                                <button type="button" class="wardrobe-filter-btn" data-category="Salwar Kameez">Salwar Kameez</button>
-                                <button type="button" class="wardrobe-filter-btn" data-category="Party Wear">Party Wear</button>
-                                <button type="button" class="wardrobe-filter-btn" data-category="Wedding Wear">Wedding Wear</button>
-                            </div>
-                        </div>
-
-                        <!-- Swipeable Wardrobe Cards Rail (Video 3) -->
-                        <div class="wardrobe-rail-container">
-                            <button type="button" class="wardrobe-rail-arrow wardrobe-rail-prev" id="wardrobeRailPrev" aria-label="Previous Garments" title="Scroll Previous Garments">‹</button>
-                            <div class="wardrobe-cards-rail" id="wardrobeCardsRail">
-                                {% for p in products %}
-                                <div class="wardrobe-item-card {% if loop.first %}active-wear{% endif %}"
-                                     data-id="{{ p.id }}"
-                                     data-name="{{ p.name }}"
-                                     data-price="{{ p.price }}"
-                                     data-category="{{ p.category }}"
-                                     data-fabric="{{ p.fabric or 'Pure Natural Fibers' }}"
-                                     data-color="{{ p.color or 'Artisanal Dye' }}"
-                                     data-desc="{{ p.description or 'Handcrafted slow luxury shaped from fine natural fibers with artisanal needlework.' }}"
-                                     data-stock="{{ p.stock }}"
-                                     data-img="{{ product_image_url(p.image, 'garment-01.jpg') }}?v={{ cache_id }}"
-                                     title="Click to wear {{ p.name }}">
-                                    
-                                    {% if loop.first %}
-                                    <span class="wearing-pill-indicator">WEARING</span>
-                                    {% endif %}
-                                    <div class="wardrobe-card-thumb-wrap">
-                                        <img src="{{ product_image_url(p.image, 'garment-01.jpg') }}?v={{ cache_id }}" 
-                                             alt="{{ p.name }}"
-                                             loading="lazy"
-                                             draggable="false"
-                                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
-                                        <button type="button" class="hanger-btn-overlay" title="Wear {{ p.name }} on Avatar" aria-label="Wear {{ p.name }} on Avatar">👗</button>
-                                    </div>
-
-                                    <div>
-                                        <p class="wardrobe-item-title">{{ p.name }}</p>
-                                        <p class="wardrobe-item-price">₹{{ "{:,.0f}".format(p.price) }}</p>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
-                            <button type="button" class="wardrobe-rail-arrow wardrobe-rail-next" id="wardrobeRailNext" aria-label="Next Garments" title="Scroll Next Garments">›</button>
-                        </div>
-
-                        <!-- Outfit Details & Senior AI Stylist Guidance -->
-                        <div class="fitted-specs-card">
-                            <span class="fitted-category-pill" id="fittingStageCategory">{{ initial_p.category if initial_p else 'Plazo / Kurta' }} • Hansi Atelier</span>
-                            <h3 id="fittingStageTitle">{{ initial_p.name if initial_p else 'Hand Embroidered Kurta' }}</h3>
-                            <p class="fitted-price-callout" id="fittingStagePrice">₹{{ "{:,.0f}".format(initial_p.price if initial_p else 2800) }}</p>
-                            <p class="fitted-desc-text" id="fittingStageDesc">{{ initial_p.description if initial_p and initial_p.description else 'A signature handcrafted kurta featuring delicate tonal embroidery along the neckline, shaped slowly from breathable natural fibers.' }}</p>
-
-                            <!-- AI Stylist Commentary Integration -->
-                            <div class="ai-stylist-advice-box" id="fittingStageAdvice">
-                                <strong>✦ Stylist Drape Guidance</strong>
-                                {{ initial_p.name if initial_p else 'This piece' }} is shaped slowly from {{ initial_p.fabric if initial_p and initial_p.fabric else 'pure natural handloom' }} with delicate needlework, suited for both ceremonial grace and timeless everyday elegance.
-                            </div>
-
-                            <!-- Tailoring Size Selector -->
-                            <p style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold-antique);margin-bottom:8px;">Choose Tailoring Size</p>
-                            <div class="spec-size-picker" style="margin-bottom:20px;">
-                                <button type="button" class="spec-size-btn fitted-size-btn" data-size="XS">XS</button>
-                                <button type="button" class="spec-size-btn fitted-size-btn" data-size="S">S</button>
-                                <button type="button" class="spec-size-btn fitted-size-btn active" data-size="M">M</button>
-                                <button type="button" class="spec-size-btn fitted-size-btn" data-size="L">L</button>
-                                <button type="button" class="spec-size-btn fitted-size-btn" data-size="XL">XL</button>
-                                <button type="button" class="spec-size-btn fitted-size-btn" data-size="2XL">2XL</button>
-                                <button type="button" class="spec-size-btn fitted-size-btn" data-size="Custom">Custom Fit</button>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="spec-actions-row">
-                                <a href="/buy-now/{{ initial_p.id if initial_p else 1 }}" class="btn-spec-buy" id="fittedBuyBtn">⚡ Buy Now</a>
-                                <button type="button" class="btn-spec-bag" id="fittedBagBtn" data-product-id="{{ initial_p.id if initial_p else 1 }}">👜 Add to Bag</button>
-                                <a href="/product/{{ initial_p.id if initial_p else 1 }}" class="btn-spec-view" id="fittedViewBtn">👁️ View Details</a>
-                            </div>
-                        </div>
-
-                    </div>
-
+                    <button class="btn-add-pill" id="lookAddBtn" data-product-id="{{ initial_p.id if initial_p else 1 }}" type="button">
+                        <span>ADD TO BAG</span>
+                        <span>→</span>
+                    </button>
                 </div>
 
             </div>
@@ -1022,383 +617,179 @@
 
 
         <!-- =========================================
-             STAGE 4 — PART 1: PICK YOUR SILK
-             Arched 3D Collection Cards & Golden Marquee (Video 4)
+             SEASONAL EDITORIAL — Magazine Layout
         ========================================== -->
-        <section class="pick-silk-section" id="pick-your-silk">
-            <div class="golden-marquee-wrap">
-                <div class="golden-marquee-track">
-                    <span>✦ PURE ZARI • SLOW CRAFTED IN HANSI • ANCESTRAL LOOMS</span>
-                    <span>✦ HANDWOVEN MULMUL & SILK • LIVING BOTANICAL PIGMENTS</span>
-                    <span>✦ TIMELESS HEIRLOOM DRAPES • 100% PURE NATURAL SILK</span>
-                    <span>✦ 24-CARAT ELECTROPLATED GOLD FILAMENT • BESPOKE COUTURE</span>
-                    <span>✦ PURE ZARI • SLOW CRAFTED IN HANSI • ANCESTRAL LOOMS</span>
-                    <span>✦ HANDWOVEN MULMUL & SILK • LIVING BOTANICAL PIGMENTS</span>
-                </div>
+
+        <section class="seasonal-section section-wave wave-ivory-to-cream" id="seasonal">
+
+            <div class="section-heading reveal">
+
+                <p class="eyebrow">
+                    {{ cms.get('seasonal_eyebrow', 'AUTUMN — WINTER 2026') }}
+                </p>
+
+                <h2>
+                    {{ cms.get('seasonal_title', 'The season,<br>in fabric.')|safe }}
+                </h2>
+
             </div>
 
-            <div class="pick-silk-container">
-                <div class="pick-silk-header reveal">
-                    <p class="stage-eyebrow">✦ ATELIER TEXTILE PROVENANCE ✦</p>
-                    <h2>Pick Your <em>Silk.</em></h2>
-                    <p>
-                        Touch the living texture of ancestral Indian handlooms. Explore 8 signature silk silhouettes sculpted from Mulberry, Banarasi, Chanderi, and wild Tussar weaves.
-                    </p>
-                </div>
+            <div class="seasonal-grid">
 
-                <div class="arched-silk-rail-wrapper">
-                    <div class="arched-silk-track" id="silkCardsTrack">
-                        <div class="arched-silk-card active-silk" data-silk-id="1">
-                            <span class="arched-silk-badge">Mulberry Silk</span>
-                            <img src="{{ url_for('static', filename='images/garment-16.jpg') }}?v={{ cache_id }}" alt="Monsoon Azure" class="arched-silk-card-img" loading="lazy">
-                            <div class="arched-silk-meta">
-                                <h4 class="arched-silk-title">Monsoon Azure</h4>
-                                <span class="arched-silk-price">₹7,200</span>
-                            </div>
-                        </div>
-
-                        <div class="arched-silk-card" data-silk-id="2">
-                            <span class="arched-silk-badge">Chanderi Tissue</span>
-                            <img src="{{ url_for('static', filename='images/garment-09.jpg') }}?v={{ cache_id }}" alt="Surya Ochre" class="arched-silk-card-img" loading="lazy">
-                            <div class="arched-silk-meta">
-                                <h4 class="arched-silk-title">Surya Ochre</h4>
-                                <span class="arched-silk-price">₹3,850</span>
-                            </div>
-                        </div>
-
-                        <div class="arched-silk-card" data-silk-id="3">
-                            <span class="arched-silk-badge">Matka Silk</span>
-                            <img src="{{ url_for('static', filename='images/garment-14.jpg') }}?v={{ cache_id }}" alt="Rani Magenta" class="arched-silk-card-img" loading="lazy">
-                            <div class="arched-silk-meta">
-                                <h4 class="arched-silk-title">Rani Magenta</h4>
-                                <span class="arched-silk-price">₹4,200</span>
-                            </div>
-                        </div>
-
-                        <div class="arched-silk-card" data-silk-id="4">
-                            <span class="arched-silk-badge">Banarasi Brocade</span>
-                            <img src="{{ url_for('static', filename='images/garment-11.jpg') }}?v={{ cache_id }}" alt="Palace Crimson" class="arched-silk-card-img" loading="lazy">
-                            <div class="arched-silk-meta">
-                                <h4 class="arched-silk-title">Palace Crimson</h4>
-                                <span class="arched-silk-price">₹5,400</span>
-                            </div>
-                        </div>
-
-                        <div class="arched-silk-card" data-silk-id="5">
-                            <span class="arched-silk-badge">Tussar Raw Silk</span>
-                            <img src="{{ url_for('static', filename='images/garment-01.jpg') }}?v={{ cache_id }}" alt="Bengal Garden" class="arched-silk-card-img" loading="lazy">
-                            <div class="arched-silk-meta">
-                                <h4 class="arched-silk-title">Bengal Garden</h4>
-                                <span class="arched-silk-price">₹2,950</span>
-                            </div>
-                        </div>
-
-                        <div class="arched-silk-card" data-silk-id="6">
-                            <span class="arched-silk-badge">Glass Organza</span>
-                            <img src="{{ url_for('static', filename='images/garment-19.jpg') }}?v={{ cache_id }}" alt="Marigold Brocade" class="arched-silk-card-img" loading="lazy">
-                            <div class="arched-silk-meta">
-                                <h4 class="arched-silk-title">Marigold Brocade</h4>
-                                <span class="arched-silk-price">₹4,600</span>
-                            </div>
-                        </div>
-
-                        <div class="arched-silk-card" data-silk-id="7">
-                            <span class="arched-silk-badge">Micro-Velvet</span>
-                            <img src="{{ url_for('static', filename='images/garment-24.jpg') }}?v={{ cache_id }}" alt="Emerald Velvet" class="arched-silk-card-img" loading="lazy">
-                            <div class="arched-silk-meta">
-                                <h4 class="arched-silk-title">Emerald Velvet</h4>
-                                <span class="arched-silk-price">₹8,500</span>
-                            </div>
-                        </div>
-
-                        <div class="arched-silk-card" data-silk-id="8">
-                            <span class="arched-silk-badge">Ancestral Silk</span>
-                            <img src="{{ url_for('static', filename='images/garment-07.jpg') }}?v={{ cache_id }}" alt="Mughal Imperial" class="arched-silk-card-img" loading="lazy">
-                            <div class="arched-silk-meta">
-                                <h4 class="arched-silk-title">Mughal Imperial</h4>
-                                <span class="arched-silk-price">₹1</span>
-                            </div>
-                        </div>
+                <div class="seasonal-image reveal-scale">
+                    <img
+                        src="{{ product_image_url(cms.get('seasonal_img1'), 'editorial-seasonal-1.jpg') }}?v={{ cache_id }}"
+                        alt="Autumn winter editorial"
+                        loading="lazy"
+                    >
+                    <div class="seasonal-caption">
+                        <small>{{ cms.get('seasonal_cap1_tag', 'Editorial') }}</small>
+                        <span>{{ cms.get('seasonal_cap1_text', 'Warmth in every stitch') }}</span>
                     </div>
                 </div>
 
-                <!-- Provenance Detail Drawer -->
-                <div class="silk-provenance-drawer">
-                    <div class="silk-provenance-info">
-                        <span class="silk-provenance-weave" id="activeSilkWeave">Pure Mulberry Silk • 4-Ply High-Density Zari Warp</span>
-                        <h3 id="activeSilkName">Monsoon Azure Kanjeevaram</h3>
-                        <p class="silk-provenance-desc" id="activeSilkDesc">
-                            Deep oceanic blue dyed with mineral pigments, woven with 24-carat silver-dipped electroplated zari borders inspired by royal palace courtyards.
-                        </p>
-                    </div>
-                    <div class="silk-provenance-action">
-                        <a href="/shop?category=Wedding%20Wear" class="btn-luxury-gold" id="activeSilkCta">Explore Silk Edit →</a>
+                <div class="seasonal-image reveal-scale reveal-delay-1">
+                    <img
+                        src="{{ product_image_url(cms.get('seasonal_img2'), 'editorial-seasonal-2.jpg') }}?v={{ cache_id }}"
+                        alt="Handmade fashion detail"
+                        loading="lazy"
+                    >
+                    <div class="seasonal-caption">
+                        <small>{{ cms.get('seasonal_cap2_tag', 'Craft') }}</small>
+                        <span>{{ cms.get('seasonal_cap2_text', 'Hand-finished details') }}</span>
                     </div>
                 </div>
+
+                <div class="seasonal-image reveal-scale reveal-delay-2">
+                    <img
+                        src="{{ product_image_url(cms.get('seasonal_img3'), 'editorial-seasonal-3.jpg') }}?v={{ cache_id }}"
+                        alt="Fabric texture detail"
+                        loading="lazy"
+                    >
+                    <div class="seasonal-caption">
+                        <small>{{ cms.get('seasonal_cap3_tag', 'Texture') }}</small>
+                        <span>{{ cms.get('seasonal_cap3_text', 'Natural fibres, living colour') }}</span>
+                    </div>
+                </div>
+
             </div>
+
         </section>
 
+
+
         <!-- =========================================
-             STAGE 4 — PART 2: THE RACK
-             Interactive Silk Collection Rail (Video 4)
+             LATEST TRENDS — Asymmetric Editorial
         ========================================== -->
-        <section class="rack-section" id="the-rack">
-            <div class="pick-silk-container">
-                <div class="pick-silk-header reveal">
-                    <p class="stage-eyebrow">✦ THE ATELIER RACK ✦</p>
-                    <h2>Draped in Devotion. <em>Worn in Light.</em></h2>
-                    <p>
-                        Browse Tulsa's bespoke hanging silhouettes on artisanal gold hangers. Select any garment along the brass bar to inspect tailor cuts, sizing, and drape.
-                    </p>
-                </div>
 
-                <!-- Top Brass Rail Bar -->
-                <div class="rack-brass-rail-bar"></div>
+        <!-- =========================================
+             ACCORDION CAMPAIGN GALLERY
+             ("Worth Your Attention")
+        ========================================== -->
 
-                <!-- Horizontal Garments Track -->
-                <div class="rack-garments-track" id="rackGarmentsTrack">
-                    {% for p in products %}
-                    <div class="rack-garment-item {% if loop.first %}active-hanger{% endif %}"
-                         data-id="{{ p.id }}"
-                         data-name="{{ p.name }}"
-                         data-price="{{ p.price }}"
-                         data-fabric="{{ p.fabric or 'Pure Handloom Silk' }}"
-                         data-img="{{ product_image_url(p.image) }}?v={{ cache_id }}">
-                        
-                        <!-- Realistic Gold Hanger SVG Graphic -->
-                        <svg class="rack-hanger-graphic" viewBox="0 0 60 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M30 4C30 2 32 1 34 2C36 3 35 6 32 7L30 8" stroke="#E6CA85" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M30 8L4 24C3 25 4 27 6 27H54C56 27 57 25 56 24L30 8Z" stroke="#E6CA85" stroke-width="2" stroke-linejoin="round"/>
-                        </svg>
+        <section class="accordion-gallery-section" id="campaign-gallery">
 
-                        <div class="rack-garment-thumb-wrap">
-                            <img src="{{ product_image_url(p.image) }}?v={{ cache_id }}" alt="{{ p.name }}" loading="lazy" draggable="false">
-                        </div>
-
-                        <div class="rack-garment-meta">
-                            <h4>{{ p.name }}</h4>
-                            <span>₹{{ "{:,.0f}".format(p.price) }}</span>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-
-                <!-- Active Garment Spotlight Stage -->
-                {% set initial_rack = products[0] if products else None %}
-                <div class="rack-featured-spotlight" id="rackSpotlightStage">
-                    <div class="rack-featured-media">
-                        <img id="rackFeaturedImg"
-                             src="{{ product_image_url(initial_rack.image) if initial_rack else url_for('static', filename='images/bridal-wedding-collection.jpg') }}?v={{ cache_id }}"
-                             alt="{{ initial_rack.name if initial_rack else 'Tulsa Garment' }}"
-                             loading="eager">
-                    </div>
-
-                    <div class="rack-featured-details">
-                        <h3 id="rackFeaturedTitle">{{ initial_rack.name if initial_rack else 'Mughal Embroidered Anarkali' }}</h3>
-                        <div class="rack-featured-price" id="rackFeaturedPrice">₹{{ "{:,.0f}".format(initial_rack.price) if initial_rack else '1' }}</div>
-                        <div class="rack-featured-fabric" id="rackFeaturedFabric">✦ Fabric: {{ initial_rack.fabric if initial_rack and initial_rack.fabric else 'Pure Handloom Silk' }}</div>
-
-                        <!-- Size Selector -->
-                        <div class="rack-size-options">
-                            <button type="button" class="rack-size-btn" data-size="XS">XS</button>
-                            <button type="button" class="rack-size-btn" data-size="S">S</button>
-                            <button type="button" class="rack-size-btn active" data-size="M">M</button>
-                            <button type="button" class="rack-size-btn" data-size="L">L</button>
-                            <button type="button" class="rack-size-btn" data-size="XL">XL</button>
-                            <button type="button" class="rack-size-btn" data-size="Custom Fit">Custom Fit</button>
-                        </div>
-
-                        <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                            <button type="button" class="btn-luxury-gold" id="rackFeaturedBagBtn" data-product-id="{{ initial_rack.id if initial_rack else 6 }}">
-                                👜 Add to Bag
-                            </button>
-                            <a href="/product/{{ initial_rack.id if initial_rack else 6 }}" class="btn-spec-view" id="rackFeaturedViewBtn" style="padding:12px 24px;border-radius:999px;border:1px solid rgba(201,169,110,0.5);color:#FFF;text-decoration:none;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">
-                                👁️ View Silhouette
-                            </a>
-                        </div>
-                    </div>
-                </div>
+            <div class="section-head-editorial reveal">
+                <p class="eyebrow">EDITORIAL CAMPAIGN ARCHIVE</p>
+                <h2>Worth Your <em>Attention</em></h2>
             </div>
+
+            <div class="slat-container">
+
+                <div class="slat-item active">
+                    <div class="slat-vertical-label">THE HERITAGE EDIT</div>
+                    <div class="slat-media">
+                        <img src="{{ url_for('static', filename='images/editorial-bridal.jpg') }}?v={{ cache_id }}" alt="Heritage Bridal Couture" loading="lazy">
+                        <div class="slat-overlay"></div>
+                    </div>
+                    <div class="slat-content">
+                        <h3 class="slat-title">Midnight Heritage</h3>
+                        <p class="slat-sub">Hand-spun Zari on Raw Crimson Silk</p>
+                    </div>
+                </div>
+
+                <div class="slat-item">
+                    <div class="slat-vertical-label">THE ATELIER DRAPE</div>
+                    <div class="slat-media">
+                        <img src="{{ url_for('static', filename='images/editorial-collection.jpg') }}?v={{ cache_id }}" alt="The Atelier Drape" loading="lazy">
+                        <div class="slat-overlay"></div>
+                    </div>
+                    <div class="slat-content">
+                        <h3 class="slat-title">Threads of Memory</h3>
+                        <p class="slat-sub">Botanical Pigments & Pure Chanderi</p>
+                    </div>
+                </div>
+
+                <div class="slat-item">
+                    <div class="slat-vertical-label">ROYAL ENSEMBLE</div>
+                    <div class="slat-media">
+                        <img src="{{ url_for('static', filename='images/editorial-trends.jpg') }}?v={{ cache_id }}" alt="Royal Ensembles" loading="lazy">
+                        <div class="slat-overlay"></div>
+                    </div>
+                    <div class="slat-content">
+                        <h3 class="slat-title">Sculpted Festive</h3>
+                        <p class="slat-sub">Modern Silhouette with Ancient Roots</p>
+                    </div>
+                </div>
+
+                <div class="slat-item">
+                    <div class="slat-vertical-label">BESPOKE ATELIER</div>
+                    <div class="slat-media">
+                        <img src="{{ url_for('static', filename='images/editorial-custom.jpg') }}?v={{ cache_id }}" alt="Bespoke Couture" loading="lazy">
+                        <div class="slat-overlay"></div>
+                    </div>
+                    <div class="slat-content">
+                        <h3 class="slat-title">One of One</h3>
+                        <p class="slat-sub">Tailored Exclusively to Your Form</p>
+                    </div>
+                </div>
+
+            </div>
+
         </section>
 
-        <!-- =========================================
-             STAGE 4 — PART 3: CINEMATIC REEL LOOKBOOK
-             "Feel the Drape" Editorial Stories (Video 4)
-        ========================================== -->
-        <section class="cinematic-lookbook-section" id="cinematic-lookbook">
-            <div class="pick-silk-container">
-                <div class="pick-silk-header reveal">
-                    <p class="stage-eyebrow">✦ EDITORIAL REEL ARCHIVE ✦</p>
-                    <h2>Feel the <em>Drape.</em></h2>
-                    <p>
-                        High-fashion campaign reels captured in natural morning light. Witness how fluid slow-crafted silks catch the wind and cascade into heirloom silhouettes.
-                    </p>
-                </div>
 
-                <div class="lookbook-split-grid">
-                    <!-- Left: 9:16 Vertical Featured Reel Card -->
-                    <div class="lookbook-featured-reel">
-                        <button type="button" class="lookbook-sound-toggle" id="reelSoundBtn">🔇 Ambient: Mute</button>
-                        <img id="reelFeaturedMedia"
-                             src="{{ url_for('static', filename='images/editorial-bridal.jpg') }}?v={{ cache_id }}"
-                             alt="Featured Lookbook Reel"
-                             loading="eager">
-                        
-                        <div class="lookbook-reel-overlay">
-                            <h3 id="reelFeaturedHeading">The Heritage Edit</h3>
-                            <p id="reelFeaturedSub">Midnight Zari on Raw Crimson Silk</p>
-                            <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                                <a href="/product/15" class="btn-luxury-gold" id="reelFeaturedShopBtn">Shop This Look →</a>
-                                <button type="button" class="btn-spec-bag" id="reelQuickAddBtn" data-product-id="15" style="padding:10px 18px;border-radius:999px;background:rgba(8,26,20,0.85);border:1px solid rgba(201,169,110,0.4);color:#F8E5BA;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;">
-                                    ⚡ One-Tap Add to Bag
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Right: Story Selection Track -->
-                    <div class="lookbook-stories-col">
-                        <div class="cinematic-reel-card active-reel"
-                             data-img="{{ url_for('static', filename='images/editorial-bridal.jpg') }}?v={{ cache_id }}"
-                             data-title="The Heritage Edit"
-                             data-sub="Midnight Zari on Raw Crimson Silk"
-                             data-product-id="15"
-                             data-link="/product/15">
-                            <div class="reel-card-thumb">
-                                <img src="{{ url_for('static', filename='images/editorial-bridal.jpg') }}?v={{ cache_id }}" alt="The Heritage Edit">
-                            </div>
-                            <div class="reel-card-info">
-                                <h4>Story 01: The Midnight Heritage</h4>
-                                <p>Embellished with royal katori dabka needlework for celestial celebrations.</p>
-                            </div>
-                            <div class="reel-progress-track"><div class="reel-progress-fill" style="width:100%;"></div></div>
-                        </div>
-
-                        <div class="cinematic-reel-card"
-                             data-img="{{ url_for('static', filename='images/editorial-collection.jpg') }}?v={{ cache_id }}"
-                             data-title="Threads of Memory"
-                             data-sub="Botanical Pigments & Pure Chanderi Kurta"
-                             data-product-id="7"
-                             data-link="/product/7">
-                            <div class="reel-card-thumb">
-                                <img src="{{ url_for('static', filename='images/editorial-collection.jpg') }}?v={{ cache_id }}" alt="Threads of Memory">
-                            </div>
-                            <div class="reel-card-info">
-                                <h4>Story 02: Threads of Memory</h4>
-                                <p>Slow-woven ivory chikankari kurta layered with artisanal floral dupatta.</p>
-                            </div>
-                            <div class="reel-progress-track"><div class="reel-progress-fill"></div></div>
-                        </div>
-
-                        <div class="cinematic-reel-card"
-                             data-img="{{ url_for('static', filename='images/editorial-trends.jpg') }}?v={{ cache_id }}"
-                             data-title="Sculpted Festive"
-                             data-sub="Royal Velvet Festive Set with Temple Borders"
-                             data-product-id="8"
-                             data-link="/product/8">
-                            <div class="reel-card-thumb">
-                                <img src="{{ url_for('static', filename='images/editorial-trends.jpg') }}?v={{ cache_id }}" alt="Sculpted Festive">
-                            </div>
-                            <div class="reel-card-info">
-                                <h4>Story 03: Sculpted Festive</h4>
-                                <p>Deep velvet tunic paired with fluid handloom trousers in jewel fuchsia.</p>
-                            </div>
-                            <div class="reel-progress-track"><div class="reel-progress-fill"></div></div>
-                        </div>
-
-                        <div class="cinematic-reel-card"
-                             data-img="{{ url_for('static', filename='images/editorial-custom.jpg') }}?v={{ cache_id }}"
-                             data-title="One of One Atelier"
-                             data-sub="Ancestral Handloom Drapes Tailored to Your Form"
-                             data-product-id="6"
-                             data-link="/product/6">
-                            <div class="reel-card-thumb">
-                                <img src="{{ url_for('static', filename='images/editorial-custom.jpg') }}?v={{ cache_id }}" alt="One of One">
-                            </div>
-                            <div class="reel-card-info">
-                                <h4>Story 04: One of One Atelier</h4>
-                                <p>Bespoke couture tailored from raw silk filaments by master drapers in Hansi.</p>
-                            </div>
-                            <div class="reel-progress-track"><div class="reel-progress-fill"></div></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
 
         <!-- =========================================
-             STAGE 4 — PART 4: THREE SILKS, ONE WEAVE
-             Interactive 3D Three.js Weaving Studio (Video 4)
+             LATEST TRENDS — 3D High-Fashion Typography & Staggered Frames
         ========================================== -->
-        <section class="weaving-studio-section" id="weaving-studio">
-            <div class="weaving-studio-wrapper">
-                <div class="pick-silk-header reveal">
-                    <p class="stage-eyebrow">✦ 3D INTERACTIVE WEAVING SIMULATION ✦</p>
-                    <h2>Three Silks, <em>One Weave.</em></h2>
-                    <p>
-                        Experience how three independent artisanal filaments intertwine into a single slow-crafted textile. Choose custom shades for Warp, Weft, and Zari in real time.
+
+        <section class="trends-display-section" id="trends">
+
+            <div class="trends-layout">
+
+                <div class="trends-hero-text reveal">
+                    <p class="eyebrow" style="letter-spacing: 0.3em; color: var(--accent-burgundy); margin-bottom: 12px; font-weight: 500;">
+                        {{ cms.get('trends_eyebrow', 'THE SEASONAL FORECAST') }}
                     </p>
+                    <h2>
+                        {{ cms.get('trends_title', 'LATEST<br><span>TRENDS</span>')|safe }}
+                    </h2>
+                    <p class="trends-story-desc">
+                        {{ cms.get('trends_desc', 'Explore the most celebrated silhouettes, sculptural pleating, and living natural dyes of the season. Garments designed to outlive ephemeral trends and become family heirlooms.') }}
+                    </p>
+                    <a href="{{ cms.get('trends_cta_link', url_for('shop')) }}" class="btn-luxury-gold">
+                        {{ cms.get('trends_cta_text', 'Discover The Edit →') }}
+                    </a>
                 </div>
 
-                <!-- 3D WebGL Canvas Viewport -->
-                <div class="weaving-canvas-viewport">
-                    <canvas id="weaveCanvas"></canvas>
-                    <div class="weaving-floating-bar">
-                        <button type="button" class="btn-stage-pill" id="btnWeavePlayPause" style="background:rgba(201,169,110,0.2);border:1px solid rgba(201,169,110,0.5);color:#FFF;padding:4px 14px;border-radius:999px;font-size:11px;cursor:pointer;">
-                            ⏸ Pause Weave
-                        </button>
-                        <div class="weave-speed-controls">
-                            <span style="font-size:10px;color:#C9A96E;text-transform:uppercase;letter-spacing:0.1em;">Pace:</span>
-                            <button type="button" class="weave-speed-btn" data-speed="0.5">0.5×</button>
-                            <button type="button" class="weave-speed-btn active" data-speed="1.0">1.0×</button>
-                            <button type="button" class="weave-speed-btn" data-speed="2.0">2.0×</button>
-                        </div>
-                        <button type="button" class="btn-stage-pill" id="btnWeaveReset" style="background:none;border:1px solid rgba(255,255,255,0.2);color:#D3C9BD;padding:4px 12px;border-radius:999px;font-size:11px;cursor:pointer;">
-                            ⟲ Reset Palette
-                        </button>
+                <div class="trends-frame-stack reveal-scale">
+                    <div class="stack-frame stack-frame-main">
+                        <img src="{{ product_image_url(cms.get('trends_image'), 'editorial-trends.jpg') }}?v={{ cache_id }}"
+                             alt="Latest Fashion Trends Main" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
+                    </div>
+                    <div class="stack-frame stack-frame-secondary">
+                        <img src="{{ product_image_url(cms.get('seasonal_img1'), 'editorial-seasonal-1.jpg') }}?v={{ cache_id }}"
+                             alt="Latest Fashion Trends Accent" 
+                             decoding="async"
+                             onerror="this.onerror=null; this.src='{{ url_for('static', filename='images/editorial-hero.jpg') }}?v={{ cache_id }}';">
                     </div>
                 </div>
 
-                <!-- Interactive Color Controls Panel -->
-                <div class="weaving-controls-panel">
-                    <div class="weaving-strands-row">
-                        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-                            <span style="font-size:12px;letter-spacing:0.14em;color:#C9A96E;text-transform:uppercase;font-weight:600;">Active Strand:</span>
-                            <div class="weave-strand-tabs">
-                                <button type="button" class="weave-strand-tab active" data-strand="1">Strand 1 (Warp)</button>
-                                <button type="button" class="weave-strand-tab" data-strand="2">Strand 2 (Weft)</button>
-                                <button type="button" class="weave-strand-tab" data-strand="3">Strand 3 (Zari Filament)</button>
-                            </div>
-                        </div>
-
-                        <!-- Color Swatches -->
-                        <div class="weave-color-swatches">
-                            <span style="font-size:11px;color:#D3C9BD;text-transform:uppercase;letter-spacing:0.1em;margin-right:4px;">Shades:</span>
-                            <div class="weave-color-swatch selected" data-color-hex="0x0C4533" data-color-name="Royal Emerald" style="background:#0C4533;" title="Royal Emerald"></div>
-                            <div class="weave-color-swatch" data-color-hex="0xC9A96E" data-color-name="Antique Gold" style="background:#C9A96E;" title="Antique Gold"></div>
-                            <div class="weave-color-swatch" data-color-hex="0xC71585" data-color-name="Rani Magenta" style="background:#C71585;" title="Rani Magenta"></div>
-                            <div class="weave-color-swatch" data-color-hex="0xD9822B" data-color-name="Surya Ochre" style="background:#D9822B;" title="Surya Ochre"></div>
-                            <div class="weave-color-swatch" data-color-hex="0x20639B" data-color-name="Monsoon Azure" style="background:#20639B;" title="Monsoon Azure"></div>
-                            <div class="weave-color-swatch" data-color-hex="0xF5EBE1" data-color-name="Raw Silk Ivory" style="background:#F5EBE1;" title="Raw Silk Ivory"></div>
-                        </div>
-                    </div>
-
-                    <div class="weave-actions-row">
-                        <div class="weave-combination-report" id="weaveCombinationReport">
-                            <strong>Selected Weave:</strong> Warp: <span class="strand-val">Royal Emerald</span> • Weft: <span class="strand-val">Antique Gold</span> • Filament: <span class="strand-val">Rani Magenta</span>
-                        </div>
-
-                        <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                            <a href="https://wa.me/{{ studio_whatsapp }}?text=Namaste%20Tulsa!%20I%20tested%20the%203D%20Weaving%20Studio%20and%20would%20love%20to%20enquire%20about%20a%20bespoke%20silk%20weave." target="_blank" class="btn-luxury-gold" style="padding:10px 22px;font-size:11px;">
-                                💬 Enquire Bespoke Weave
-                            </a>
-                            <a href="/shop" class="btn-spec-view" style="padding:10px 22px;border-radius:999px;border:1px solid rgba(201,169,110,0.5);color:#FFF;text-decoration:none;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;">
-                                ✦ Browse Shop Silks
-                            </a>
-                        </div>
-                    </div>
-                </div>
             </div>
+
         </section>
 
 
@@ -2482,9 +1873,6 @@
         💬
     </a>
 
-    <!-- AI Customer Support & Desktop Profile Control -->
-    {% include 'ai_support_widget.html' %}
-
     <!-- =========================================
          JAVASCRIPT & 3D ENGINE
     ========================================== -->
@@ -2498,7 +1886,6 @@
     <script src="{{ url_for('static', filename='js/three-world.js') }}?v={{ cache_id }}"></script>
     <script src="{{ url_for('static', filename='js/curved-carousel.js') }}?v={{ cache_id }}"></script>
     <script src="{{ url_for('static', filename='js/look-builder.js') }}?v={{ cache_id }}"></script>
-    <script src="{{ url_for('static', filename='js/stage4-atelier.js') }}?v={{ cache_id }}"></script>
 
     <script
         src="{{ url_for('static', filename='js/main.js') }}?v={{ cache_id }}"
@@ -2564,7 +1951,6 @@
     {% endif %}
 
 
-    {% include 'mobile_bottom_nav.html' %}
 </body>
 
 </html>
